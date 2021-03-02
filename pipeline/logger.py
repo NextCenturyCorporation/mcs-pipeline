@@ -24,17 +24,18 @@ def configureBaseLogging(logFileName):
         file_handler.setFormatter(logging.Formatter(formatString))
         mainLog.addHandler(file_handler)
     except Exception as e:
-        print("Unable to create path" + full_path)
+        print("Unable to create path" + full_path + " " + str(e))
 
     return mainLog
 
 
 def configureLogging(logName, logFileName):
-    """Configure a logger that is a child of the base logger.  It will be at debug and go to
-    own file.  Because it is a child of the base, the base will also get the log.
+    """Configure a logger that is a child of the base logger.  It will be at
+    debug and go to own file.  Because it is a child of the base, the base
+    will also get the log.
 
-    Only call this once for shared loggers since it calls addHandler, and you end up adding a new
-    FileHandler each time"""
+    Only call this once for shared loggers since it calls addHandler, and you
+    end up adding a new FileHandler each time"""
     logger = logging.getLogger('main.' + logName)
     logger.setLevel(logging.DEBUG)
     full_path = logPath + logFileName + '.log'
@@ -44,6 +45,6 @@ def configureLogging(logName, logFileName):
         handler.setFormatter(logging.Formatter(formatString))
         logger.addHandler(handler)
     except Exception as e:
-        print("Unable to create path" + full_path)
+        print("Unable to create path" + full_path + " " + str(e))
 
     return logger

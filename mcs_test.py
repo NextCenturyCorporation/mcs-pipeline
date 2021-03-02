@@ -1,7 +1,7 @@
 #
 # A minimalist test for MCS.  It starts a controller, reads in a scene
 # (randomly picked) and goes forward for 10 steps.   On each step,
-# it saves an image 
+# it saves an image
 #
 #
 import machine_common_sense as mcs
@@ -10,7 +10,7 @@ directory = "/home/ubuntu/"
 unity_app_file_path = directory + "MCS-AI2-THOR-Unity-App-v0.3.6.1.x86_64"
 config_json_file_path = directory + "retrieval_goal-0005.json"
 
-controller = mcs.create_controller(unity_app_file_path) # , depth_masks=True, object_masks=True)
+controller = mcs.create_controller(unity_app_file_path)
 
 if controller is None:
     print("Controller is NONE. Problem initializaing AI2-THOR !!!")
@@ -33,7 +33,3 @@ for x in range(0, 10):
         print(f"Size of image list {len(image_list)}")
 
 controller.end_scene(None)
-
-
-
-

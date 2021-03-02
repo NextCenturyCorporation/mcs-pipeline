@@ -23,7 +23,7 @@ class BaselineSingleTask(SingleTask):
             self.log.warn("Failed on rm old tasks step")
             return return_code
 
-        # Copy the file from /home/ubuntu/tasks/unzipped to /home/ubuntu/baseline/tasks
+        # Copy the file from ~/tasks/unzipped to /home/ubuntu/baseline/tasks
         cmd = "cp " + all_tasks_dir + tail + " " + current_tasks_dir
         return_code = util.shellRunCommand(self.machine_dns, cmd, self.log)
         if return_code != 0:
@@ -31,11 +31,13 @@ class BaselineSingleTask(SingleTask):
             return return_code
 
         # Run the command
-        cmd = "source activate pytorch_latest_p37 && cd /home/ubuntu/baseline && ./runall.sh"
+        cmd = "source activate pytorch_latest_p37 " + \
+              "&& cd /home/ubuntu/baseline && ./runall.sh"
         return_code = util.shellRunCommand(self.machine_dns, cmd, self.log)
         if return_code != 0:
             self.log.warn("Failed on run step")
             return return_code
 
-        self.log.info(f"---- Ended task with json file: {tail}  Return_code: {return_code}")
+        self.log.info(f"---- Ended task with json file: {tail}  " +
+                      "Return_code: {return_code}")
         return return_code

@@ -46,21 +46,23 @@ def test_getS3Buckets():
 def test_getAWSMachines():
     print("\n---test_getAWSMachines---")
     machines = util.getAWSMachines(machine_type='t2.micro')
-    print(f"Current t2.micro Machines:")
+    print("Current t2.micro Machines: ")
     print(json.dumps(machines, indent=4, default=str))
 
     machines = util.getAWSMachines(machine_type='*', location='us-east-1')
-    print(f"All Current Machines:")
+    print("All Current Machines: ")
     print(json.dumps(machines, indent=4, default=str))
 
-    machines = util.getAWSMachines(machine_type='p2.xlarge', location='us-east-1')
-    print(f"p2.xlarge Current Machines:")
+    machines = util.getAWSMachines(machine_type='p2.xlarge',
+                                   location='us-east-1')
+    print("p2.xlarge Current Machines: ")
     print(json.dumps(machines, indent=4, default=str))
 
 
 def run_test_mess():
     machine = "ec2-52-205-76-200.compute-1.amazonaws.com"
-    run_command = "cd /home/ubuntu/mess_original_code/mess_final/ && ./runall.sh"
+    run_command = "cd /home/ubuntu/mess_original_code/mess_final/ && " + \
+                  " ./runall.sh"
     util.shellRunCommand(machine, run_command, None)
 
 # test_copyFileToAWS()

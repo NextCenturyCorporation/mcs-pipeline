@@ -26,7 +26,7 @@ manually.
 
 * See what machines are running.  Within the code you can look for specific 
 types of machines (like 'p2.xlarge', the default) or a location ('us-east-1'). 
-It would be pretty eash to get it to look for tags. 
+It would be pretty easy to get it to look for tags. 
 * Get a list of the scenes to run
 * Create a thread pool of size of the number of machines
 * In each thread:
@@ -107,10 +107,12 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
 * Big run:
   * Start lots of machines (~120 or so)
   * Same as the small run, following the same basic steps, one at a time: 
-    * Start the X server on each by uncommenting that line and running
+    * Start the X server on each by uncommenting that line and running.  Since this does not  
+    run a thread per machine, this might take a couple of minutes
     * Copy over mcs_config.yaml.  Make sure to put in all the information, set 
     the AWS keys, make sure bucket and directory is correct, correct metadata level etc.  Uncomment 
-    that line and run
+    that line and run.  Again, not parallelized (i.e. thread per machine) so takes a couple 
+    of minutes.  
     * Make a file with the correct list of tasks and set the TASK_FILE_PATH to point to it
     * Run the tasks
 

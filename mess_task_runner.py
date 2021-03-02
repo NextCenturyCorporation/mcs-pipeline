@@ -11,9 +11,10 @@ from pipeline.mess_singletask import MessSingleTask
 from pipeline.xserver_check import XServerCheck
 from pipeline.xserver_startup import XServerStartup
 
-# Uncomment one of the following.  The first is for testing;  the second is for _all_ tasks (14600 of them)
-# TASK_FILE_PATH = "tasks_single_task.txt"
-TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
+# Uncomment one of the following.  single is for testing;  the other
+# is for intphys
+# TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
+TASK_FILE_PATH = "tasks_single_task.txt"
 
 
 class MessRunTasks:
@@ -28,14 +29,16 @@ class MessRunTasks:
         self.log.info("Starting runtasks")
 
     def runThreadOnEC2Machine(self, machine_dns):
-        """ Function that runs on its own thread, with thread-local variable of the machine to use.  While
-        there are more task files to run, get one and run it, exiting the thread when there are no more tasks."""
-
+        """ Function that runs on its own thread, with thread-local variable
+        of the machine to use.  While there are more task files to run, get
+        one and run it, exiting the thread when there are no more tasks."""
         dateStr = util.getDateInFileFormat()
-        threadlog = logger.configureLogging(machine_dns, dateStr + "." + machine_dns)
+        threadlog = logger.configureLogging(machine_dns, dateStr +
+                                            "." + machine_dns)
 
-        # Lock to be able to count tasks remaining and get one in a thread-safe way.  Otherwise, we could
-        # count tasks remaining and before we pop it, some other thread might pop it
+        # Lock to be able to count tasks remaining and get one in a
+        # thread-safe way. Otherwise, we could count tasks remaining and
+        # before we pop it, some other thread might pop it
         lock = threading.RLock()
         while True:
             lock.acquire()
@@ -45,12 +48,13 @@ class MessRunTasks:
             task_file = task_files_list.pop(0)
             lock.release()
 
-            singleTask = MessSingleTask(machine_dns, task_file, threadlog, None)
+            singleTask = MessSingleTask(machine_dns, task_file, threadlog)
             return_code = singleTask.process()
 
             if return_code > 0:
                 lock.acquire()
-                self.log.warning(f"Task for file {task_file} failed.  Adding back to the queue")
+                self.log.warning(f"Task for file {task_file} failed.  " +
+                                 "Adding back to the queue")
                 task_files_list.append(task_file)
                 lock.release()
 
@@ -61,7 +65,7 @@ class MessRunTasks:
         task_file = open(TASK_FILE_PATH, 'r')
         lines = task_file.readlines()
         for line in lines:
-            if line != None and len(line) > 0:
+            if line is not None and len(line) > 0:
                 task_files_list.append(line.strip())
 
         task_files_list.sort()
@@ -71,14 +75,16 @@ class MessRunTasks:
     def runTasks(self):
         self.getTasks()
 
-        # Determine the DNS for all the machine that we have, default to us-east-1 and p2.xlarge
+        # Determine the DNS for all the machine that we have, default to
+        # us-east-1 and p2.xlarge
         self.available_machines = util.getAWSMachines()
         self.log.info(f"Machines available {self.available_machines}")
 
         # Create a thread for each machine
         threads = []
         for machine in self.available_machines:
-            processThread = threading.Thread(target=self.runThreadOnEC2Machine, args=(machine,))
+            processThread = threading.Thread(target=self.runThreadOnEC2Machine,
+                                             args=(machine,))
             processThread.start()
             threads.append(processThread)
 
@@ -137,4 +143,4 @@ if __name__ == '__main__':
     # run_tasks.run_test()   # Note, this is not paralleized
 
     # Command to actually run the tasks.
-    # run_tasks.runTasks()
+    run_tasks.runTasks()
