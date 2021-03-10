@@ -42,5 +42,5 @@ class MessSingleTask(SingleTask):
             return return_code
 
         self.log.info(f"---- Ended task with json file: {tail}  " +
-                      "Return_code: {return_code}")
+                      f"Return_code: {return_code}")
         return return_code
