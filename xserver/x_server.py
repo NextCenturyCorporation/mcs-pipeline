@@ -28,6 +28,7 @@ def pci_records():
 
     return records
 
+
 def generate_xorg_conf(devices):
     xorg_conf = []
 
@@ -61,12 +62,16 @@ EndSection
     for i, bus_id in enumerate(devices):
         xorg_conf.append(device_section.format(device_id=i, bus_id=bus_id))
         xorg_conf.append(screen_section.format(device_id=i, screen_id=i))
-        screen_records.append('Screen {screen_id} "Screen{screen_id}" 0 0'.format(screen_id=i))
-    
-    xorg_conf.append(server_layout_section.format(screen_records="\n    ".join(screen_records)))
+        screen_records.append(
+            'Screen {screen_id} "Screen{screen_id}" 0 0'.format(screen_id=i))
 
-    output =  "\n".join(xorg_conf)
+    xorg_conf.append(
+        server_layout_section.format(screen_records="\n    ".join(
+            screen_records)))
+
+    output = "\n".join(xorg_conf)
     return output
+
 
 def _startx(display):
     if platform.system() != 'Linux':
@@ -74,9 +79,10 @@ def _startx(display):
 
     devices = []
     for r in pci_records():
-        if r.get('Vendor', '') == 'NVIDIA Corporation'\
-                and r['Class'] in ['VGA compatible controller', '3D controller']:
-            bus_id = 'PCI:' + ':'.join(map(lambda x: str(int(x, 16)), re.split(r'[:\.]', r['Slot'])))
+        if r.get('Vendor', '') == 'NVIDIA Corporation' and \
+                r['Class'] in ['VGA compatible controller', '3D controller']:
+            bus_id = 'PCI:' + ':'.join(
+                map(lambda x: str(int(x, 16)), re.split(r'[:\.]', r['Slot'])))
             devices.append(bus_id)
 
     if not devices:
@@ -91,18 +97,22 @@ def _startx(display):
             print("---xorg conf ------------")
             print(new_xorg_conf)
             print("-------------------------")
-        command = shlex.split("Xorg -noreset +extension GLX +extension RANDR +extension RENDER -config %s :%s" % (path, display))
+        command = shlex.split(
+            "Xorg -noreset +extension GLX +extension RANDR +extension " +
+            "RENDER -config %s :%s" % (path, display))
         print(f"Command staring x: {command}", flush=True)
         proc = subprocess.Popen(command)
         atexit.register(lambda: proc.poll() is None and proc.kill())
         proc.wait()
-    finally: 
+    finally:
         os.close(fd)
         os.unlink(path)
 
+
 def startx(display=0):
     if 'DISPLAY' in os.environ:
-        print("Skipping Xorg server - DISPLAY is already running at %s" % os.environ['DISPLAY'])
+        print("Skipping Xorg server - DISPLAY is already running at %s"
+              % os.environ['DISPLAY'])
         return
 
     xthread = threading.Thread(target=_startx, args=(display,))
@@ -110,8 +120,3 @@ def startx(display=0):
     xthread.start()
     # wait for server to start
     time.sleep(4)
-
-
-
-    
-

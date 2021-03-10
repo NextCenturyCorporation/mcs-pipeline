@@ -1,21 +1,20 @@
 
-This directory contains code that runs an Xorg X server that does not do anything.
+This directory contains code that runs an Xorg X server that does not
+do anything.
 
-This is necessary when running on a remote server that does not have a display or X server.
+This is necessary when running on a remote server that does not have a
+display or X server.
 
-### Requirements ### 
+### Requirements
 
 * Xorg install -- 'sudo apt install xserver-xorg'
-* lspci -- Part of PCI tools, which determine what is in the PCI (Peripheral 
-Component Interconnect) buses.  'sudo apt install pciutils'
+* lspci -- Part of PCI tools, which determine what is in the PCI 
+(Peripheral Component Interconnect) buses. 'sudo apt install pciutils'
 
-### Usage ###
+### Usage
 
-<pre>
-% cd xserver
-% sudo python3 run_startx & 
-</pre>
+<pre>% cd xserver
+% sudo python3 run_startx &</pre>
 
-Sudo is necessary since the X server needs to be running as root.  The & is so 
-the X server continues to run.  
-
+Sudo is necessary since the X server needs to be running as root.
+The & is so the X server continues to run.
