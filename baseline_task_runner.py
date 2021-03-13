@@ -21,16 +21,16 @@ class BaselineRunTasks:
         self.task_files_full_path = []
 
         # Main Logger
-        dateStr = util.getDateInFileFormat()
-        self.log = logger.configureBaseLogging(dateStr + ".log")
+        dateStr = util.get_date_in_file_format()
+        self.log = logger.configure_base_logging(dateStr + ".log")
         self.log.info("Starting runtasks")
 
-    def runThreadOnEC2Machine(self, machine_dns):
+    def run_thread_on_ec2_machine(self, machine_dns):
         """ Function that runs on its own thread, with thread-local variable of
         the machine to use.  While there are more task files to run, get one
         and run it, exiting the thread when there are no more tasks."""
-        dateStr = util.getDateInFileFormat()
-        threadlog = logger.configureLogging(machine_dns, dateStr +
+        dateStr = util.get_date_in_file_format()
+        threadlog = logger.configure_logging(machine_dns, dateStr +
                                             "." + machine_dns)
 
         # Lock to be able to count tasks remaining and get one in a
@@ -56,12 +56,12 @@ class BaselineRunTasks:
                 task_files_full_path.append(task_file)
                 lock.release()
 
-    def runTasks(self):
+    def run_tasks(self):
         global task_files_full_path
 
         # Determine the DNS for all the machine that we have, default
         # to us-east-1 and p2.xlarge
-        self.available_machines = util.getAWSMachines()
+        self.available_machines = util.get_aws_machines()
         self.log.info(f"Machines available {self.available_machines}")
 
         # Get all the tasks files
@@ -75,7 +75,7 @@ class BaselineRunTasks:
         # Create a thread for each machine
         threads = []
         for machine in self.available_machines:
-            processThread = threading.Thread(target=self.runThreadOnEC2Machine,
+            processThread = threading.Thread(target=self.run_thread_on_ec2_machine,
                                              args=(machine,))
             processThread.start()
             threads.append(processThread)
@@ -86,16 +86,16 @@ class BaselineRunTasks:
 
         self.log.info("Ending runtasks")
 
-    def runStartup(self):
-        self.available_machines = util.getAWSMachines()
+    def run_startup(self):
+        self.available_machines = util.get_aws_machines()
         self.log.info(f"Machines available {self.available_machines}")
 
         for machine in self.available_machines:
             bs = XServerStartup(machine, self.log)
             bs.process()
 
-    def runCheckXorg(self):
-        self.available_machines = util.getAWSMachines()
+    def run_check_xorg(self):
+        self.available_machines = util.get_aws_machines()
         self.log.info(f"Machines available {self.available_machines}")
 
         for machine in self.available_machines:
@@ -107,4 +107,4 @@ if __name__ == '__main__':
     run_tasks = BaselineRunTasks()
     # run_tasks.runStartup()
     # run_tasks.runCheckXorg()
-    run_tasks.runTasks()
+    run_tasks.run_tasks()

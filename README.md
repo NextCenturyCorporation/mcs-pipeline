@@ -7,6 +7,17 @@ This code runs scene files on EC2 machines.  Assumptions:
 * The scene files are already on the machines
 * You know how to run a single scene file on the remote the machine.   
 
+### Python Environment Setup
+
+From the mcs-pipeline root, create a virtual environment.
+
+```bash
+$ python3 -m venv --prompt pipeline venv
+$ source venv/bin/activate
+(pipeline) $ python -m pip install --upgrade pip setuptools wheel
+(pipeline) $ python -m pip install -r requirements.txt
+```
+
 ### Pre-requisites / setup 
 
 * Working ssh.  You should have a pem that will allow you to do something like:

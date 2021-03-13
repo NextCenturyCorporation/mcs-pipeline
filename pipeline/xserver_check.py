@@ -16,7 +16,7 @@ class XServerCheck:
 
         # Clear out current tasks
         cmd = "ps auxwww | grep Xorg"
-        return_code = util.shellRunCommand(self.machine_dns, cmd, self.log)
+        return_code = util.shell_run_command(self.machine_dns, cmd, self.log)
         if return_code != 0:
             self.log.warn("Failed on starup step")
             return return_code

@@ -22,20 +22,20 @@ class MessSingleTask(SingleTask):
 
         # Clear out current tasks
         cmd = "rm -f " + current_tasks_dir + "* || true"
-        return_code = util.shellRunCommand(self.machine_dns, cmd, self.log)
+        return_code = util.shell_run_command(self.machine_dns, cmd, self.log)
         if return_code != 0:
             self.log.warn("Failed on rm old tasks step")
             return return_code
 
         # Copy the file from task dir to current task dir
         cmd = "cp " + all_tasks_dir + tail + " " + current_tasks_dir
-        return_code = util.shellRunCommand(self.machine_dns, cmd, self.log)
+        return_code = util.shell_run_command(self.machine_dns, cmd, self.log)
         if return_code != 0:
             self.log.warn("Failed on cp new tasks step")
             return return_code
 
         # Run the command
-        return_code = util.shellRunCommand(self.machine_dns,
+        return_code = util.shell_run_command(self.machine_dns,
                                            run_command, self.log)
         if return_code != 0:
             self.log.warn("Failed on run step, but returning 0 anyway")

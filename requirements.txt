@@ -1,2 +1,2 @@
-boto3
-flake8
+boto3==1.17.24
+flake8==3.8.4
