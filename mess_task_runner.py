@@ -133,7 +133,7 @@ class MessRunTasks:
 
 if __name__ == '__main__':
     run_tasks = MessRunTasks()
-    run_tasks.get_tachines()
+    run_tasks.get_machines()
     run_tasks.get_tasks()
 
     # Commands to change the Remote machines.  Uncomment them to run them.
