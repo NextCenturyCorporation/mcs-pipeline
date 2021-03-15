@@ -38,10 +38,9 @@ class MessSingleTask(SingleTask):
         return_code = util.shellRunCommand(self.machine_dns,
                                            run_command, self.log)
         if return_code != 0:
-            self.log.warn("Failed on run step, but returning 0 anyway")
-            # return return_code
-            return 0
+            self.log.warn("Failed on run step")
+            return return_code
 
         self.log.info(f"---- Ended task with json file: {tail}  " +
-                      "Return_code: {return_code}")
+                      f"Return_code: {return_code}")
         return return_code

@@ -14,8 +14,8 @@ from pipeline.xserver_startup import XServerStartup
 # Uncomment one of the following.  single is for testing;  the other
 # is for intphys
 # TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
-TASK_FILE_PATH = "tasks_single_task.txt"
-
+# TASK_FILE_PATH = "tasks_single_task.txt"
+TASK_FILE_PATH = "tasks_small_number.txt"
 
 class MessRunTasks:
 
@@ -137,10 +137,10 @@ if __name__ == '__main__':
     run_tasks.getTasks()
 
     # Commands to change the Remote machines.  Uncomment them to run them.
-    # run_tasks.change_mcs_config()
+    run_tasks.change_mcs_config()
     # run_tasks.runXStartup()
     # run_tasks.runCheckXorg()
     # run_tasks.run_test()   # Note, this is not paralleized
 
     # Command to actually run the tasks.
-    run_tasks.runTasks()
+    # run_tasks.runTasks()
