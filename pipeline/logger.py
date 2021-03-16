@@ -5,7 +5,7 @@ logPath = "./logs/"
 formatString = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 
 
-def configureBaseLogging(logFileName):
+def configure_base_logging(logFileName):
     mainLog = logging.getLogger('main')
     mainLog.setLevel(logging.INFO)
 
@@ -29,7 +29,7 @@ def configureBaseLogging(logFileName):
     return mainLog
 
 
-def configureLogging(logName, logFileName):
+def configure_logging(logName, logFileName):
     """Configure a logger that is a child of the base logger.  It will be at
     debug and go to own file.  Because it is a child of the base, the base
     will also get the log.

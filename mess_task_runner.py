@@ -14,8 +14,8 @@ from pipeline.xserver_startup import XServerStartup
 # Uncomment one of the following.  single is for testing;  the other
 # is for intphys
 # TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
-# TASK_FILE_PATH = "tasks_single_task.txt"
-TASK_FILE_PATH = "tasks_small_number.txt"
+TASK_FILE_PATH = "tasks_single_task.txt"
+
 
 class MessRunTasks:
 
@@ -24,16 +24,16 @@ class MessRunTasks:
         self.task_files_full_path = []
 
         # Main Logger
-        dateStr = util.getDateInFileFormat()
-        self.log = logger.configureBaseLogging(dateStr + ".log")
+        dateStr = util.get_date_in_file_format()
+        self.log = logger.configure_base_logging(dateStr + ".log")
         self.log.info("Starting runtasks")
 
-    def runThreadOnEC2Machine(self, machine_dns):
+    def run_thread_on_ec2_machine(self, machine_dns):
         """ Function that runs on its own thread, with thread-local variable
         of the machine to use.  While there are more task files to run, get
         one and run it, exiting the thread when there are no more tasks."""
-        dateStr = util.getDateInFileFormat()
-        threadlog = logger.configureLogging(machine_dns, dateStr +
+        dateStr = util.get_date_in_file_format()
+        threadlog = logger.configure_logging(machine_dns, dateStr +
                                             "." + machine_dns)
 
         # Lock to be able to count tasks remaining and get one in a
@@ -58,7 +58,7 @@ class MessRunTasks:
                 task_files_list.append(task_file)
                 lock.release()
 
-    def getTasks(self):
+    def get_tasks(self):
         global task_files_list
 
         task_files_list = []
@@ -72,12 +72,12 @@ class MessRunTasks:
         self.log.info(f"Number of tasks: {len(task_files_list)}")
         self.log.info(f"Tasks {task_files_list}")
 
-    def runTasks(self):
-        self.getTasks()
+    def run_tasks(self):
+        self.get_tasks()
 
         # Determine the DNS for all the machine that we have, default to
         # us-east-1 and p2.xlarge
-        self.available_machines = util.getAWSMachines()
+        self.available_machines = util.get_aws_machines()
         self.log.info(f"Machines available {self.available_machines}")
 
         # Create a thread for each machine
@@ -94,12 +94,12 @@ class MessRunTasks:
 
         self.log.info("Ending runtasks")
 
-    def getMachines(self):
-        self.available_machines = util.getAWSMachines()
+    def get_machines(self):
+        self.available_machines = util.get_aws_machines()
         self.log.info(f"Number of machines {len(self.available_machines)}")
         self.log.info(f"Machines available:  {self.available_machines}")
 
-    def runXStartup(self):
+    def run_xstartup(self):
         ''' Start X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
             bs = XServerStartup(machine, self.log)
@@ -115,9 +115,9 @@ class MessRunTasks:
             bs = MessConfigChange(machine, self.log)
             bs.process()
 
-    def runCheckXorg(self):
+    def run_check_xorg(self):
         ''' Check X Server on all the machines.  Note:  Not parallelized'''
-        self.available_machines = util.getAWSMachines()
+        self.available_machines = util.get_aws_machines()
         self.log.info(f"Machines available {self.available_machines}")
 
         for machine in self.available_machines:
@@ -125,7 +125,7 @@ class MessRunTasks:
             bs.process()
 
     def run_test(self):
-        self.available_machines = util.getAWSMachines()
+        self.available_machines = util.get_aws_machines()
         for machine in self.available_machines:
             bs = McsTestRunner(machine, self.log)
             bs.process()
@@ -133,14 +133,14 @@ class MessRunTasks:
 
 if __name__ == '__main__':
     run_tasks = MessRunTasks()
-    run_tasks.getMachines()
-    run_tasks.getTasks()
+    run_tasks.get_machines()
+    run_tasks.get_tasks()
 
     # Commands to change the Remote machines.  Uncomment them to run them.
-    run_tasks.change_mcs_config()
+    # run_tasks.change_mcs_config()
     # run_tasks.runXStartup()
     # run_tasks.runCheckXorg()
     # run_tasks.run_test()   # Note, this is not paralleized
 
     # Command to actually run the tasks.
-    # run_tasks.runTasks()
+    run_tasks.run_tasks()

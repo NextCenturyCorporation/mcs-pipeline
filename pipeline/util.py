@@ -17,7 +17,6 @@
 import os
 import subprocess
 import time
-from os import path
 
 import boto3
 
@@ -27,13 +26,13 @@ PEM_FILE = Secrets['PEM_FILE']
 USERNAME = Secrets['USERNAME']
 
 
-def getDateInFileFormat():
+def get_date_in_file_format():
     """Get the date in a format like 2020-03-01, useful for creating files"""
     timeInFileFormat = time.strftime('%Y-%m-%d', time.localtime(time.time()))
     return timeInFileFormat
 
 
-def getS3Buckets():
+def get_s3_buckets():
     """ Look on AWS and get the list of buckets"""
     buckets = []
     s3 = boto3.resource('s3')
@@ -44,7 +43,7 @@ def getS3Buckets():
 
 # TODO:  Add ability to look for particular tags (key,value) because might
 #  have multiple sets of machines
-def getAWSMachines(machine_type='p2.xlarge', location='us-east-1'):
+def get_aws_machines(machine_type='p2.xlarge', location='us-east-1'):
     """ Look on AWS and determine all the machines that we have running
     AWS that we can use. The assumption is that we are looking for machines
     of type machine_type.
@@ -76,7 +75,7 @@ def getAWSMachines(machine_type='p2.xlarge', location='us-east-1'):
     return machines
 
 
-def getRemoteUserInfo(machine_dns):
+def get_remote_user_info(machine_dns):
     """ The name of the remote user depends on the type of machine that is running.
     For ubuntu images, the username is 'ubuntu'. For Amazon, it is 'ec2-user'
     """
@@ -99,7 +98,7 @@ def safe_log(log, intro, msg):
     log.info(intro + " " + stripped_msg)
 
 
-def runCommandAndCaptureOutput(commandList, log=None):
+def run_command_and_capture_output(commandList, log=None):
     process = subprocess.Popen(commandList,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT,
@@ -124,16 +123,16 @@ def runCommandAndCaptureOutput(commandList, log=None):
     return return_code, output_file
 
 
-def shellRunCommand(machine_dns, command, log=None):
+def shell_run_command(machine_dns, command, log=None):
     '''Run the command on the remote machine using ssh.'''
-    userInfo = getRemoteUserInfo(machine_dns)
+    userInfo = get_remote_user_info(machine_dns)
     process_command = ["ssh", "-i", PEM_FILE, userInfo, command]
-    return_code, _ = runCommandAndCaptureOutput(process_command, log)
+    return_code, _ = run_command_and_capture_output(process_command, log)
     return return_code
 
 
-def shellRunBackground(machine_dns, command, log=None):
-    userInfo = getRemoteUserInfo(machine_dns)
+def shell_run_background(machine_dns, command, log=None):
+    userInfo = get_remote_user_info(machine_dns)
 
     # This is surprisingly difficult.  We need to run a command, then
     #  disconnect.
@@ -146,7 +145,7 @@ def shellRunBackground(machine_dns, command, log=None):
     return return_code
 
 
-def dockerRunCommand(machine_dns, json_file_name_fullpath, command, log=None):
+def docker_run_command(machine_dns, json_file_name_fullpath, command, log=None):
     """ Running a command on a remote machine looks like :
             "ssh -i pem_file user@machine command"
         For ours, it looks like:
@@ -160,12 +159,12 @@ def dockerRunCommand(machine_dns, json_file_name_fullpath, command, log=None):
         writes to the output (/data/output_file), we will need to strip
         off the /data and get output_file from the instance.
     """
-    userInfo = getRemoteUserInfo(machine_dns)
+    userInfo = get_remote_user_info(machine_dns)
 
     head, tail = os.path.split(json_file_name_fullpath)
     mapped_dir = "/data/"
     process_command = ["ssh", "-i", PEM_FILE, userInfo] + command
-    return_code, output_file = runCommandAndCaptureOutput(process_command, log)
+    return_code, output_file = run_command_and_capture_output(process_command, log)
 
     # Strip the mapped dir from the output file to get the name of
     # the output file on the instance
@@ -174,18 +173,18 @@ def dockerRunCommand(machine_dns, json_file_name_fullpath, command, log=None):
     return return_code, output_file
 
 
-def copyFileToAWS(machine_dns, file_name, log=None, remote_dir=""):
-    head, tail = path.split(file_name)
-    remove_user_info = getRemoteUserInfo(machine_dns) + ":" + remote_dir + tail
+def copy_file_to_aws(machine_dns, file_name, log=None, remote_dir=""):
+    head, tail = os.path.split(file_name)
+    remove_user_info = get_remote_user_info(machine_dns) + ":" + remote_dir + tail
     process_command = ['scp', '-i', PEM_FILE, file_name, remove_user_info]
-    return_code, _ = runCommandAndCaptureOutput(process_command, log)
+    return_code, _ = run_command_and_capture_output(process_command, log)
     return return_code
 
 
-def copyFileFromAWS(machine_dns, file_name, log=None):
-    ubuntu_machine_dns = getRemoteUserInfo(machine_dns) + ":" + file_name
+def copy_file_from_aws(machine_dns, file_name, log=None):
+    ubuntu_machine_dns = get_remote_user_info(machine_dns) + ":" + file_name
     if log:
         log.info(f"Ubuntu command: {ubuntu_machine_dns}")
     process_command = ['scp', '-i', PEM_FILE, ubuntu_machine_dns, "."]
-    return_code, _ = runCommandAndCaptureOutput(process_command, log)
+    return_code, _ = run_command_and_capture_output(process_command, log)
     return return_code
