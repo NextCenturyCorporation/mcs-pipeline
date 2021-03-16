@@ -8,7 +8,7 @@ RUN apt install -y emacs tree silversearcher-ag
 
 RUN apt install -y xserver-xorg
 RUN apt install -y pciutils
-
+RUN apt install -y kmod
 
 ADD . /x_server
 
