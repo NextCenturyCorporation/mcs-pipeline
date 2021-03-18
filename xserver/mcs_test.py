@@ -8,7 +8,7 @@
 import machine_common_sense as mcs
 
 unity_app_file_path = "/mcs/MCS-AI2-THOR-Unity-App-v0.3.8.x86_64"
-config_json_file_path = "/mcs/retrieval_goal-0005.json"
+config_json_file_path = "/x_server/retrieval_goal-0005.json"
 
 controller = mcs.create_controller(unity_app_file_path) # , depth_masks=True, object_masks=True)
 
@@ -19,7 +19,7 @@ if controller is None:
 config_data, status = mcs.load_scene_json_file(config_json_file_path)
 output = controller.start_scene(config_data)
 
-action = 'None'
+action = 'MoveAhead'
 
 for x in range(0, 10):
     step_output = controller.step(action)
