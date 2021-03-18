@@ -14,7 +14,8 @@ set -x
 
 LOC=/home/ubuntu/workspace
 
-# Start the docker container, giving it a command that never returns
+# Start the docker container, giving it a command that never returns,
+# with -d to run in daemon mode.  
 docker run \
        --rm \
        --privileged \
@@ -31,7 +32,7 @@ docker run \
 CID=`docker ps -a | grep 'cora_with_x' | awk '{print $1}'`
 
 # Start the X server 
-docker exec $CID bash -c "python3 /x_server/run_startx.py &"
+docker exec -d $CID bash -c "python3 /x_server/run_startx.py"
 sleep 20 
   
   
