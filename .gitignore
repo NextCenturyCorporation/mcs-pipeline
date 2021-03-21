@@ -1,2 +1,9 @@
 secrets.py
-venv
+
+__pycache__/
+
+# Environments
+.env
+.venv
+env/
+venv/
