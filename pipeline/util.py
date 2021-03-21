@@ -14,7 +14,6 @@
 #
 
 import os
-from platform import machine
 import subprocess
 import time
 
