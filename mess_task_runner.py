@@ -83,7 +83,7 @@ class MessRunTasks:
         # Create a thread for each machine
         threads = []
         for machine in self.available_machines:
-            processThread = threading.Thread(target=self.runThreadOnEC2Machine,
+            processThread = threading.Thread(target=self.run_thread_on_ec2_machine,
                                              args=(machine,))
             processThread.start()
             threads.append(processThread)
