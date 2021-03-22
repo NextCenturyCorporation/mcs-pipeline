@@ -42,8 +42,8 @@ def get_s3_buckets():
 
 
 def get_aws_machines(
-        machine_type: str='p2.xlarge',
-        location: str='us-east-1',
+        instance_type: str='p2.xlarge',
+        region: str='us-east-1',
         tag_name: str='Name',
         tag_value: str=''
     ) -> List[str]:
@@ -52,7 +52,7 @@ def get_aws_machines(
     of type machine_type.
     """
 
-    ec2 = boto3.client('ec2', region_name=location)
+    ec2 = boto3.client('ec2', region_name=region)
     response = ec2.describe_instances(
         Filters=[
             {
@@ -65,7 +65,7 @@ def get_aws_machines(
             },
             {
                 'Name': 'instance-type',
-                'Values': [machine_type]
+                'Values': [instance_type]
             }
         ]
     )
