@@ -13,13 +13,13 @@
 # the S3 buckets and AWS machines to use.
 #
 
-
 import os
 import subprocess
 import time
 
 import boto3
 
+from typing import List
 from pipeline.secrets import Secrets
 
 PEM_FILE = Secrets['PEM_FILE']
@@ -41,36 +41,40 @@ def get_s3_buckets():
     return buckets
 
 
-# TODO:  Add ability to look for particular tags (key,value) because might
-#  have multiple sets of machines
-def get_aws_machines(machine_type='p2.xlarge', location='us-east-1'):
-    """ Look on AWS and determine all the machines that we have running
-    AWS that we can use. The assumption is that we are looking for machines
+def get_aws_machines(
+        instance_type: str='p2.xlarge',
+        region: str='us-east-1',
+        tag_name: str='Name',
+        tag_value: str=''
+    ) -> List[str]:
+    """ Look on AWS and determine all the machines that we have running.
+    The assumption is that we are looking for machines
     of type machine_type.
     """
 
-    machines = []
-
-    ec2 = boto3.client('ec2', region_name=location)
-    response = ec2.describe_instances()
-    reservations = response.get('Reservations')
-    for reservation in reservations:
-        instances = reservation.get('Instances')
-        for instance in instances:
-            instance_location = instance.get('Placement') \
-                .get('AvailabilityZone')
-            instance_type = instance.get('InstanceType')
-            public_dns = instance.get('PublicDnsName')
-            instance_status = instance.get('State').get('Code')
-
-            # Status 16 means running.
-            if instance_status == 16:
-                # Do not look for an exact match for location, because the
-                # desired location could be us-east-1, but the actual
-                # location could be 'us-east-1b'.
-                if location == "*" or instance_location.find(location) > -1:
-                    if machine_type == "*" or instance_type == machine_type:
-                        machines.append(public_dns)
+    ec2 = boto3.client('ec2', region_name=region)
+    response = ec2.describe_instances(
+        Filters=[
+            {
+                'Name': 'instance-state-name',
+                'Values': ['running']
+            },
+            {
+                'Name': f'tag:{tag_name}',
+                'Values': [f'*{tag_value}*']
+            },
+            {
+                'Name': 'instance-type',
+                'Values': [instance_type]
+            }
+        ]
+    )
+    
+    machines = [
+        instance['PublicDnsName'] 
+        for reservation in response['Reservations']
+        for instance in reservation['Instances'] 
+        ]
 
     return machines
 
