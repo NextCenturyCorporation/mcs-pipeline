@@ -6,8 +6,8 @@ import threading
 from pipeline import logger
 from pipeline import util
 from pipeline.mcs_test_runner import McsTestRunner
-from pipeline.mess_config_change import MessConfigChange
-from pipeline.mess_singletask import MessSingleTask
+from pipeline.opics_config_change import OpicsConfigChange
+from pipeline.opics_singletask import OpicsSingleTask
 from pipeline.xserver_check import XServerCheck
 from pipeline.xserver_startup import XServerStartup
 
@@ -17,7 +17,7 @@ from pipeline.xserver_startup import XServerStartup
 TASK_FILE_PATH = "tasks_single_task.txt"
 
 
-class MessRunTasks:
+class OpicsRunTasks:
 
     def __init__(self):
         self.available_machines = []
@@ -48,7 +48,7 @@ class MessRunTasks:
             task_file = task_files_list.pop(0)
             lock.release()
 
-            singleTask = MessSingleTask(machine_dns, task_file, threadlog)
+            singleTask = OpicsSingleTask(machine_dns, task_file, threadlog)
             return_code = singleTask.process()
 
             if return_code > 0:
@@ -112,7 +112,7 @@ class MessRunTasks:
 
     def change_mcs_config(self):
         for machine in self.available_machines:
-            bs = MessConfigChange(machine, self.log)
+            bs = OpicsConfigChange(machine, self.log)
             bs.process()
 
     def run_check_xorg(self):
@@ -132,7 +132,7 @@ class MessRunTasks:
 
 
 if __name__ == '__main__':
-    run_tasks = MessRunTasks()
+    run_tasks = OpicsRunTasks()
     run_tasks.get_machines()
     run_tasks.get_tasks()
 

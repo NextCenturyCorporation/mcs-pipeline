@@ -1,20 +1,20 @@
 #
-# Change the mcs_config.yaml file
+# Change the mcs_config.ini file
 #
 from pipeline import util
 
-file_on_local = "/home/clark/work/mcs/mcs-pipeline/pipeline/mcs_config.yaml"
-dir_on_remote = "/home/ubuntu/mess_original_code/mess_final/"
+file_on_local = "configs/opics/mcs_config.ini"
+dir_on_remote = "/home/ubuntu/mcs_eval3-3.5.0/"
 
 
-class MessConfigChange:
+class OpicsConfigChange:
 
     def __init__(self, machine_dns, log):
         self.machine_dns = machine_dns
         self.log = log
 
     def process(self):
-        self.log.info(f"Copying mcs_config.yaml to machine {self.machine_dns}")
+        self.log.info(f"Copying mcs_config.ini to machine {self.machine_dns}")
 
         return_code = util.copy_file_to_aws(self.machine_dns, file_on_local,
                                          self.log, dir_on_remote)

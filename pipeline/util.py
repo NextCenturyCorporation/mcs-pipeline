@@ -43,7 +43,7 @@ def get_s3_buckets():
 
 # TODO:  Add ability to look for particular tags (key,value) because might
 #  have multiple sets of machines
-def get_aws_machines(machine_type='p2.xlarge', location='us-east-1'):
+def get_aws_machines(machine_type='p2.xlarge', location='us-east-1', name_tag='brian-test'):
     """ Look on AWS and determine all the machines that we have running
     AWS that we can use. The assumption is that we are looking for machines
     of type machine_type.
@@ -62,15 +62,17 @@ def get_aws_machines(machine_type='p2.xlarge', location='us-east-1'):
             instance_type = instance.get('InstanceType')
             public_dns = instance.get('PublicDnsName')
             instance_status = instance.get('State').get('Code')
-
-            # Status 16 means running.
-            if instance_status == 16:
-                # Do not look for an exact match for location, because the
-                # desired location could be us-east-1, but the actual
-                # location could be 'us-east-1b'.
-                if location == "*" or instance_location.find(location) > -1:
-                    if machine_type == "*" or instance_type == machine_type:
-                        machines.append(public_dns)
+            tags = instance.get('Tags')
+            for tag in tags:
+                if tag["Value"] == name_tag:
+                    # Status 16 means running.
+                    if instance_status == 16:
+                        # Do not look for an exact match for location, because the
+                        # desired location could be us-east-1, but the actual
+                        # location could be 'us-east-1b'.
+                        if location == "*" or instance_location.find(location) > -1:
+                            if machine_type == "*" or instance_type == machine_type:
+                                machines.append(public_dns)
 
     return machines
 
