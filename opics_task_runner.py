@@ -14,8 +14,8 @@ from pipeline.xserver_startup import XServerStartup
 # Uncomment one of the following.  single is for testing;  the other
 # is for intphys
 # TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
-TASK_FILE_PATH = "tasks_single_task.txt"
-
+# TASK_FILE_PATH = "tasks_single_task.txt"
+TASK_FILE_PATH = "tasks_juliett.txt"
 
 class OpicsRunTasks:
 
@@ -95,8 +95,10 @@ class OpicsRunTasks:
     def run_xstartup(self):
         ''' Start X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
-            bs = XServerStartup(machine, self.log)
-            bs.process()
+            cmd = "sudo /usr/bin/Xorg :0"
+            return_code = util.shell_run_background(machine, cmd, self.log)
+            if not return_code == 0:
+                self.log.warn(f"Error starting x on {machine}")
 
     def kill_and_restartX(self):
         for machine in self.available_machines:
@@ -126,10 +128,10 @@ if __name__ == '__main__':
     run_tasks.get_tasks()
 
     # Commands to change the Remote machines.  Uncomment them to run them.
-    run_tasks.change_mcs_config()
-    run_tasks.run_xstartup()
-    run_tasks.run_check_xorg()
-    #run_tasks.run_test()   # Note, this is not paralleized
-
-    # Command to actually run the tasks.
+    # run_tasks.change_mcs_config()
+    # run_tasks.run_xstartup()
+    # run_tasks.run_check_xorg()
+    # run_tasks.run_test()   # Note, this is not paralleized
+    #
+    # # Command to actually run the tasks.
     run_tasks.run_tasks()
