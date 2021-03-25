@@ -73,13 +73,6 @@ class OpicsRunTasks:
         self.log.info(f"Tasks {task_files_list}")
 
     def run_tasks(self):
-        self.get_tasks()
-
-        # Determine the DNS for all the machine that we have, default to
-        # us-east-1 and p2.xlarge
-        self.available_machines = util.get_aws_machines()
-        self.log.info(f"Machines available {self.available_machines}")
-
         # Create a thread for each machine
         threads = []
         for machine in self.available_machines:
@@ -95,7 +88,7 @@ class OpicsRunTasks:
         self.log.info("Ending runtasks")
 
     def get_machines(self):
-        self.available_machines = util.get_aws_machines()
+        self.available_machines = util.get_aws_machines(tag_name='ta1', tag_value='opics')
         self.log.info(f"Number of machines {len(self.available_machines)}")
         self.log.info(f"Machines available:  {self.available_machines}")
 
@@ -117,15 +110,11 @@ class OpicsRunTasks:
 
     def run_check_xorg(self):
         ''' Check X Server on all the machines.  Note:  Not parallelized'''
-        self.available_machines = util.get_aws_machines()
-        self.log.info(f"Machines available {self.available_machines}")
-
         for machine in self.available_machines:
             bs = XServerCheck(machine, self.log)
             bs.process()
 
     def run_test(self):
-        self.available_machines = util.get_aws_machines()
         for machine in self.available_machines:
             bs = McsTestRunner(machine, self.log)
             bs.process()
