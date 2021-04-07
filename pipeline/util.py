@@ -13,13 +13,13 @@
 # the S3 buckets and AWS machines to use.
 #
 
-import os
 import subprocess
 import time
+from typing import List
 
 import boto3
+import os
 
-from typing import List
 from pipeline.secrets import Secrets
 
 PEM_FILE = Secrets['PEM_FILE']
@@ -42,11 +42,11 @@ def get_s3_buckets():
 
 
 def get_aws_machines(
-        instance_type: str='p2.xlarge',
-        region: str='us-east-1',
-        tag_name: str='Name',
-        tag_value: str=''
-    ) -> List[str]:
+        instance_type: str = 'p2.xlarge',
+        region: str = 'us-east-1',
+        tag_name: str = 'Name',
+        tag_value: str = ''
+) -> List[str]:
     """ Look on AWS and determine all the machines that we have running.
     The assumption is that we are looking for machines
     of type machine_type.
@@ -74,7 +74,7 @@ def get_aws_machines(
         instance['PublicDnsName']
         for reservation in response['Reservations']
         for instance in reservation['Instances']
-        ]
+    ]
 
     return machines
 
@@ -149,7 +149,8 @@ def shell_run_background(machine_dns, command, log=None):
     return return_code
 
 
-def docker_run_command(machine_dns, json_file_name_fullpath, command, log=None):
+def docker_run_command(machine_dns, json_file_name_fullpath,
+                       command, log=None):
     """ Running a command on a remote machine looks like :
             "ssh -i pem_file user@machine command"
         For ours, it looks like:
@@ -168,7 +169,8 @@ def docker_run_command(machine_dns, json_file_name_fullpath, command, log=None):
     head, tail = os.path.split(json_file_name_fullpath)
     mapped_dir = "/data/"
     process_command = ["ssh", "-i", PEM_FILE, userInfo] + command
-    return_code, output_file = run_command_and_capture_output(process_command, log)
+    return_code, output_file = run_command_and_capture_output(process_command,
+                                                              log)
 
     # Strip the mapped dir from the output file to get the name of
     # the output file on the instance
@@ -179,8 +181,9 @@ def docker_run_command(machine_dns, json_file_name_fullpath, command, log=None):
 
 def copy_file_to_aws(machine_dns, file_name, log=None, remote_dir=""):
     head, tail = os.path.split(file_name)
-    remove_user_info = get_remote_user_info(machine_dns) + ":" + remote_dir + tail
-    process_command = ['scp', '-i', PEM_FILE, file_name, remove_user_info]
+    remote_user = get_remote_user_info(machine_dns)
+    remote_location = remote_user + ":" + remote_dir + tail
+    process_command = ['scp', '-i', PEM_FILE, file_name, remote_location]
     return_code, _ = run_command_and_capture_output(process_command, log)
     return return_code
 

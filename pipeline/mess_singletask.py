@@ -36,7 +36,7 @@ class MessSingleTask(SingleTask):
 
         # Run the command
         return_code = util.shell_run_command(self.machine_dns,
-                                           run_command, self.log)
+                                             run_command, self.log)
         if return_code != 0:
             self.log.warn("Failed on run step")
             return return_code

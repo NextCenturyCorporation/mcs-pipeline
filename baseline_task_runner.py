@@ -2,6 +2,7 @@
 # Run all the tasks (in directory taskfiles/) on all the machines that we have.
 #
 import threading
+
 from os import listdir, path
 from os.path import isfile, join
 
@@ -25,13 +26,13 @@ class BaselineRunTasks:
         self.log = logger.configure_base_logging(dateStr + ".log")
         self.log.info("Starting runtasks")
 
-    def run_thread_on_ec2_machine(self, machine_dns):
+    def thread_on_ec2_machine(self, machine_dns):
         """ Function that runs on its own thread, with thread-local variable of
         the machine to use.  While there are more task files to run, get one
         and run it, exiting the thread when there are no more tasks."""
         dateStr = util.get_date_in_file_format()
         threadlog = logger.configure_logging(machine_dns, dateStr +
-                                            "." + machine_dns)
+                                             "." + machine_dns)
 
         # Lock to be able to count tasks remaining and get one in a
         # thread-safe way.  Otherwise, we could count tasks remaining and
@@ -75,10 +76,10 @@ class BaselineRunTasks:
         # Create a thread for each machine
         threads = []
         for machine in self.available_machines:
-            processThread = threading.Thread(target=self.run_thread_on_ec2_machine,
-                                             args=(machine,))
-            processThread.start()
-            threads.append(processThread)
+            pthread = threading.Thread(target=self.thread_on_ec2_machine,
+                                       args=(machine,))
+            pthread.start()
+            threads.append(pthread)
 
         # Wait for them all to finish
         for thread in threads:

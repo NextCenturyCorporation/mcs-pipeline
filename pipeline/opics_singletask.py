@@ -11,7 +11,9 @@ local_scene_dir = "/home/clark/work/mcs/eval3.5/data/eval/"
 current_tasks_dir = "/home/ubuntu/mcs_eval3-3.5.0/gravity_scenes/"
 
 # The command that will be run to process a scene
-run_command = "cd /home/ubuntu/mcs_eval3-3.5.0 && source activate mcs_opics && python3 eval.py --scenes gravity_scenes"
+run_command = "cd /home/ubuntu/mcs_eval3-3.5.0 " \
+              "&& source activate mcs_opics " \
+              "&& python3 eval.py --scenes gravity_scenes"
 
 
 class OpicsSingleTask(SingleTask):
@@ -34,7 +36,7 @@ class OpicsSingleTask(SingleTask):
 
         # Run the command
         return_code = util.shell_run_command(self.machine_dns,
-                                           run_command, self.log)
+                                             run_command, self.log)
         if return_code != 0:
             self.log.warn("Failed on run step")
             return return_code
