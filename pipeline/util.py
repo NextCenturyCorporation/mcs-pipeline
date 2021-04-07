@@ -69,11 +69,11 @@ def get_aws_machines(
             }
         ]
     )
-    
+
     machines = [
-        instance['PublicDnsName'] 
+        instance['PublicDnsName']
         for reservation in response['Reservations']
-        for instance in reservation['Instances'] 
+        for instance in reservation['Instances']
         ]
 
     return machines
