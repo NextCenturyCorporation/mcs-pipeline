@@ -2,7 +2,6 @@
 # Run all the tasks (in directory taskfiles/) on all the machines that we have.
 #
 import threading
-
 from os import listdir, path
 from os.path import isfile, join
 

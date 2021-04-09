@@ -34,7 +34,7 @@ class MessRunTasks:
         one and run it, exiting the thread when there are no more tasks."""
         dateStr = util.get_date_in_file_format()
         threadlog = logger.configure_logging(machine_dns, dateStr +
-                                            "." + machine_dns)
+                                             "." + machine_dns)
 
         # Lock to be able to count tasks remaining and get one in a
         # thread-safe way. Otherwise, we could count tasks remaining and

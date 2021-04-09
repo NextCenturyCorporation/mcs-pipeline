@@ -24,7 +24,7 @@ class OpicsSingleTask(SingleTask):
 
         # Clear out current tasks
         cmd = "rm -f " + current_tasks_dir + "* || true"
-        return_code = util.shell_run_command(self.machine_dns, cmd, self.log)
+        return_code = util.shell_run_command_remote(self.machine_dns, cmd, self.log)
         if return_code != 0:
             self.log.warn("Failed on rm old tasks step")
             return return_code
@@ -35,8 +35,8 @@ class OpicsSingleTask(SingleTask):
                               local_file, self.log, current_tasks_dir)
 
         # Run the command
-        return_code = util.shell_run_command(self.machine_dns,
-                                             run_command, self.log)
+        return_code = util.shell_run_command_remote(self.machine_dns,
+                                                    run_command, self.log)
         if return_code != 0:
             self.log.warn("Failed on run step")
             return return_code

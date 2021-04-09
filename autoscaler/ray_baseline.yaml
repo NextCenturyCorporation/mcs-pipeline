@@ -1,0 +1,46 @@
+cluster_name: baseline
+initial_workers: 2
+# max_workers: 2                        # Note, 2 is the default
+# idle_timeout_minutes: 5
+
+provider:
+  type: aws
+  region: us-east-1
+  availability_zone: us-east-1a,us-east-1b
+  cache_stopped_nodes: True # True means stopped, false means terminated.
+
+auth:
+  ssh_user: ubuntu
+
+head_node:
+  InstanceType: p2.xlarge
+  ImageId: ami-09de87c68cf55d9ed   # This is the eval3.5 baseline
+
+worker_nodes:
+  InstanceType: p2.xlarge
+  ImageId: ami-09de87c68cf55d9ed   # This is also the eval3.5 baseline
+
+# copy files to
+file_mounts: {
+  "~": "/home/clark/work/mcs/mcs-pipeline"                # Code
+    "~/tasks": "/home/clark/work/mcs/eval3.5/data/eval"     # Tasks
+}
+
+setup_commands:
+  - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
+  - # Can't seem to use the default which uses a wheel, which doesn't work on AWS Ubuntu ????
+  - source activate pytorch_latest_p37
+  - pip install -U ray==1.2.0
+
+# Command to start ray on the head node. You don't need to change this.
+head_start_ray_commands:
+  - ray stop
+  # Removed ulimit, since doesn't like it on AWS Ubuntu.  Not clear why.
+  - ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml
+  # - ulimit -n 65536; ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml
+
+# Command to start ray on worker nodes. You don't need to change this.
+worker_start_ray_commands:
+  - ray stop
+  - ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076
+  # - ulimit -n 65536; ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076

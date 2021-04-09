@@ -17,6 +17,7 @@ from pipeline.xserver_startup import XServerStartup
 # TASK_FILE_PATH = "tasks_single_task.txt"
 TASK_FILE_PATH = "tasks_juliett.txt"
 
+
 class OpicsRunTasks:
 
     def __init__(self):
@@ -34,7 +35,7 @@ class OpicsRunTasks:
         one and run it, exiting the thread when there are no more tasks."""
         dateStr = util.get_date_in_file_format()
         threadlog = logger.configure_logging(machine_dns, dateStr +
-                                            "." + machine_dns)
+                                             "." + machine_dns)
 
         # Lock to be able to count tasks remaining and get one in a
         # thread-safe way. Otherwise, we could count tasks remaining and
@@ -96,7 +97,7 @@ class OpicsRunTasks:
         ''' Start X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
             cmd = "sudo /usr/bin/Xorg :0"
-            return_code = util.shell_run_background(machine, cmd, self.log)
+            return_code = util.shell_run_background_remote(machine, cmd, self.log)
             if not return_code == 0:
                 self.log.warn(f"Error starting x on {machine}")
 

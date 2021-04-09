@@ -20,8 +20,8 @@ class XServerStartup:
         # Start x.  Put in quotes so all one command.
         cmd = "\"cd ~/mcs-pipeline/ && " + \
               "sudo python3 run_startx.py > /dev/null 2>&1 &\""
-        return_code = util.shell_run_background(self.machine_dns,
-                                                cmd, self.log)
+        return_code = util.shell_run_background_remote(self.machine_dns,
+                                                       cmd, self.log)
         if return_code != 0:
             self.log.warn("Failed on starup step")
             return return_code

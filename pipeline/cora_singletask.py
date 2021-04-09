@@ -27,15 +27,15 @@ class CoraSingleTask(SingleTask):
         mod_command = 'sed "s/' + old_scene + '/' + scene_file + '/" ' + \
                       '/home/ubuntu/run_cora.sh > /home/ubuntu/r.sh ' + \
                       '&& chmod +x /home/ubuntu/r.sh'
-        return_code = util.shell_run_command(self.machine_dns,
-                                             mod_command, self.log)
+        return_code = util.shell_run_command_remote(self.machine_dns,
+                                                    mod_command, self.log)
         if return_code != 0:
             self.log.warn("Failed on sed step")
             return return_code
 
         # Run the command
-        return_code = util.shell_run_command(self.machine_dns,
-                                             "/home/ubuntu/r.sh", self.log)
+        return_code = util.shell_run_command_remote(self.machine_dns,
+                                                    "/home/ubuntu/r.sh", self.log)
         if return_code != 0:
             self.log.warn("Failed on run step")
             return return_code
