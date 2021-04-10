@@ -9,12 +9,13 @@ from pipeline.baseline_singletask_ray import BaselineSingleTaskRay
 from pipeline.xserver_check import XServerCheck
 from pipeline.xserver_startup import XServerStartup
 
-TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
+# TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
 TASK_FILE_PATH = "tasks_single_task.txt"
 
 
 @ray.remote
 def run_task(task_file):
+    print(f"Got to here {task_file}")
     # Run the task
     singleTask = BaselineSingleTaskRay(task_file, None)
     return_code = singleTask.process()
@@ -25,6 +26,7 @@ def run_task(task_file):
         # task_files_full_path.append(task_file)
 
 
+@ray.remote
 class BaselineRunTasks:
 
     def __init__(self):
@@ -34,7 +36,11 @@ class BaselineRunTasks:
         self.log = logger.configure_base_logging(dateStr + ".log")
         self.log.info("Starting runtasks")
 
+        self.get_tasks()
+        self.run_tasks()
+
     def get_tasks(self):
+        util.run_command_and_capture_output('ls', self.log)
         task_file = open(TASK_FILE_PATH, 'r')
         lines = task_file.readlines()
         for line in lines:
@@ -66,6 +72,9 @@ class BaselineRunTasks:
 
 
 if __name__ == '__main__':
-    ray.init(address='auto')
-    run_tasks = BaselineRunTasks()
-    run_tasks.run_tasks()
+    ray.init()
+    # ray.init(address='auto')
+    try:
+        baseline_run_tasks = BaselineRunTasks.remote()
+    except Exception as e:
+        print(f"exception {e}")

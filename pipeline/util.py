@@ -112,7 +112,8 @@ def run_command_and_capture_output(commandList, log=None):
     process = subprocess.Popen(commandList,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT,
-                               universal_newlines=True)
+                               universal_newlines=True,
+                               shell=True)
 
     safe_log(log, "", f"Sending the following command: {commandList}")
 

@@ -22,13 +22,13 @@ worker_nodes:
 
 # copy files to
 file_mounts: {
-  "~": "/home/clark/work/mcs/mcs-pipeline"                # Code
-    "~/tasks": "/home/clark/work/mcs/eval3.5/data/eval"     # Tasks
+  "~": "/home/clark/work/mcs/mcs-pipeline",
+  "~/tasks": "/home/clark/work/mcs/eval3.5/data/eval"
 }
 
 setup_commands:
   - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
-  - # Can't seem to use the default which uses a wheel, which doesn't work on AWS Ubuntu ????
+  # Can't seem to use the default which uses a wheel, which doesn't work on AWS Ubuntu ????
   - source activate pytorch_latest_p37
   - pip install -U ray==1.2.0
 
