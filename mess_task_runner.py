@@ -34,7 +34,7 @@ class MessRunTasks:
         one and run it, exiting the thread when there are no more tasks."""
         dateStr = util.get_date_in_file_format()
         threadlog = logger.configure_logging(machine_dns, dateStr +
-                                            "." + machine_dns)
+                                             "." + machine_dns)
 
         # Lock to be able to count tasks remaining and get one in a
         # thread-safe way. Otherwise, we could count tasks remaining and
@@ -102,18 +102,18 @@ class MessRunTasks:
     def run_xstartup(self):
         ''' Start X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
-            bs = XServerStartup(machine, self.log)
-            bs.process()
+            xserver = XServerStartup(machine, self.log)
+            xserver.process()
 
     def kill_and_restartX(self):
         for machine in self.available_machines:
-            bs = XServerStartup(machine, self.log)
-            bs.kill_and_restart()
+            xserver = XServerStartup(machine, self.log)
+            xserver.kill_and_restart()
 
     def change_mcs_config(self):
         for machine in self.available_machines:
-            bs = MessConfigChange(machine, self.log)
-            bs.process()
+            config_change = MessConfigChange(machine, self.log)
+            config_change.process()
 
     def run_check_xorg(self):
         ''' Check X Server on all the machines.  Note:  Not parallelized'''
@@ -121,14 +121,14 @@ class MessRunTasks:
         self.log.info(f"Machines available {self.available_machines}")
 
         for machine in self.available_machines:
-            bs = XServerCheck(machine, self.log)
-            bs.process()
+            xserver_check = XServerCheck(machine, self.log)
+            xserver_check.process()
 
     def run_test(self):
         self.available_machines = util.get_aws_machines()
         for machine in self.available_machines:
-            bs = McsTestRunner(machine, self.log)
-            bs.process()
+            test_runner = McsTestRunner(machine, self.log)
+            test_runner.process()
 
 
 if __name__ == '__main__':

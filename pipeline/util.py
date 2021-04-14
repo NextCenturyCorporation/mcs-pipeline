@@ -13,12 +13,12 @@
 # the S3 buckets and AWS machines to use.
 #
 
+import os
 import subprocess
 import time
 from typing import List
 
 import boto3
-import os
 
 from pipeline.secrets import Secrets
 

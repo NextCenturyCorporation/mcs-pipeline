@@ -7,15 +7,11 @@ from pipeline import logger
 from pipeline import util
 from pipeline.cora_singletask import CoraSingleTask
 from pipeline.mcs_test_runner import McsTestRunner
-from pipeline.mess_config_change import MessConfigChange
-from pipeline.mess_singletask import MessSingleTask
-from pipeline.xserver_check import XServerCheck
 from pipeline.xserver_startup import XServerStartup
 
 # Uncomment one of the following.  single is for testing;
 # TASK_FILE_PATH = "tasks_single_task.txt"
 TASK_FILE_PATH = "tasks_juliett.txt"
-
 
 # Config file location
 config_on_local = "config_level2.ini"
@@ -39,7 +35,7 @@ class CoraRunTasks:
         one and run it, exiting the thread when there are no more tasks."""
         dateStr = util.get_date_in_file_format()
         threadlog = logger.configure_logging(machine_dns, dateStr +
-                                            "." + machine_dns)
+                                             "." + machine_dns)
 
         # Lock to be able to count tasks remaining and get one in a
         # thread-safe way. Otherwise, we could count tasks remaining and
@@ -85,7 +81,7 @@ class CoraRunTasks:
         threads = []
         for machine in self.available_machines:
             process_thread = threading.Thread(target=self.run_thread_on_ec2_machine,
-                                             args=(machine,))
+                                              args=(machine,))
             process_thread.start()
             threads.append(process_thread)
 
@@ -105,13 +101,13 @@ class CoraRunTasks:
         for machine in self.available_machines:
             cmd = "/home/ubuntu/start_cora_docker.sh"
             return_code = util.shell_run_background(machine, cmd, self.log)
-            print(f"Tried to start docker on CORA machine {machine}" +
-                  f" Result: {return_code}")
+            self.log.debug(f"Tried to start docker on CORA machine {machine}" +
+                           f" Result: {return_code}")
 
     def kill_and_restartX(self):
         for machine in self.available_machines:
-            bs = XServerStartup(machine, self.log)
-            bs.kill_and_restart()
+            xserver = XServerStartup(machine, self.log)
+            xserver.kill_and_restart()
 
     def change_mcs_config(self):
         for machine in self.available_machines:
@@ -126,14 +122,14 @@ class CoraRunTasks:
         for machine in self.available_machines:
             cmd = "docker exec `docker ps -a | grep cora | awk '{print $1}'` ps auxwww | grep Xorg"
             return_code = util.shell_run_command(machine, cmd, self.log)
-            print(f"X Status on remote machine {machine}" +
-                  f" Result: {return_code}")
+            self.log.debug(f"X Status on remote machine {machine}" +
+                           f" Result: {return_code}")
 
     def run_test(self):
         self.available_machines = util.get_aws_machines()
         for machine in self.available_machines:
-            bs = McsTestRunner(machine, self.log)
-            bs.process()
+            test_runner = McsTestRunner(machine, self.log)
+            test_runner.process()
 
 
 if __name__ == '__main__':

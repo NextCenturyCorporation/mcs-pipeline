@@ -17,6 +17,7 @@ from pipeline.xserver_startup import XServerStartup
 # TASK_FILE_PATH = "tasks_single_task.txt"
 TASK_FILE_PATH = "tasks_juliett.txt"
 
+
 class OpicsRunTasks:
 
     def __init__(self):
@@ -34,7 +35,7 @@ class OpicsRunTasks:
         one and run it, exiting the thread when there are no more tasks."""
         dateStr = util.get_date_in_file_format()
         threadlog = logger.configure_logging(machine_dns, dateStr +
-                                            "." + machine_dns)
+                                             "." + machine_dns)
 
         # Lock to be able to count tasks remaining and get one in a
         # thread-safe way. Otherwise, we could count tasks remaining and
@@ -102,24 +103,24 @@ class OpicsRunTasks:
 
     def kill_and_restartX(self):
         for machine in self.available_machines:
-            bs = XServerStartup(machine, self.log)
-            bs.kill_and_restart()
+            xserver = XServerStartup(machine, self.log)
+            xserver.kill_and_restart()
 
     def change_mcs_config(self):
         for machine in self.available_machines:
-            bs = OpicsConfigChange(machine, self.log)
-            bs.process()
+            config_change = OpicsConfigChange(machine, self.log)
+            config_change.process()
 
     def run_check_xorg(self):
         ''' Check X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
-            bs = XServerCheck(machine, self.log)
-            bs.process()
+            xserver_check = XServerCheck(machine, self.log)
+            xserver_check.process()
 
     def run_test(self):
         for machine in self.available_machines:
-            bs = McsTestRunner(machine, self.log)
-            bs.process()
+            test_runner = McsTestRunner(machine, self.log)
+            test_runner.process()
 
 
 if __name__ == '__main__':

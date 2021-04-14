@@ -2,7 +2,6 @@
 # Run all the tasks (in directory taskfiles/) on all the machines that we have.
 #
 import threading
-
 from os import listdir, path
 from os.path import isfile, join
 
@@ -70,7 +69,7 @@ class BaselineRunTasks:
                                 for f in listdir(TASK_FILE_PATH) if
                                 isfile(join(TASK_FILE_PATH, f))]
         task_files_full_path.sort()
-        print(f"Tasks file {task_files_full_path}")
+        self.log.info(f"Tasks file {task_files_full_path}")
         self.log.info(f"Number of tasks: {len(task_files_full_path)}")
 
         # Create a thread for each machine
@@ -92,16 +91,16 @@ class BaselineRunTasks:
         self.log.info(f"Machines available {self.available_machines}")
 
         for machine in self.available_machines:
-            bs = XServerStartup(machine, self.log)
-            bs.process()
+            xserver = XServerStartup(machine, self.log)
+            xserver.process()
 
     def run_check_xorg(self):
         self.available_machines = util.get_aws_machines()
         self.log.info(f"Machines available {self.available_machines}")
 
         for machine in self.available_machines:
-            bs = XServerCheck(machine, self.log)
-            bs.process()
+            xserver_check = XServerCheck(machine, self.log)
+            xserver_check.process()
 
 
 if __name__ == '__main__':
