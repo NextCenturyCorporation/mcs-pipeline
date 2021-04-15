@@ -53,7 +53,7 @@ def test_get_aws_machines():
     print(json.dumps(machines, indent=4, default=str))
 
     machines = util.get_aws_machines(machine_type='p2.xlarge',
-                                   location='us-east-1')
+                                     location='us-east-1')
     print("p2.xlarge Current Machines: ")
     print(json.dumps(machines, indent=4, default=str))
 

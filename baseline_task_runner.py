@@ -25,13 +25,13 @@ class BaselineRunTasks:
         self.log = logger.configure_base_logging(dateStr + ".log")
         self.log.info("Starting runtasks")
 
-    def run_thread_on_ec2_machine(self, machine_dns):
+    def thread_on_ec2_machine(self, machine_dns):
         """ Function that runs on its own thread, with thread-local variable of
         the machine to use.  While there are more task files to run, get one
         and run it, exiting the thread when there are no more tasks."""
         dateStr = util.get_date_in_file_format()
         threadlog = logger.configure_logging(machine_dns, dateStr +
-                                            "." + machine_dns)
+                                             "." + machine_dns)
 
         # Lock to be able to count tasks remaining and get one in a
         # thread-safe way.  Otherwise, we could count tasks remaining and
@@ -69,16 +69,16 @@ class BaselineRunTasks:
                                 for f in listdir(TASK_FILE_PATH) if
                                 isfile(join(TASK_FILE_PATH, f))]
         task_files_full_path.sort()
-        print(f"Tasks file {task_files_full_path}")
+        self.log.info(f"Tasks file {task_files_full_path}")
         self.log.info(f"Number of tasks: {len(task_files_full_path)}")
 
         # Create a thread for each machine
         threads = []
         for machine in self.available_machines:
-            processThread = threading.Thread(target=self.run_thread_on_ec2_machine,
-                                             args=(machine,))
-            processThread.start()
-            threads.append(processThread)
+            pthread = threading.Thread(target=self.thread_on_ec2_machine,
+                                       args=(machine,))
+            pthread.start()
+            threads.append(pthread)
 
         # Wait for them all to finish
         for thread in threads:
@@ -91,16 +91,16 @@ class BaselineRunTasks:
         self.log.info(f"Machines available {self.available_machines}")
 
         for machine in self.available_machines:
-            bs = XServerStartup(machine, self.log)
-            bs.process()
+            xserver = XServerStartup(machine, self.log)
+            xserver.process()
 
     def run_check_xorg(self):
         self.available_machines = util.get_aws_machines()
         self.log.info(f"Machines available {self.available_machines}")
 
         for machine in self.available_machines:
-            bs = XServerCheck(machine, self.log)
-            bs.process()
+            xserver_check = XServerCheck(machine, self.log)
+            xserver_check.process()
 
 
 if __name__ == '__main__':

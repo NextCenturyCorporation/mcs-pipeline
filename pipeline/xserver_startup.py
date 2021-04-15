@@ -18,10 +18,10 @@ class XServerStartup:
         self.log.info(f"Startup on machine {self.machine_dns}")
 
         # Start x.  Put in quotes so all one command.
-        cmd = "\"cd ~/ai2thor-docker/ && " + \
+        cmd = "\"cd ~/mcs-pipeline/ && " + \
               "sudo python3 run_startx.py > /dev/null 2>&1 &\""
         return_code = util.shell_run_background(self.machine_dns,
-                                              cmd, self.log)
+                                                cmd, self.log)
         if return_code != 0:
             self.log.warn("Failed on starup step")
             return return_code
