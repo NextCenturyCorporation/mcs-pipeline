@@ -160,6 +160,36 @@ def shell_run_background_remote(machine_dns, command, log=None):
     return return_code
 
 
+def docker_run_command(machine_dns, json_file_name_fullpath,
+                       command, log=None):
+    """ Running a command on a remote machine looks like :
+            "ssh -i pem_file user@machine command"
+        For ours, it looks like:
+            "ssh -i pem_file user@machine docker run --privileged -v
+            `pwd`:/data dockerimage python3 ta1_code /data/json_file"
+
+        We are using volume mapping to make the json file available to
+        the docker, by mapping the home directory on the instance to the /data
+        directory in the docker.  That means that the docker image will see
+        the file as /data/filename.  Similarly, when the docker image
+        writes to the output (/data/output_file), we will need to strip
+        off the /data and get output_file from the instance.
+    """
+    userInfo = get_remote_user_info(machine_dns)
+
+    head, tail = os.path.split(json_file_name_fullpath)
+    mapped_dir = "/data/"
+    process_command = ["ssh", "-i", PEM_FILE, userInfo] + command
+    return_code, output_file = run_command_and_capture_output(process_command,
+                                                              log)
+
+    # Strip the mapped dir from the output file to get the name of
+    # the output file on the instance
+    if output_file is not None:
+        output_file = output_file.partition(mapped_dir)[2]
+    return return_code, output_file
+
+
 def copy_file_to_aws(machine_dns, file_name, log=None, remote_dir=""):
     head, tail = os.path.split(file_name)
     remote_user = get_remote_user_info(machine_dns)

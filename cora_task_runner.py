@@ -101,13 +101,13 @@ class CoraRunTasks:
         for machine in self.available_machines:
             cmd = "/home/ubuntu/start_cora_docker.sh"
             return_code = util.shell_run_background_remote(machine, cmd, self.log)
-            print(f"Tried to start docker on CORA machine {machine}" +
-                  f" Result: {return_code}")
+            self.log.debug(f"Tried to start docker on CORA machine {machine}" +
+                           f" Result: {return_code}")
 
     def kill_and_restartX(self):
         for machine in self.available_machines:
-            bs = XServerStartup(machine, self.log)
-            bs.kill_and_restart()
+            xserver = XServerStartup(machine, self.log)
+            xserver.kill_and_restart()
 
     def change_mcs_config(self):
         for machine in self.available_machines:
@@ -122,14 +122,14 @@ class CoraRunTasks:
         for machine in self.available_machines:
             cmd = "docker exec `docker ps -a | grep cora | awk '{print $1}'` ps auxwww | grep Xorg"
             return_code = util.shell_run_command_remote(machine, cmd, self.log)
-            print(f"X Status on remote machine {machine}" +
-                  f" Result: {return_code}")
+            self.log.debug(f"X Status on remote machine {machine}" +
+                           f" Result: {return_code}")
 
     def run_test(self):
         self.available_machines = util.get_aws_machines()
         for machine in self.available_machines:
-            bs = McsTestRunner(machine, self.log)
-            bs.process()
+            test_runner = McsTestRunner(machine, self.log)
+            test_runner.process()
 
 
 if __name__ == '__main__':
