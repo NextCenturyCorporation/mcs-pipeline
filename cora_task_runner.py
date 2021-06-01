@@ -10,11 +10,11 @@ from pipeline.mcs_test_runner import McsTestRunner
 from pipeline.xserver_startup import XServerStartup
 
 # Uncomment one of the following.  single is for testing;
-# TASK_FILE_PATH = "tasks_single_task.txt"
-TASK_FILE_PATH = "tasks_juliett.txt"
+# TASK_FILE_PATH = "scenes_single_scene.txt"
+TASK_FILE_PATH = "scenes_juliett.txt"
 
 # Config file location
-config_on_local = "config_level2.ini"
+config_on_local = "mcs_config_cora_level2.ini"
 remote_config_file_directory = "/home/ubuntu/workspace/GenPRAM.jl/GenAgent/omg/"
 
 

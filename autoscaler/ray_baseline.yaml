@@ -1,13 +1,18 @@
+#
+#   Configuration file for:
+#         Team:   Baseline
+#
+# This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
+
 cluster_name: baseline
 initial_workers: 2
-# max_workers: 2                        # Note, 2 is the default
-# idle_timeout_minutes: 5
+max_workers: 20                        # 2 is the default
 
 provider:
   type: aws
   region: us-east-1
   availability_zone: us-east-1a,us-east-1b
-  cache_stopped_nodes: True # True means stopped, false means terminated.
+  cache_stopped_nodes: True          # Default True means stopped, false means terminate.
 
 auth:
   ssh_user: ubuntu
@@ -20,10 +25,9 @@ worker_nodes:
   InstanceType: p2.xlarge
   ImageId: ami-09de87c68cf55d9ed   # This is also the eval3.5 baseline
 
-# copy files to
+# If needed, can copy files to remote machines.  However, they should be configured to run from a script,
+# so this should not be needed
 file_mounts: {
-  "~": "/home/clark/work/mcs/mcs-pipeline",
-  "~/tasks": "/home/clark/work/mcs/eval3.5/data/eval"
 }
 
 setup_commands:
@@ -35,8 +39,8 @@ setup_commands:
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
   - ray stop
-  # Removed ulimit, since doesn't like it on AWS Ubuntu.  Not clear why.
   - ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml
+  # NOTE:  Removed ulimit, since doesn't like it on AWS Ubuntu.  Not clear why.
   # - ulimit -n 65536; ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml
 
 # Command to start ray on worker nodes. You don't need to change this.

@@ -14,8 +14,8 @@ from pipeline.xserver_startup import XServerStartup
 # Uncomment one of the following.  single is for testing;  the other
 # is for intphys
 # TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
-# TASK_FILE_PATH = "tasks_single_task.txt"
-TASK_FILE_PATH = "tasks_juliett.txt"
+# TASK_FILE_PATH = "scenes_single_scene.txt"
+TASK_FILE_PATH = "scenes_juliett.txt"
 
 
 class OpicsRunTasks:
