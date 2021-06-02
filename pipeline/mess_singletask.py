@@ -11,7 +11,7 @@ all_tasks_dir = "/home/ubuntu/tasks/passive/all/"
 current_tasks_dir = "/home/ubuntu/mess_original_code/mess_final/tasks/"
 
 # The command that will be run to process a scene
-run_command = "cd /home/ubuntu/mess_original_code/mess_final/ && ./runall.sh"
+run_command = "cd /home/ubuntu/mess_original_code/mess_final/ && ./mess_runall.sh"
 
 
 class MessSingleTask(SingleTask):

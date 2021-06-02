@@ -32,7 +32,7 @@ class BaselineSingleTask(SingleTask):
 
         # Run the command
         cmd = "source activate pytorch_latest_p37 " + \
-              "&& cd /home/ubuntu/baseline && ./runall.sh"
+              "&& cd /home/ubuntu/baseline && ./mess_runall.sh"
         return_code = util.shell_run_command_remote(self.machine_dns, cmd, self.log)
         if return_code != 0:
             self.log.warn("Failed on run step")

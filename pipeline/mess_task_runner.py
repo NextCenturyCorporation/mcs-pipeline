@@ -5,20 +5,19 @@ import threading
 
 from pipeline import logger
 from pipeline import util
-from pipeline.cora_singletask import CoraSingleTask
 from pipeline.mcs_test_runner import McsTestRunner
+from pipeline.mess_config_change import MessConfigChange
+from pipeline.mess_singletask import MessSingleTask
+from pipeline.xserver_check import XServerCheck
 from pipeline.xserver_startup import XServerStartup
 
-# Uncomment one of the following.  single is for testing;
-# TASK_FILE_PATH = "scenes_single_scene.txt"
-TASK_FILE_PATH = "scenes_juliett.txt"
-
-# Config file location
-config_on_local = "mcs_config_cora_level2.ini"
-remote_config_file_directory = "/home/ubuntu/workspace/GenPRAM.jl/GenAgent/omg/"
+# Uncomment one of the following.  single is for testing;  the other
+# is for intphys
+# TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
+TASK_FILE_PATH = "../scenes_single_scene.txt"
 
 
-class CoraRunTasks:
+class MessRunTasks:
 
     def __init__(self):
         self.available_machines = []
@@ -49,7 +48,7 @@ class CoraRunTasks:
             task_file = task_files_list.pop(0)
             lock.release()
 
-            singleTask = CoraSingleTask(machine_dns, task_file, threadlog)
+            singleTask = MessSingleTask(machine_dns, task_file, threadlog)
             return_code = singleTask.process()
 
             if return_code > 0:
@@ -74,16 +73,20 @@ class CoraRunTasks:
         self.log.info(f"Tasks {task_files_list}")
 
     def run_tasks(self):
-        """ Run the tasks (you must call get_tasks first) on all the machine
-        (you must call get_machines first)"""
+        self.get_tasks()
+
+        # Determine the DNS for all the machine that we have, default to
+        # us-east-1 and p2.xlarge
+        self.available_machines = util.get_aws_machines()
+        self.log.info(f"Machines available {self.available_machines}")
 
         # Create a thread for each machine
         threads = []
         for machine in self.available_machines:
-            process_thread = threading.Thread(target=self.run_thread_on_ec2_machine,
-                                              args=(machine,))
-            process_thread.start()
-            threads.append(process_thread)
+            processThread = threading.Thread(target=self.run_thread_on_ec2_machine,
+                                             args=(machine,))
+            processThread.start()
+            threads.append(processThread)
 
         # Wait for them all to finish
         for thread in threads:
@@ -92,17 +95,15 @@ class CoraRunTasks:
         self.log.info("Ending runtasks")
 
     def get_machines(self):
-        self.available_machines = util.get_aws_machines(tag_name='ta1', tag_value='cora')
+        self.available_machines = util.get_aws_machines()
         self.log.info(f"Number of machines {len(self.available_machines)}")
         self.log.info(f"Machines available:  {self.available_machines}")
 
     def run_xstartup(self):
         ''' Start X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
-            cmd = "/home/ubuntu/start_cora_docker.sh"
-            return_code = util.shell_run_background_remote(machine, cmd, self.log)
-            self.log.debug(f"Tried to start docker on CORA machine {machine}" +
-                           f" Result: {return_code}")
+            xserver = XServerStartup(machine, self.log)
+            xserver.process()
 
     def kill_and_restartX(self):
         for machine in self.available_machines:
@@ -111,19 +112,17 @@ class CoraRunTasks:
 
     def change_mcs_config(self):
         for machine in self.available_machines:
-            return_code = util.copy_file_to_aws(machine, config_on_local,
-                                                self.log,
-                                                remote_config_file_directory)
-            if not return_code == 0:
-                self.log.warn(f"Error copying new config {return_code}")
+            config_change = MessConfigChange(machine, self.log)
+            config_change.process()
 
     def run_check_xorg(self):
         ''' Check X Server on all the machines.  Note:  Not parallelized'''
+        self.available_machines = util.get_aws_machines()
+        self.log.info(f"Machines available {self.available_machines}")
+
         for machine in self.available_machines:
-            cmd = "docker exec `docker ps -a | grep cora | awk '{print $1}'` ps auxwww | grep Xorg"
-            return_code = util.shell_run_command_remote(machine, cmd, self.log)
-            self.log.debug(f"X Status on remote machine {machine}" +
-                           f" Result: {return_code}")
+            xserver_check = XServerCheck(machine, self.log)
+            xserver_check.process()
 
     def run_test(self):
         self.available_machines = util.get_aws_machines()
@@ -133,14 +132,14 @@ class CoraRunTasks:
 
 
 if __name__ == '__main__':
-    run_tasks = CoraRunTasks()
+    run_tasks = MessRunTasks()
     run_tasks.get_machines()
     run_tasks.get_tasks()
 
     # Commands to change the Remote machines.  Uncomment them to run them.
     # run_tasks.change_mcs_config()
-    # run_tasks.run_xstartup()
-    # run_tasks.run_check_xorg()
+    # run_tasks.runXStartup()
+    # run_tasks.runCheckXorg()
     # run_tasks.run_test()   # Note, this is not paralleized
 
     # Command to actually run the tasks.

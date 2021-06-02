@@ -55,7 +55,7 @@ def test_get_aws_machines():
 def run_test_mess():
     machine = "ec2-52-205-76-200.compute-1.amazonaws.com"
     run_command = "cd /home/ubuntu/mess_original_code/mess_final/ && " + \
-                  " ./runall.sh"
+                  " ./mess_runall.sh"
     util.shell_run_command_remote(machine, run_command, None)
 
 
