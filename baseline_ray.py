@@ -52,8 +52,8 @@ class BaselineRunScenes:
 
         self.scene_files_list = []
 
-        dateStr = util.get_date_in_file_format()
-        self.log = logger.configure_base_logging(dateStr + ".log")
+        date_str = util.get_date_in_file_format()
+        self.log = logger.configure_base_logging(date_str + ".log")
         self.log.info("Starting run scenes")
 
         self.get_scenes()
@@ -110,12 +110,8 @@ def parse_args():
 
 
 if __name__ == '__main__':
-
     args = parse_args()
-
     ray.init()
-    # ray.init(address='auto')
-
     try:
         baseline_run_tasks = BaselineRunScenes(args)
     except Exception as e:
