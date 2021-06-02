@@ -48,6 +48,11 @@ class MCSRayActor:
 
         # TODO:  Return more information from the script about how it went and results
         ret = os.system(cmd)
+
+        # TODO:  Remove the mcs_config.ini file since it may have AWS information in it
+
+        # TODO:  Long term.  copy the files to S3???
+
         return ret
 
 

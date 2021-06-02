@@ -23,7 +23,7 @@ head_node:
 
 worker_nodes:
   InstanceType: p2.xlarge
-  ImageId: ami-09fcc141b05b116dc   # This is also the eval3.5 baseline
+  ImageId: ami-09fcc141b05b116dc     # This is also the eval3.5 baseline
 
 # If needed, can copy files to remote machines.  However, they should be configured to run from a script,
 # so this should not be needed
@@ -31,7 +31,7 @@ file_mounts: {
 }
 
 setup_commands:
-    - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
+  - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
   # Can't seem to use the default which uses a wheel, which doesn't work on AWS Ubuntu ????
   # - source activate pytorch_latest_p37
   # - pip install -U ray==1.2.0
