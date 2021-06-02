@@ -1,11 +1,16 @@
 #
-# Use Ray to run all the scenes
+# Use Ray to run all the scenes.
+#
+# Usage:   python pipeline_ray.py configs/execution_config.ini configs/mcs_config.ini
+#          where execution_config.ini has run_script and scenes information
+#                mcs_config.ini has metadata level, team, evaluation, etc.
 #
 import argparse
 import configparser
 import json
 import os
 import pathlib
+import time
 import traceback
 import uuid
 
@@ -17,7 +22,7 @@ from pipeline import util
 
 @ray.remote
 class MCSRayActor:
-    """Simple Ray Actor that calls a script on the remote machine """
+    """Ray Actor that calls a script on the remote machine """
 
     def __init__(self, run_script: str):
         self.identifier = uuid.uuid4()
@@ -26,20 +31,22 @@ class MCSRayActor:
     def run_scene(self, mcs_config, scene_config):
         # Save the mcs_config information as /tmp/mcs_config.ini
         mcs_config_filename = "/tmp/mcs_config.ini"
-        self.log.info(f"Saving mcs config information to {mcs_config_filename}")
+        print(f"Saving mcs config information to {mcs_config_filename}")
         with open(mcs_config_filename, 'w') as mcs_config_file:
             for line in mcs_config:
                 mcs_config_file.write(line)
 
         # Save the scene config information
         scene_config_filename = "/tmp/" + str(self.identifier) + ".json"
-        self.log.info(f"Saving scene information to {scene_config_filename}")
+        print(f"Saving scene information to {scene_config_filename}")
         with open(scene_config_filename, 'w') as scene_config_file:
             json.dump(scene_config, scene_config_file)
 
         # Run the script on the machine
         cmd = f'{self.run_script} {mcs_config_filename} {scene_config_filename}'
-        self.log.info(f"In run scene.  Running {cmd}")
+        print(f"In run scene.  Running {cmd}")
+
+        # TODO:  Return more information from the script about how it went and results
         ret = os.system(cmd)
         return ret
 
@@ -88,18 +95,18 @@ class SceneRunner:
         mcs_actor = MCSRayActor.remote(
             run_script=self.exec_config['MCS']['run_script']
         )
-        self.log.info(f"Running {len(self.scene_files_list)} gravity scenes")
+        self.log.info(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
         for scene_ref in self.scene_files_list:
             with open(str(scene_ref)) as scene_file:
                 job_ids.append(mcs_actor.run_scene.remote(self.mcs_config, json.load(scene_file)))
-        self.log.info(*job_ids, sep='\n')
 
         not_done = job_ids
         while not_done:
             done, not_done = ray.wait(not_done)
-            result = ray.get(done)
-            self.log.info(result)
+            for done_ref in done:
+                result = ray.get(done_ref)
+                self.log.info(f"Result of {done_ref}:  {result}")
 
 
 def parse_args():
@@ -123,4 +130,7 @@ if __name__ == '__main__':
         print(f"exception {e}")
         traceback.print_exc()
 
-    input("Finished")
+    # Give it time to wrap up, produce output from the ray workers
+    time.sleep(2)
+    print("\n*********************************")
+    input("Finished.  Hit enter to finish ")
