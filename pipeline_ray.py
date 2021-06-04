@@ -128,7 +128,12 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+
+    # TODO:  If running local, do ray.init().  If doing remote/cluster, do (address='auto').  Add
+    # command line switch to determine which to use
+    # ray.init(address='auto')
     ray.init()
+
     try:
         scene_runner = SceneRunner(args)
     except Exception as e:

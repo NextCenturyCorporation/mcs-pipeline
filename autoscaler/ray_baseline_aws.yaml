@@ -34,7 +34,7 @@ setup_commands:
   - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
   # Can't seem to use the default which uses a wheel, which doesn't work on AWS Ubuntu ????
   # - source activate pytorch_latest_p37
-  # - pip install -U ray==1.2.0
+  - pip install -U ray==1.3.0
 
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
