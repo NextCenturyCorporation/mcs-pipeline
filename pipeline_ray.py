@@ -46,12 +46,15 @@ class MCSRayActor:
         cmd = f'{self.run_script} {mcs_config_filename} {scene_config_filename}'
         print(f"In run scene.  Running {cmd}")
 
-        # TODO:  Return more information from the script about how it went and results
+        # TODO MCS-709:  Return more information from the script about how it went, and handle the
+        # results, either re-trying or reporting failure.
         ret = os.system(cmd)
 
-        # TODO:  Remove the mcs_config.ini file since it may have AWS information in it
 
-        # TODO:  Long term.  copy the files to S3???
+        # TODO MCS-702:  Send AWS S3 Parameters in Pipeline, Make them Ephemeral.  Until MCS-674, which will
+        # move it entirely to the pipeline
+
+        # TODO  MCS-674:  Move Evaluation Code out of Python API (and into the pipeline)
 
         return ret
 
@@ -76,7 +79,7 @@ class SceneRunner:
         self.get_scenes()
         self.run_scenes()
 
-    def read_mcs_config(selfs, mcs_config_filename: str):
+    def read_mcs_config(self, mcs_config_filename: str):
         with open(mcs_config_filename, 'r') as mcs_config_file:
             lines = mcs_config_file.readlines()
         return lines
@@ -129,8 +132,8 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    # TODO:  If running local, do ray.init().  If doing remote/cluster, do (address='auto').  Add
-    # command line switch to determine which to use
+    # TODO MCS-711:  If running local, do ray.init().  If doing remote/cluster, do (address='auto').
+    #  Add command line switch or configuration to determine which to use
     # ray.init(address='auto')
     ray.init()
 
