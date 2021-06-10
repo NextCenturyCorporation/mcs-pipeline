@@ -8,7 +8,7 @@ import os
 import traceback
 from shutil import copyfile
 
-from pipeline import util
+from old_pipeline import util
 from pipeline.logger import configure_logging
 
 # The baseline code runs all the scenes in this directory.

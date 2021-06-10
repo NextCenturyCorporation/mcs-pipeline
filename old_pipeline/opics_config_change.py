@@ -1,7 +1,7 @@
 #
 # Change the mcs_config_opics_oracle.ini file
 #
-from pipeline import util
+from old_pipeline import util
 
 file_on_local = "configs/opics/mcs_config_opics_oracle.ini"
 dir_on_remote = "/home/ubuntu/mcs_eval3-3.5.0/"

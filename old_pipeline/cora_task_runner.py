@@ -4,10 +4,10 @@
 import threading
 
 from pipeline import logger
-from pipeline import util
-from pipeline.cora_singletask import CoraSingleTask
-from pipeline.mcs_test_runner import McsTestRunner
-from pipeline.xserver_startup import XServerStartup
+from old_pipeline import util
+from old_pipeline.cora_singletask import CoraSingleTask
+from old_pipeline.mcs_test_runner import McsTestRunner
+from old_pipeline.xserver_startup import XServerStartup
 
 # Uncomment one of the following.  single is for testing;
 # TASK_FILE_PATH = "scenes_single_scene.txt"

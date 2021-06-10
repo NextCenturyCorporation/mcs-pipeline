@@ -15,23 +15,15 @@
 
 import os
 import subprocess
-import time
 from typing import List
 
 import boto3
 import psutil
 
-from pipeline.secrets import Secrets
+from old_pipeline.secrets import Secrets
 
 PEM_FILE = Secrets['PEM_FILE']
 USERNAME = Secrets['USERNAME']
-
-
-def get_date_in_file_format():
-    """Get the date in a format like 2020-03-01, useful for creating files"""
-    timeInFileFormat = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-    return timeInFileFormat
-
 
 def get_s3_buckets():
     """ Look on AWS and get the list of buckets"""

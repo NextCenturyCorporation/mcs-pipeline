@@ -4,7 +4,7 @@
 #
 import threading
 
-from pipeline import util
+from old_pipeline import util
 
 
 class XServerStartup:

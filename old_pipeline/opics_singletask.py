@@ -3,8 +3,8 @@
 #
 import os.path
 
-from pipeline import util
-from pipeline.singletask import SingleTask
+from old_pipeline import util
+from old_pipeline.singletask import SingleTask
 
 # Where to find tasks.  Be sure to have '/' at end
 local_scene_dir = "/home/clark/work/mcs/eval3.5/data/eval/"

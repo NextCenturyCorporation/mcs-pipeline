@@ -1,7 +1,7 @@
 #
 # Change the mcs_config.yaml file
 #
-from pipeline import util
+from old_pipeline import util
 
 file_on_local = "/home/clark/work/mcs/mcs-pipeline/pipeline/mcs_config.yaml"
 dir_on_remote = "/home/ubuntu/mess_original_code/mess_final/"

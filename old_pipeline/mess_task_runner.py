@@ -4,21 +4,20 @@
 import threading
 
 from pipeline import logger
-from pipeline import util
-from pipeline.mcs_test_runner import McsTestRunner
-from pipeline.opics_config_change import OpicsConfigChange
-from pipeline.opics_singletask import OpicsSingleTask
-from pipeline.xserver_check import XServerCheck
-from pipeline.xserver_startup import XServerStartup
+from old_pipeline import util
+from old_pipeline.mcs_test_runner import McsTestRunner
+from old_pipeline.mess_config_change import MessConfigChange
+from old_pipeline.mess_singletask import MessSingleTask
+from old_pipeline.xserver_check import XServerCheck
+from old_pipeline.xserver_startup import XServerStartup
 
 # Uncomment one of the following.  single is for testing;  the other
 # is for intphys
 # TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
-# TASK_FILE_PATH = "scenes_single_scene.txt"
-TASK_FILE_PATH = "../scenes_juliett.txt"
+TASK_FILE_PATH = "../scenes_single_scene.txt"
 
 
-class OpicsRunTasks:
+class MessRunTasks:
 
     def __init__(self):
         self.available_machines = []
@@ -49,7 +48,7 @@ class OpicsRunTasks:
             task_file = task_files_list.pop(0)
             lock.release()
 
-            singleTask = OpicsSingleTask(machine_dns, task_file, threadlog)
+            singleTask = MessSingleTask(machine_dns, task_file, threadlog)
             return_code = singleTask.process()
 
             if return_code > 0:
@@ -74,6 +73,13 @@ class OpicsRunTasks:
         self.log.info(f"Tasks {task_files_list}")
 
     def run_tasks(self):
+        self.get_tasks()
+
+        # Determine the DNS for all the machine that we have, default to
+        # us-east-1 and p2.xlarge
+        self.available_machines = util.get_aws_machines()
+        self.log.info(f"Machines available {self.available_machines}")
+
         # Create a thread for each machine
         threads = []
         for machine in self.available_machines:
@@ -89,17 +95,15 @@ class OpicsRunTasks:
         self.log.info("Ending runtasks")
 
     def get_machines(self):
-        self.available_machines = util.get_aws_machines(tag_name='ta1', tag_value='opics')
+        self.available_machines = util.get_aws_machines()
         self.log.info(f"Number of machines {len(self.available_machines)}")
         self.log.info(f"Machines available:  {self.available_machines}")
 
     def run_xstartup(self):
         ''' Start X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
-            cmd = "sudo /usr/bin/Xorg :0"
-            return_code = util.shell_run_background_remote(machine, cmd, self.log)
-            if not return_code == 0:
-                self.log.warn(f"Error starting x on {machine}")
+            xserver = XServerStartup(machine, self.log)
+            xserver.process()
 
     def kill_and_restartX(self):
         for machine in self.available_machines:
@@ -108,31 +112,35 @@ class OpicsRunTasks:
 
     def change_mcs_config(self):
         for machine in self.available_machines:
-            config_change = OpicsConfigChange(machine, self.log)
+            config_change = MessConfigChange(machine, self.log)
             config_change.process()
 
     def run_check_xorg(self):
         ''' Check X Server on all the machines.  Note:  Not parallelized'''
+        self.available_machines = util.get_aws_machines()
+        self.log.info(f"Machines available {self.available_machines}")
+
         for machine in self.available_machines:
             xserver_check = XServerCheck(machine, self.log)
             xserver_check.process()
 
     def run_test(self):
+        self.available_machines = util.get_aws_machines()
         for machine in self.available_machines:
             test_runner = McsTestRunner(machine, self.log)
             test_runner.process()
 
 
 if __name__ == '__main__':
-    run_tasks = OpicsRunTasks()
+    run_tasks = MessRunTasks()
     run_tasks.get_machines()
     run_tasks.get_tasks()
 
     # Commands to change the Remote machines.  Uncomment them to run them.
     # run_tasks.change_mcs_config()
-    # run_tasks.run_xstartup()
-    # run_tasks.run_check_xorg()
+    # run_tasks.runXStartup()
+    # run_tasks.runCheckXorg()
     # run_tasks.run_test()   # Note, this is not paralleized
-    #
-    # # Command to actually run the tasks.
+
+    # Command to actually run the tasks.
     run_tasks.run_tasks()

@@ -2,7 +2,7 @@
 # Check to make sure that the X server is properly running on a remote machine
 #
 
-from pipeline import util
+from old_pipeline import util
 
 
 class XServerCheck:

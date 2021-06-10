@@ -16,8 +16,7 @@ import uuid
 
 import ray
 
-from pipeline import logger
-from pipeline import util
+from pipeline import logger, time_utils
 
 
 @ray.remote
@@ -72,7 +71,7 @@ class SceneRunner:
 
         self.scene_files_list = []
 
-        date_str = util.get_date_in_file_format()
+        date_str = time_utils.get_date_in_file_format()
         self.log = logger.configure_base_logging(date_str + ".log")
         self.log.info("Starting run scenes")
 

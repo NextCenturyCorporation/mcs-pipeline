@@ -1,7 +1,7 @@
 import json
 import random
 
-from pipeline import util
+from old_pipeline import util
 from pipeline.logger import configure_base_logging
 
 
