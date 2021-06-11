@@ -1,4 +1,12 @@
 # mcs-pipeline
+
+TODO:  Rewrite this for using Ray.
+
+Ray Book of Knowledge: 
+https://nextcentury.atlassian.net/wiki/spaces/MCS/pages/2156757749/BoK
+
+****
+
 MCS Project for running evaluations
 
 This code runs scene files on EC2 machines.  Assumptions:

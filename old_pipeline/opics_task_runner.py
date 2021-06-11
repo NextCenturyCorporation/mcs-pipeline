@@ -4,18 +4,18 @@
 import threading
 
 from pipeline import logger
-from pipeline import util
-from pipeline.mcs_test_runner import McsTestRunner
-from pipeline.opics_config_change import OpicsConfigChange
-from pipeline.opics_singletask import OpicsSingleTask
-from pipeline.xserver_check import XServerCheck
-from pipeline.xserver_startup import XServerStartup
+from old_pipeline import util
+from old_pipeline.mcs_test_runner import McsTestRunner
+from old_pipeline.opics_config_change import OpicsConfigChange
+from old_pipeline.opics_singletask import OpicsSingleTask
+from old_pipeline.xserver_check import XServerCheck
+from old_pipeline.xserver_startup import XServerStartup
 
 # Uncomment one of the following.  single is for testing;  the other
 # is for intphys
 # TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
-# TASK_FILE_PATH = "tasks_single_task.txt"
-TASK_FILE_PATH = "tasks_juliett.txt"
+# TASK_FILE_PATH = "scenes_single_scene.txt"
+TASK_FILE_PATH = "../scenes_juliett.txt"
 
 
 class OpicsRunTasks:
@@ -97,7 +97,7 @@ class OpicsRunTasks:
         ''' Start X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
             cmd = "sudo /usr/bin/Xorg :0"
-            return_code = util.shell_run_background(machine, cmd, self.log)
+            return_code = util.shell_run_background_remote(machine, cmd, self.log)
             if not return_code == 0:
                 self.log.warn(f"Error starting x on {machine}")
 

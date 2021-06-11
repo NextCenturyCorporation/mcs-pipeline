@@ -1,7 +1,8 @@
 import json
 import random
 
-from pipeline import util
+from old_pipeline import util
+from pipeline.logger import configure_base_logging
 
 
 def get_first_machine():
@@ -26,13 +27,6 @@ def test_copy_file_from_aws():
     temp_name = test_copy_file_to_aws()
     print(f"Copying filename from AWS: {temp_name} ")
     success = util.copy_file_from_aws(get_first_machine(), temp_name)
-    print(f"Success: {success}")
-
-
-def test_print_command():
-    print("\n---test_printCommand---")
-    tmpname = test_copy_file_to_aws()
-    success = util.docker_run_command(get_first_machine(), tmpname)
     print(f"Success: {success}")
 
 
@@ -61,5 +55,33 @@ def test_get_aws_machines():
 def run_test_mess():
     machine = "ec2-52-205-76-200.compute-1.amazonaws.com"
     run_command = "cd /home/ubuntu/mess_original_code/mess_final/ && " + \
-                  " ./runall.sh"
-    util.shell_run_command(machine, run_command, None)
+                  " ./mess_runall.sh"
+    util.shell_run_command_remote(machine, run_command, None)
+
+
+def run_command_locally():
+    logger = configure_base_logging("testlog")
+    run_command = 'ls'
+    util.run_command_and_capture_output(run_command, logger)
+
+
+def run_background_task_locally():
+    logger = configure_base_logging("testlog")
+    run_command = 'while :; do sleep 1; done &'
+    util.run_command_and_return(run_command, logger)
+    sleep_running = util.check_if_process_running(run_command, True)
+    if sleep_running:
+        print("sleep proc found ")
+    else:
+        print("sleep proc not found ")
+
+
+def find_Xorg_process():
+    xorg_running = util.check_if_process_running("/usr/lib/xorg/xorg")
+    if xorg_running:
+        print("Xorg proc found")
+    else:
+        print("Xorg proc not found")
+
+
+find_Xorg_process()

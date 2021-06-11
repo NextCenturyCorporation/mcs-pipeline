@@ -4,6 +4,7 @@
 #
 #
 import time
+
 from x_server import startx
 
 # This uses code from AI2THOR Docker that creates a xorg.conf based on the

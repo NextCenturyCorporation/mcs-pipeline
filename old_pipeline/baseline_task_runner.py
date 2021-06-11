@@ -6,10 +6,10 @@ from os import listdir, path
 from os.path import isfile, join
 
 from pipeline import logger
-from pipeline import util
-from pipeline.baseline_singletask import BaselineSingleTask
-from pipeline.xserver_check import XServerCheck
-from pipeline.xserver_startup import XServerStartup
+from old_pipeline import util
+from old_pipeline.baseline_singletask import BaselineSingleTask
+from old_pipeline.xserver_check import XServerCheck
+from old_pipeline.xserver_startup import XServerStartup
 
 TASK_FILE_PATH = "/home/ced/work/mcs/eval3/tasks/togo/"
 

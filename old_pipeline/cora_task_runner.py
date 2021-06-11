@@ -4,17 +4,17 @@
 import threading
 
 from pipeline import logger
-from pipeline import util
-from pipeline.cora_singletask import CoraSingleTask
-from pipeline.mcs_test_runner import McsTestRunner
-from pipeline.xserver_startup import XServerStartup
+from old_pipeline import util
+from old_pipeline.cora_singletask import CoraSingleTask
+from old_pipeline.mcs_test_runner import McsTestRunner
+from old_pipeline.xserver_startup import XServerStartup
 
 # Uncomment one of the following.  single is for testing;
-# TASK_FILE_PATH = "tasks_single_task.txt"
-TASK_FILE_PATH = "tasks_juliett.txt"
+# TASK_FILE_PATH = "scenes_single_scene.txt"
+TASK_FILE_PATH = "../scenes_juliett.txt"
 
 # Config file location
-config_on_local = "config_level2.ini"
+config_on_local = "mcs_config_cora_level2.ini"
 remote_config_file_directory = "/home/ubuntu/workspace/GenPRAM.jl/GenAgent/omg/"
 
 
@@ -100,7 +100,7 @@ class CoraRunTasks:
         ''' Start X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
             cmd = "/home/ubuntu/start_cora_docker.sh"
-            return_code = util.shell_run_background(machine, cmd, self.log)
+            return_code = util.shell_run_background_remote(machine, cmd, self.log)
             self.log.debug(f"Tried to start docker on CORA machine {machine}" +
                            f" Result: {return_code}")
 
@@ -121,7 +121,7 @@ class CoraRunTasks:
         ''' Check X Server on all the machines.  Note:  Not parallelized'''
         for machine in self.available_machines:
             cmd = "docker exec `docker ps -a | grep cora | awk '{print $1}'` ps auxwww | grep Xorg"
-            return_code = util.shell_run_command(machine, cmd, self.log)
+            return_code = util.shell_run_command_remote(machine, cmd, self.log)
             self.log.debug(f"X Status on remote machine {machine}" +
                            f" Result: {return_code}")
 

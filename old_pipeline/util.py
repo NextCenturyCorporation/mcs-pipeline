@@ -15,22 +15,15 @@
 
 import os
 import subprocess
-import time
 from typing import List
 
 import boto3
+import psutil
 
-from pipeline.secrets import Secrets
+from old_pipeline.secrets import Secrets
 
 PEM_FILE = Secrets['PEM_FILE']
 USERNAME = Secrets['USERNAME']
-
-
-def get_date_in_file_format():
-    """Get the date in a format like 2020-03-01, useful for creating files"""
-    timeInFileFormat = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-    return timeInFileFormat
-
 
 def get_s3_buckets():
     """ Look on AWS and get the list of buckets"""
@@ -103,14 +96,16 @@ def safe_log(log, intro, msg):
 
 
 def run_command_and_capture_output(commandList, log=None):
+    """Run a command on the current machine.  The command
+    can be something that runs locally (like 'ls') or
+    an ssh call (like 'ssh -i <pem> ubuntu@machine ls').
+    This captures the output and writes it to a log.  It
+    does not return until the command is done. """
     process = subprocess.Popen(commandList,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT,
-                               universal_newlines=True)
-
-    # Note:  Not used any more.  Originally, if we had to copy a file back,
-    # we would find the name of the file in the output.
-    output_file = None
+                               universal_newlines=True,
+                               shell=True)
 
     safe_log(log, "", f"Sending the following command: {commandList}")
 
@@ -124,18 +119,26 @@ def run_command_and_capture_output(commandList, log=None):
             for output in process.stdout.readlines():
                 safe_log(log, "Output:", f"{output}")
             break
-    return return_code, output_file
-
-
-def shell_run_command(machine_dns, command, log=None):
-    '''Run the command on the remote machine using ssh.'''
-    userInfo = get_remote_user_info(machine_dns)
-    process_command = ["ssh", "-i", PEM_FILE, userInfo, command]
-    return_code, _ = run_command_and_capture_output(process_command, log)
     return return_code
 
 
-def shell_run_background(machine_dns, command, log=None):
+def run_command_and_return(commandList, log=None):
+    """Run a command, disconnect from it, and return.  This is
+    useful when the the command runs in the background (like
+    'Xorg &').  If the command errors out or does not exist,
+    no return is presented, you check to see if it is running."""
+    subprocess.Popen(commandList, close_fds=True, shell=True)
+
+
+def shell_run_command_remote(machine_dns, command, log=None):
+    '''Run the command on the remote machine using ssh.'''
+    userInfo = get_remote_user_info(machine_dns)
+    process_command = ["ssh", "-i", PEM_FILE, userInfo, command]
+    return_code = run_command_and_capture_output(process_command, log)
+    return return_code
+
+
+def shell_run_background_remote(machine_dns, command, log=None):
     userInfo = get_remote_user_info(machine_dns)
 
     # This is surprisingly difficult.  We need to run a command, then
@@ -184,7 +187,7 @@ def copy_file_to_aws(machine_dns, file_name, log=None, remote_dir=""):
     remote_user = get_remote_user_info(machine_dns)
     remote_location = remote_user + ":" + remote_dir + tail
     process_command = ['scp', '-i', PEM_FILE, file_name, remote_location]
-    return_code, _ = run_command_and_capture_output(process_command, log)
+    return_code = run_command_and_capture_output(process_command, log)
     return return_code
 
 
@@ -193,5 +196,33 @@ def copy_file_from_aws(machine_dns, file_name, log=None):
     if log:
         log.info(f"Ubuntu command: {ubuntu_machine_dns}")
     process_command = ['scp', '-i', PEM_FILE, ubuntu_machine_dns, "."]
-    return_code, _ = run_command_and_capture_output(process_command, log)
+    return_code = run_command_and_capture_output(process_command, log)
     return return_code
+
+
+def check_if_process_running(process_name, print_match=False):
+    '''
+    Check if there is any running process with a command line that matches
+    the passed process_name.  psutil.process_iter returns Process objects.
+    We look in the full command line.  Note that the commandline is a list,
+    so you have to be careful with the match.
+
+    Example:  you start a process with 'bash -s "while :; do sleep 1; done &"'
+    The command line looks like:
+           ['/bin/bash', '-c', 'while :; do sleep 1; done &']
+    So, you cannot look for the entire passed command, just parts of it.
+    '''
+    process_name = process_name.lower()
+    for proc in psutil.process_iter():
+        cmd_line = [cmd.lower() for cmd in proc.cmdline()]
+        if print_match:
+            print(f"{cmd_line}")
+        try:
+            found = any(process_name in cmd for cmd in cmd_line)
+            if found:
+                if print_match:
+                    print(proc.name())
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False

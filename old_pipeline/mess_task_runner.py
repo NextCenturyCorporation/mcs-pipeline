@@ -4,17 +4,17 @@
 import threading
 
 from pipeline import logger
-from pipeline import util
-from pipeline.mcs_test_runner import McsTestRunner
-from pipeline.mess_config_change import MessConfigChange
-from pipeline.mess_singletask import MessSingleTask
-from pipeline.xserver_check import XServerCheck
-from pipeline.xserver_startup import XServerStartup
+from old_pipeline import util
+from old_pipeline.mcs_test_runner import McsTestRunner
+from old_pipeline.mess_config_change import MessConfigChange
+from old_pipeline.mess_singletask import MessSingleTask
+from old_pipeline.xserver_check import XServerCheck
+from old_pipeline.xserver_startup import XServerStartup
 
 # Uncomment one of the following.  single is for testing;  the other
 # is for intphys
 # TASK_FILE_PATH = "tasks_delta_echo_foxtrot.txt"
-TASK_FILE_PATH = "tasks_single_task.txt"
+TASK_FILE_PATH = "../scenes_single_scene.txt"
 
 
 class MessRunTasks:
