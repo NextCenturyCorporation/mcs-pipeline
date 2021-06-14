@@ -49,7 +49,6 @@ class MCSRayActor:
         # results, either re-trying or reporting failure.
         ret = os.system(cmd)
 
-
         # TODO MCS-702:  Send AWS S3 Parameters in Pipeline, Make them Ephemeral.  Until MCS-674, which will
         # move it entirely to the pipeline
 
@@ -99,12 +98,10 @@ class SceneRunner:
 
     def run_scenes(self):
 
-        mcs_actor = MCSRayActor.remote(
-            run_script=self.exec_config['MCS']['run_script']
-        )
         self.log.info(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
         for scene_ref in self.scene_files_list:
+            mcs_actor = MCSRayActor.remote(run_script=self.exec_config['MCS']['run_script'])
             with open(str(scene_ref)) as scene_file:
                 job_ids.append(mcs_actor.run_scene.remote(self.mcs_config, json.load(scene_file)))
 
