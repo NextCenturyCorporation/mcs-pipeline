@@ -19,7 +19,7 @@ import ray
 from pipeline import logger, time_utils
 
 
-@ray.remote
+@ray.remote(num_cpus=1)
 class MCSRayActor:
     """Ray Actor that calls a script on the remote machine """
 
