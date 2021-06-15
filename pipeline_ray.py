@@ -110,7 +110,7 @@ class SceneRunner:
             done, not_done = ray.wait(not_done)
             for done_ref in done:
                 result = ray.get(done_ref)
-                self.log.info(f"Result of {done_ref}:  {result}")
+                self.log.info(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
 
 def parse_args():
@@ -130,8 +130,8 @@ if __name__ == '__main__':
 
     # TODO MCS-711:  If running local, do ray.init().  If doing remote/cluster, do (address='auto').
     #  Add command line switch or configuration to determine which to use
-    # ray.init(address='auto')
-    ray.init()
+    ray.init(address='auto')
+    # ray.init()
 
     try:
         scene_runner = SceneRunner(args)

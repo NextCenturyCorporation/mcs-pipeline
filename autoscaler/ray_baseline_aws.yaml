@@ -4,25 +4,35 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: baseline-clark
-max_workers: 8                        # 2 is the default
+cluster_name: baseline-clark-2
+max_workers: 8                       # 2 is the default
 
 provider:
   type: aws
   region: us-east-1
-  availability_zone: us-east-1a,us-east-1b
+  availability_zone: us-east-1b
   cache_stopped_nodes: True          # Default True means stopped, false means terminate.
+
+available_node_types:
+    ray.head.default:
+        min_workers: 0
+        max_workers: 0
+        resources: {}
+        node_config:
+            InstanceType: p2.xlarge
+            ImageId: ami-09fcc141b05b116dc  # This is the eval3.5 baseline
+    ray.worker.default:
+        min_workers: 0
+        max_workers: 10
+        resources: {}
+        node_config:
+            InstanceType: p2.xlarge
+            ImageId: ami-09fcc141b05b116dc # This is the eval3.5 baseline
 
 auth:
   ssh_user: ubuntu
 
-head_node:
-  InstanceType: p2.xlarge
-  ImageId:  ami-09fcc141b05b116dc    # This is the eval3.5 baseline
-
-worker_nodes:
-  InstanceType: p2.xlarge
-  ImageId: ami-09fcc141b05b116dc     # This is also the eval3.5 baseline
+head_node_type: ray.head.default
 
 # If needed, can copy files to remote machines.  However, they should be configured to run from a script,
 # so this should not be needed
