@@ -16,45 +16,41 @@ import uuid
 
 import ray
 
-from pipeline import logger, time_utils
 
+@ray.remote(num_gpus=1)
+def run_scene(run_script, mcs_config, scene_config):
+    """ Ray """
 
-@ray.remote(num_cpus=1)
-class MCSRayActor:
-    """Ray Actor that calls a script on the remote machine """
+    identifier = uuid.uuid4()
+    run_script = run_script
 
-    def __init__(self, run_script: str):
-        self.identifier = uuid.uuid4()
-        self.run_script = run_script
+    # Save the mcs_config information as /tmp/mcs_config.ini
+    mcs_config_filename = "/tmp/mcs_config.ini"
+    print(f"Saving mcs config information to {mcs_config_filename}")
+    with open(mcs_config_filename, 'w') as mcs_config_file:
+        for line in mcs_config:
+            mcs_config_file.write(line)
 
-    def run_scene(self, mcs_config, scene_config):
-        # Save the mcs_config information as /tmp/mcs_config.ini
-        mcs_config_filename = "/tmp/mcs_config.ini"
-        print(f"Saving mcs config information to {mcs_config_filename}")
-        with open(mcs_config_filename, 'w') as mcs_config_file:
-            for line in mcs_config:
-                mcs_config_file.write(line)
+    # Save the scene config information
+    scene_config_filename = "/tmp/" + str(identifier) + ".json"
+    print(f"Saving scene information to {scene_config_filename}")
+    with open(scene_config_filename, 'w') as scene_config_file:
+        json.dump(scene_config, scene_config_file)
 
-        # Save the scene config information
-        scene_config_filename = "/tmp/" + str(self.identifier) + ".json"
-        print(f"Saving scene information to {scene_config_filename}")
-        with open(scene_config_filename, 'w') as scene_config_file:
-            json.dump(scene_config, scene_config_file)
+    # Run the script on the machine
+    cmd = f'{run_script} {mcs_config_filename} {scene_config_filename}'
+    print(f"In run scene.  Running {cmd}")
 
-        # Run the script on the machine
-        cmd = f'{self.run_script} {mcs_config_filename} {scene_config_filename}'
-        print(f"In run scene.  Running {cmd}")
+    # TODO MCS-709:  Return more information from the script about how it went, and handle the
+    # results, either re-trying or reporting failure.
+    ret = os.system(cmd)
 
-        # TODO MCS-709:  Return more information from the script about how it went, and handle the
-        # results, either re-trying or reporting failure.
-        ret = os.system(cmd)
+    # TODO MCS-702:  Send AWS S3 Parameters in Pipeline, Make them Ephemeral.  Until MCS-674, which will
+    # move it entirely to the pipeline
 
-        # TODO MCS-702:  Send AWS S3 Parameters in Pipeline, Make them Ephemeral.  Until MCS-674, which will
-        # move it entirely to the pipeline
+    # TODO  MCS-674:  Move Evaluation Code out of Python API (and into the pipeline)
 
-        # TODO  MCS-674:  Move Evaluation Code out of Python API (and into the pipeline)
-
-        return ret
+    return ret
 
 
 class SceneRunner:
@@ -70,12 +66,14 @@ class SceneRunner:
 
         self.scene_files_list = []
 
-        date_str = time_utils.get_date_in_file_format()
-        self.log = logger.configure_base_logging(date_str + ".log")
-        self.log.info("Starting run scenes")
+        date_str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+        print(f"Starting run scenes {date_str}")
 
         self.get_scenes()
         self.run_scenes()
+
+        date_str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+        print(f"Finished run scenes {date_str}")
 
     def read_mcs_config(self, mcs_config_filename: str):
         with open(mcs_config_filename, 'r') as mcs_config_file:
@@ -93,24 +91,23 @@ class SceneRunner:
                 self.scene_files_list.append(base_dir / line.strip())
 
         self.scene_files_list.sort()
-        self.log.info(f"Number of scenes: {len(self.scene_files_list)}")
-        self.log.info(f"Scenes {self.scene_files_list}")
+        print(f"Number of scenes: {len(self.scene_files_list)}")
+        print(f"Scenes {self.scene_files_list}")
 
     def run_scenes(self):
 
-        self.log.info(f"Running {len(self.scene_files_list)} scenes")
+        print(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
         for scene_ref in self.scene_files_list:
-            mcs_actor = MCSRayActor.remote(run_script=self.exec_config['MCS']['run_script'])
             with open(str(scene_ref)) as scene_file:
-                job_ids.append(mcs_actor.run_scene.remote(self.mcs_config, json.load(scene_file)))
+                job_ids.append(run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file)))
 
         not_done = job_ids
         while not_done:
             done, not_done = ray.wait(not_done)
             for done_ref in done:
                 result = ray.get(done_ref)
-                self.log.info(f"{len(not_done)}  Result of {done_ref}:  {result}")
+                print(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
 
 def parse_args():
