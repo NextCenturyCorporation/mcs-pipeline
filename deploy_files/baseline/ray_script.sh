@@ -30,12 +30,8 @@ cd /home/ubuntu
 cp $scene_file /home/ubuntu/scenes/validation/
 cp $mcs_configfile /home/ubuntu/mcs_config.ini
 
-echo RUN GRAVITY
-
 # Run the model
 python3 gravity_py.py
-
-echo FINISH GRAVITY
 
 # Copy the results to the right place
 mkdir -p /tmp/results/
