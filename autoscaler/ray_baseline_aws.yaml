@@ -7,6 +7,8 @@
 cluster_name: baseline-clark-3
 max_workers: 8                       # 2 is the default
 
+# Note that ray only seems to use the first availability zone, so if there are issues with that 
+# one, just need to put a different one first.
 provider:
   type: aws
   region: us-east-1
