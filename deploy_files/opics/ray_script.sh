@@ -13,7 +13,7 @@ echo "Running OPICS with config $mcs_configfile and scene $scene_file"
 
 # Pre setup - potentially move to run once per machine later
 echo Starting X Server
-sudo nvidia-xconfig --use-display-device=None --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
+#sudo nvidia-xconfig --use-display-device=None --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
 sudo /usr/bin/Xorg :0 &
 echo "Sleeping for 20 seconds to wait for X server"
 sleep 20
