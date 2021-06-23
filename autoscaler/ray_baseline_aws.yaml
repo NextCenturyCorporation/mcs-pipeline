@@ -4,26 +4,38 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: baseline
-initial_workers: 2
-max_workers: 20                        # 2 is the default
+cluster_name: baseline-clark-3
+max_workers: 8                       # 2 is the default
 
+# Note that ray only seems to use the first availability zone, so if there are issues with that 
+# one, just need to put a different one first.
 provider:
   type: aws
   region: us-east-1
-  availability_zone: us-east-1a,us-east-1b
+  availability_zone: us-east-1a, us-east-1b, us-east-1c, us-east-1d
   cache_stopped_nodes: True          # Default True means stopped, false means terminate.
+
+
+available_node_types:
+  ray.head.default:
+    min_workers: 0
+    max_workers: 0
+    resources: {"CPU": 4, "GPU": 1}
+    node_config:
+      InstanceType: p2.xlarge
+      ImageId: ami-0e230ba090bb7ad02
+  ray.worker.default:
+    min_workers: 0
+    max_workers: 3
+    resources: {"CPU": 4, "GPU": 1}
+    node_config:
+      InstanceType: p2.xlarge
+      ImageId: ami-0e230ba090bb7ad02
 
 auth:
   ssh_user: ubuntu
 
-head_node:
-  InstanceType: p2.xlarge
-  ImageId:  ami-09fcc141b05b116dc    # This is the eval3.5 baseline
-
-worker_nodes:
-  InstanceType: p2.xlarge
-  ImageId: ami-09fcc141b05b116dc     # This is also the eval3.5 baseline
+head_node_type: ray.head.default
 
 # If needed, can copy files to remote machines.  However, they should be configured to run from a script,
 # so this should not be needed
@@ -31,18 +43,14 @@ file_mounts: {
 }
 
 setup_commands:
-  - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
   - pip install -U ray==1.3.0
 
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
   - ray stop
   - ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml
-  # NOTE:  Removed ulimit, since doesn't like it on AWS Ubuntu.  Not clear why.
-  # - ulimit -n 65536; ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml
 
 # Command to start ray on worker nodes. You don't need to change this.
 worker_start_ray_commands:
   - ray stop
   - ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076
-  # - ulimit -n 65536; ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076
