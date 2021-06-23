@@ -23,14 +23,14 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0626f0e163938da2e
+      ImageId: ami-05ab0b9b3aabc4f22
   ray.worker.default:
     min_workers: 0
     max_workers: 2
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0626f0e163938da2e
+      ImageId: ami-05ab0b9b3aabc4f22
 
 auth:
   ssh_user: ubuntu
