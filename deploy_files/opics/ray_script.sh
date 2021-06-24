@@ -19,8 +19,6 @@ echo "Sleeping for 20 seconds to wait for X server"
 sleep 20
 echo "Sleep finished"
 
-#below is modeled from baseline but I'm not sure if its needed here.
-#rm -f $SCENE_DIR/validation/*
 echo Clearing History at $EVAL_DIR/SCENE_HISTORY/
 rm -f $EVAL_DIR/SCENE_HISTORY/*
 
