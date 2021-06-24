@@ -4,7 +4,7 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: opics
+cluster_name: opics-kdrumm
 max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
@@ -31,6 +31,8 @@ available_node_types:
     node_config:
       InstanceType: p2.xlarge
       ImageId: ami-05ab0b9b3aabc4f22
+      IamInstanceProfile: 
+        Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-v1
 
 auth:
   ssh_user: ubuntu
@@ -49,8 +51,10 @@ setup_commands:
 head_start_ray_commands:
   - ray stop
   - ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml
+  - rm -rf ~/.aws
 
 # Command to start ray on worker nodes. You don't need to change this.
 worker_start_ray_commands:
   - ray stop
   - ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076
+  - rm -rf ~/.aws
