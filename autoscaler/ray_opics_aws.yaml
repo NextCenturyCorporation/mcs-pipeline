@@ -32,7 +32,7 @@ available_node_types:
       InstanceType: p2.xlarge
       ImageId: ami-05ab0b9b3aabc4f22
       IamInstanceProfile: 
-        Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-v1
+        Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
 auth:
   ssh_user: ubuntu
