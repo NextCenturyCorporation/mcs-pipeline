@@ -13,15 +13,13 @@ echo "Running OPICS with config $mcs_configfile and scene $scene_file"
 
 # Pre setup - potentially move to run once per machine later
 echo Starting X Server
-sudo nvidia-xconfig --use-display-device=None --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
+#sudo nvidia-xconfig --use-display-device=None --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
 sudo /usr/bin/Xorg :0 &
 echo "Sleeping for 20 seconds to wait for X server"
 sleep 20
 echo "Sleep finished"
 
-#below is modeled from baseline but I'm not sure if its needed here.
-#rm -f $SCENE_DIR/validation/*
-echo Clearing History at $EVAL_DIR/SCENE_HISTORY/*
+echo Clearing History at $EVAL_DIR/SCENE_HISTORY/
 rm -f $EVAL_DIR/SCENE_HISTORY/*
 
 #cd $EVAL_DIR

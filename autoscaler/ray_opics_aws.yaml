@@ -4,7 +4,7 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: opics-kdrumm
+cluster_name: opics
 max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
@@ -23,33 +23,19 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0e230ba090bb7ad02
+      ImageId: ami-05ab0b9b3aabc4f22
   ray.worker.default:
     min_workers: 0
-    max_workers: 3
+    max_workers: 2
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0e230ba090bb7ad02
-  ray.head.opics:
-    min_workers: 0
-    max_workers: 0
-    resources: {"CPU": 4, "GPU": 1}
-    node_config:
-      InstanceType: p2.xlarge
-      ImageId: ami-0626f0e163938da2e
-  ray.worker.opics:
-    min_workers: 0
-    max_workers: 3
-    resources: {"CPU": 4, "GPU": 1}
-    node_config:
-      InstanceType: p2.xlarge
-      ImageId: ami-0626f0e163938da2e
+      ImageId: ami-05ab0b9b3aabc4f22
 
 auth:
   ssh_user: ubuntu
 
-head_node_type: ray.head.opics
+head_node_type: ray.head.default
 
 # If needed, can copy files to remote machines.  However, they should be configured to run from a script,
 # so this should not be needed
