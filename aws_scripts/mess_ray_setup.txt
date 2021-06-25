@@ -1,0 +1,6 @@
+# Commands to start up ray for MESS (ray_script.sh and mcs-pipeline code should already be on AMI)
+# Additionally, will need to update scene file list/path referenced in mess_aws.ini
+
+ray up autoscaler/ray_mess_aws.yaml
+ray rsync_up -v autoscaler/ray_mess_aws.yaml configs/ '~/configs/'
+ray submit autoscaler/ray_mess_aws.yaml pipeline_ray.py configs/mess_aws.ini configs/mcs_config_mess_<metadata_level>.ini
