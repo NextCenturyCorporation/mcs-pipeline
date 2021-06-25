@@ -4,8 +4,10 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: mess-375test-ra
+cluster_name: mess-375-test
 max_workers: 8                       # 2 is the default
+
+idle_timeout_minutes: 10
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
 # one, just need to put a different one first.
@@ -23,14 +25,14 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0c81f616d7ca4e0e3 # beta
+      ImageId: ami-0aabadbc0dd018b89 # AMI built from 'mess-35-beta'
   ray.worker.default:
     min_workers: 0
     max_workers: 3
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0c81f616d7ca4e0e3 # beta
+      ImageId: ami-0aabadbc0dd018b89 # AMI built from 'mess-35-beta'
 
 auth:
   ssh_user: ubuntu

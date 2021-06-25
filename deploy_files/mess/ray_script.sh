@@ -8,8 +8,7 @@ scene_file=$2
 echo "Running MESS with config $mcs_configfile and scene $scene_file"
 
 # Start X
-# TODO: Check to see if the xserver is already running and do not restart
-
+# TODO: Check to see if the xserver is already running and do not restart (MCS-727)
 cd mcs-pipeline/xserver
 sudo python3 run_startx.py &
 sleep 20
@@ -34,8 +33,6 @@ conda activate myenv
 # run model
 python3 script_mess.py scenes/$scene_file_basename
 
-# TODO: test upload to AWS
-#mkdir -p /tmp/results/
-#cp /home/ubuntu/SCENE_HISTORY/* /tmp/results/
-
+mkdir -p /tmp/results/
+cp /home/ubuntu/mess_eval35/SCENE_HISTORY/* /tmp/results/
 
