@@ -2,8 +2,22 @@
 
 # Will be passed in two things:
 #    mcs_configfile  scene_file
+if [ -z $1 ] || [ -z $2 ]; then
+    echo "Need mcs_configfile as first parameter, scene_file as second"
+    exit 1
+fi
 mcs_configfile=$1
 scene_file=$2
+
+# Check that the files exist
+if [ ! -f "$mcs_configfile" ]; then
+    echo "The file $mcs_configfile does not exist"
+    exit 1
+fi
+if [ ! -f "$scene_file" ]; then
+    echo "The file $scene_file does not exist"
+    exit 1
+fi
 
 EVAL_DIR=/home/ubuntu/mcs_eval3-3.5.0
 SCENE_DIR="$EVAL_DIR/eval_scene/"

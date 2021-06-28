@@ -1,7 +1,5 @@
 !/bin/bash
 
-set -x
-
 # Will be passed in two things:
 #    mcs_configfile  scene_file
 if [ -z $1 ] || [ -z $2 ]; then
