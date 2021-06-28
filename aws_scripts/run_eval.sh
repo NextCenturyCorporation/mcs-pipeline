@@ -49,8 +49,8 @@ cp -R deploy_files/${TEAM}/* $TMP_DIR/
 
 
 
-ray exec $RAY_CONFIG "mkdir -p ~/scenes/tmp/"
 ray up -y $RAY_CONFIG
+ray exec $RAY_CONFIG "mkdir -p ~/scenes/tmp/"
 wait
 ray rsync_up -v $RAY_CONFIG configs/ '~/configs/'
 ray rsync_up -v $RAY_CONFIG deploy_files/${TEAM}/ '~'
@@ -67,4 +67,5 @@ ray rsync_up -v $RAY_CONFIG $TMP_DIR/scenes_single_scene.txt '~/scenes_single_sc
 
 ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG
 
+# Remove to cleanup?  or keep for debugging?
 # rm -rf $TMP_DIR
