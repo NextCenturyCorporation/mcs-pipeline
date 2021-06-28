@@ -60,6 +60,9 @@ ray rsync_up -v $RAY_CONFIG deploy_files/${TEAM}/ '~'
 # Should we run
 ray rsync_up -v $RAY_CONFIG pipeline '~'
 
+# The following 2 scripts as well as the creation of the scenes_single_scene.txt file are custom code for eval 
+# and may need to be removed for a more generic pipeline.
+
 # this may cause re-used machines to have more scenes than necessary in the follow location.
 # I believe this is ok since we use the txt file to control exactly which files are run.
 ray rsync_up -v $RAY_CONFIG $LOCAL_SCENE_DIR/ '~/scenes/tmp/'
