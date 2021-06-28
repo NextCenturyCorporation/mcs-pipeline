@@ -1,67 +1,69 @@
 #!/bin/bash
 # This file is intended to be run on local development machine.
 # This will perform the following actions:
-#  1. Start a ray cluster for the appropriate team
+#  1. Start a ray cluster for the appropriate module
 #  2. Upload the appropriate scenes
 #  3. Upload the config files
 #  4. Start the eval
 
-# 3 parameters
-# TODO make usage
-DEFAULT_METADATA="level2"
-
-TEAM=$1
-LOCAL_SCENE_DIR=$2
-METADATA=${3:-$DEFAULT_METADATA}
-
-# Removing ending slash of scene dir so we have consistency
-LOCAL_SCENE_DIR=$(echo $LOCAL_SCENE_DIR | sed 's:/*$::')
+MODULE=$1
 TMP_DIR=.tmp_pipeline_ray
-RAY_CONFIG="autoscaler/ray_${TEAM}_aws.yaml"
-# We probably don't need a new 'locations' file for each team
-RAY_LOCATIONS_CONFIG=configs/${TEAM}_aws.ini
-MCS_CONFIG=configs/mcs_config_${TEAM}_${METADATA}.ini
 
-echo "Starting Ray Eval:"
-echo "  Team:          $TEAM"
-echo "  Metadata:      $METADATA"
-echo "  Scene Dir:     $LOCAL_SCENE_DIR"
-echo "  Ray Config:    $RAY_CONFIG"
-echo "  Ray Locations: $RAY_LOCATIONS_CONFIG"
-echo "  MCS config:    $MCS_CONFIG" 
+# We probably don't need a new 'locations' file for each team in evals
+RAY_LOCATIONS_CONFIG=configs/${MODULE}_aws.ini
 
 mkdir -p $TMP_DIR
 rm -rf $TMP_DIR/*
 
 ORIG_PWD=$PWD
 
-echo $LOCAL_SCENE_DIR/
 
+#cp -R configs $TMP_DIR
+cp -R deploy_files/${MODULE}/* $TMP_DIR/
+#mkdir -p $TMP_DIR/scenes/tmp
+#cp -R $LOCAL_SCENE_DIR/* $TMP_DIR/scenes/tmp/
+RAY_CONFIG="autoscaler/ray_${MODULE}_aws.yaml"
+
+ray up -y $RAY_CONFIG
+wait
+
+# We should copy all the pipeline code, but at least opics needs it in a special folder.  Should ray_script handle that?  
+# Should we run
+ray rsync_up -v $RAY_CONFIG pipeline '~'
+ray rsync_up -v $RAY_CONFIG deploy_files/${MODULE}/ '~'
+ray rsync_up -v $RAY_CONFIG configs/ '~/configs/'
+
+####### STARTING EVAL SPECIFIC CODE ########
+
+# Handle inputs:
+
+DEFAULT_METADATA="level2"
+LOCAL_SCENE_DIR=$2
+# Removing ending slash of scene dir so we have consistency
+LOCAL_SCENE_DIR=$(echo $LOCAL_SCENE_DIR | sed 's:/*$::')
+METADATA=${3:-$DEFAULT_METADATA}
+
+MCS_CONFIG=configs/mcs_config_${MODULE}_${METADATA}.ini
+
+# Create necessary files:
+
+# Create list of scenes for head node to run.  All scenes will also be rsync'ed.
 for entry in $LOCAL_SCENE_DIR/*
 do
   echo "`basename $entry`" >> $TMP_DIR/scenes_single_scene.txt
 done
 
-#cp -R configs $TMP_DIR
-cp -R deploy_files/${TEAM}/* $TMP_DIR/
-#mkdir -p $TMP_DIR/scenes/tmp
-#cp -R $LOCAL_SCENE_DIR/* $TMP_DIR/scenes/tmp/
+# Debug info
 
+echo "Starting Ray Eval:"
+echo "  Module:        $MODULE"
+echo "  Metadata:      $METADATA"
+echo "  Scene Dir:     $LOCAL_SCENE_DIR"
+echo "  Ray Config:    $RAY_CONFIG"
+echo "  Ray Locations: $RAY_LOCATIONS_CONFIG"
+echo "  MCS config:    $MCS_CONFIG" 
 
-
-ray up -y $RAY_CONFIG
 ray exec $RAY_CONFIG "mkdir -p ~/scenes/tmp/"
-wait
-ray rsync_up -v $RAY_CONFIG configs/ '~/configs/'
-ray rsync_up -v $RAY_CONFIG deploy_files/${TEAM}/ '~'
-
-
-# We should copy all the pipeline code, but at least opics needs it in a special folder.  Should ray_script handle that?  
-# Should we run
-ray rsync_up -v $RAY_CONFIG pipeline '~'
-
-# The following 2 scripts as well as the creation of the scenes_single_scene.txt file are custom code for eval 
-# and may need to be removed for a more generic pipeline.
 
 # this may cause re-used machines to have more scenes than necessary in the follow location.
 # I believe this is ok since we use the txt file to control exactly which files are run.
