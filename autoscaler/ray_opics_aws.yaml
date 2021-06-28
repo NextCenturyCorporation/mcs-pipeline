@@ -31,6 +31,8 @@ available_node_types:
     node_config:
       InstanceType: p2.xlarge
       ImageId: ami-05ab0b9b3aabc4f22
+      IamInstanceProfile: 
+        Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
 auth:
   ssh_user: ubuntu
@@ -44,6 +46,7 @@ file_mounts: {
 
 setup_commands:
   - pip install -U ray==1.3.0
+  - rm -rf ~/.aws
 
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
