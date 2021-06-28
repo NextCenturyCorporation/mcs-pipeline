@@ -4,7 +4,7 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: opics-kdrumm
+cluster_name: opics
 max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
@@ -50,7 +50,6 @@ file_mounts: {
 
 setup_commands:
   - pip install -U ray==1.3.0
-  - mkdir -p ~/scenes/tmp/
   - rm -rf ~/.aws
 
 # Command to start ray on the head node. You don't need to change this.
