@@ -14,7 +14,7 @@ idle_timeout_minutes: 10
 provider:
   type: aws
   region: us-east-1
-  availability_zone: us-east-1b, us-east-1c, us-east-1d, us-east-1a
+  availability_zone: us-east-1b,us-east-1c,us-east-1d,us-east-1a
   cache_stopped_nodes: True          # Default True means stopped, false means terminate.
 
 
