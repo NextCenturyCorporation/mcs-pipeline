@@ -44,7 +44,6 @@ head_node_type: ray.head.default
 file_mounts: {
   "/home/ubuntu/ray_script.sh": ".tmp_pipeline_ray/ray_script.sh"
 }
-# file_mounts_sync_continuously: True
 
 setup_commands:
   - pip install -U ray==1.3.0
