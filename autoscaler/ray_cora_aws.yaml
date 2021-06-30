@@ -1,6 +1,6 @@
 #
 #   Configuration file for:
-#         Team:   Baseline
+#         Team:   CORA
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
@@ -12,7 +12,7 @@ max_workers: 8                       # 2 is the default
 provider:
   type: aws
   region: us-east-1
-  availability_zone: us-east-1c, us-east-1b, us-east-1d, us-east-1a
+  availability_zone: us-east-1c,us-east-1b,us-east-1d,us-east-1a
   cache_stopped_nodes: True          # Default True means stopped, false means terminate.
 
 
