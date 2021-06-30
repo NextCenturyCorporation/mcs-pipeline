@@ -1,32 +1,11 @@
 #!/bin/bash
 
-# Will be passed in two things:
-#    mcs_configfile  scene_file
-if [ -z $1 ] || [ -z $2 ]; then
-    echo "Need mcs_configfile as first parameter, scene_file as second"
-    exit 1
-fi
-mcs_configfile=$1
-scene_file=$2
-
-# Check that the files exist
-if [ ! -f "$mcs_configfile" ]; then
-    echo "The file $mcs_configfile does not exist"
-    exit 1
-fi
-if [ ! -f "$scene_file" ]; then
-    echo "The file $scene_file does not exist"
-    exit 1
-fi
-
+# check passed mcs_config and scene file
+source /home/ubuntu/check_passed_variables.sh
 
 echo "Running MESS with config $mcs_configfile and scene $scene_file"
 
-# Start X
-# TODO: Check to see if the xserver is already running and do not restart (MCS-727)
-cd mcs-pipeline/xserver
-sudo python3 run_startx.py &
-sleep 20
+source /home/ubuntu/start_x_server.sh
 
 # Clear out the directories
 rm -f /home/ubuntu/mess_eval35/scenes/*

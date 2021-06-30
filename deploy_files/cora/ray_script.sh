@@ -1,27 +1,9 @@
 !/bin/bash
 
-# Will be passed in two things:
-#    mcs_configfile  scene_file
-if [ -z $1 ] || [ -z $2 ]; then
-    echo "Need mcs_configfile as first parameter, scene_file as second"
-    exit 1
-fi
-mcs_configfile=$1
-scene_file=$2
+# check passed mcs_config and scene file
+source /home/ubuntu/check_passed_variables.sh
 
-# Check that the files exist
-if [ ! -f "$mcs_configfile" ]; then
-    echo "The file $mcs_configfile does not exist"
-    exit 1
-fi
-if [ ! -f "$scene_file" ]; then
-    echo "The file $scene_file does not exist"
-    exit 1
-fi
-
-
-echo "Running Cora with config $mcs_configfile and scene $scene_file"
-
+echo "Running CORA with config $mcs_configfile and scene $scene_file"
 
 # Copy the scenes and config file to the right place
 LOC=/home/ubuntu/workspace
@@ -29,12 +11,9 @@ LOC=/home/ubuntu/workspace
 cp $scene_file $LOC/scenes/
 cp $mcs_configfile $LOC/GenPRAM.jl/GenAgent/omg/mcs_config.ini
 
-
-# TODO: MCS-709 Handle:  'Exception in create_controller() Time out!' error gracefully
-
-
 # Look for the CORA docker container running.  This will occur if this
-# is the second or subsequent runs on this machine.
+# is the second or subsequent runs on this machine.  The X Server
+# runs within the docker container.  
 CID=`docker ps -a | grep 'cora_with_x' | awk '{print $1}'`
 if [ -z $CID ]; then
 
