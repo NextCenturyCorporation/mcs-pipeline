@@ -8,11 +8,12 @@
 import argparse
 import configparser
 import json
-import os
 import pathlib
 import time
 import traceback
 import uuid
+import subprocess
+import io
 
 import ray
 
@@ -37,20 +38,24 @@ def run_scene(run_script, mcs_config, scene_config):
     with open(scene_config_filename, 'w') as scene_config_file:
         json.dump(scene_config, scene_config_file)
 
-    # Run the script on the machine
-    cmd = f'{run_script} {mcs_config_filename} {scene_config_filename}'
-    print(f"In run scene.  Running {cmd}")
+    cmd = f'{run_script} {mcs_config_filename} {scene_config_filename}'#' | tee {out_file_path}'
+    print(f"In run scene.  Running {cmd}") 
 
-    # TODO MCS-709:  Return more information from the script about how it went, and handle the
-    # results, either re-trying or reporting failure.
-    ret = os.system(cmd)
+    output =""
+
+    proc = subprocess.Popen(cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
+        print(line.rstrip())
+        output+=line
+
 
     # TODO MCS-702:  Send AWS S3 Parameters in Pipeline, Make them Ephemeral.  Until MCS-674, which will
     # move it entirely to the pipeline
 
     # TODO  MCS-674:  Move Evaluation Code out of Python API (and into the pipeline)
 
-    return ret
+    print("about to return")
+    return proc.returncode, output
 
 
 class SceneRunner:
@@ -95,18 +100,28 @@ class SceneRunner:
         print(f"Scenes {self.scene_files_list}")
 
     def run_scenes(self):
+        id_to_scene_file={}
 
         print(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
         for scene_ref in self.scene_files_list:
             with open(str(scene_ref)) as scene_file:
-                job_ids.append(run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file)))
+                job_id=run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file))
+                id_to_scene_file[job_id]=scene_ref
+                job_ids.append(job_id)
 
         not_done = job_ids
         while not_done:
             done, not_done = ray.wait(not_done)
             for done_ref in done:
-                result = ray.get(done_ref)
+                result,output = ray.get(done_ref)
+                if ("Exception in create_controller() Time out!" in output):
+                    scene_ref=id_to_scene_file[done_ref]
+                    print(f"Timeout occured for file={scene_ref}")
+                    with open(str(scene_ref)) as scene_file:
+                        job_id=run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file))
+                        id_to_scene_file[job_id]=scene_ref
+                        not_done.append(job_id)
                 print(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
 
