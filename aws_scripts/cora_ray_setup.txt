@@ -5,7 +5,7 @@ ray up -y autoscaler/ray_cora_aws.yaml
 
 # Copying over necessary files
 ray rsync_up -v autoscaler/ray_cora_aws.yaml configs/ '~/configs/'
-ray rsync_up -v autoscaler/ray_cora_aws.yaml /home/clark/work/mcs/eval3.5/data/eval/ /home/ubuntu/scenes
+ray rsync_up -v autoscaler/ray_cora_aws.yaml /home/clark/work/mcs/eval3.5/data/eval/ /home/ubuntu/scenes/tmp
 ray rsync_up -v autoscaler/ray_cora_aws.yaml scenes_single_scene.txt '~'
 
 # Starting the job
