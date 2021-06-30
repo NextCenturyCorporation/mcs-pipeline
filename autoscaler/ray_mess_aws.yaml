@@ -44,7 +44,8 @@ head_node_type: ray.head.default
 # If needed, can copy files to remote machines. Commenting out for now, since
 # a copy is of this script is included in the AMI. 
 file_mounts: {
-  #"/home/ubuntu/ray_script.sh": "./tmp_pipeline_ray/ray_script.sh"
+  #push ray_script.sh to ALL nodes
+  "/home/ubuntu/ray_script.sh": "deploy_files/mess/ray_script.sh"
 }
 
 setup_commands:
