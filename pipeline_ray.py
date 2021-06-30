@@ -41,13 +41,12 @@ def run_scene(run_script, mcs_config, scene_config):
     cmd = f'{run_script} {mcs_config_filename} {scene_config_filename}'#' | tee {out_file_path}'
     print(f"In run scene.  Running {cmd}") 
 
-    output =""
-
     proc = subprocess.Popen(cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    lines=[]
     for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
         print(line.rstrip())
-        output+=line
-
+        lines.append(line)
+    output = ''.join(lines)
 
     # TODO MCS-702:  Send AWS S3 Parameters in Pipeline, Make them Ephemeral.  Until MCS-674, which will
     # move it entirely to the pipeline
@@ -59,6 +58,8 @@ def run_scene(run_script, mcs_config, scene_config):
 
 
 class SceneRunner:
+
+    retry_counts={}
 
     def __init__(self, args):
 
@@ -115,15 +116,25 @@ class SceneRunner:
             done, not_done = ray.wait(not_done)
             for done_ref in done:
                 result,output = ray.get(done_ref)
-                if ("Exception in create_controller() Time out!" in output):
+                if (self.is_retry(result, output,scene_ref)):
                     scene_ref=id_to_scene_file[done_ref]
-                    print(f"Timeout occured for file={scene_ref}")
                     with open(str(scene_ref)) as scene_file:
                         job_id=run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file))
+                        print(f"Retrying {scene_ref} with job_id={job_id}")
                         id_to_scene_file[job_id]=scene_ref
                         not_done.append(job_id)
                 print(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
+    def is_retry(self, result:int, output:str, scene_file_path:str) -> bool:
+        num_retries = self.retry_counts.get(scene_file_path, 0)
+        retry=False
+        if ("Exception in create_controller() Time out!" in output and num_retries < 1):
+            print(f"Timeout occured for file={scene_file_path}")
+            retry|=True
+        #Allow for more conditions to retry
+        if (retry):
+            self.retry_counts[scene_file_path]=num_retries+1
+            return True
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run scenes using ray')
