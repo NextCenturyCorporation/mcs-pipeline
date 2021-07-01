@@ -12,7 +12,7 @@ max_workers: 8                       # 2 is the default
 provider:
   type: aws
   region: us-east-1
-  availability_zone: us-east-1c, us-east-1b, us-east-1d, us-east-1a
+  availability_zone: us-east-1a,us-east-1b,us-east-1c,us-east-1d
   cache_stopped_nodes: True          # Default True means stopped, false means terminate.
 
 
@@ -23,14 +23,14 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-05ab0b9b3aabc4f22
+      ImageId: ami-0626f0e163938da2e
   ray.worker.default:
     min_workers: 0
     max_workers: 2
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-05ab0b9b3aabc4f22
+      ImageId: ami-0626f0e163938da2e
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
@@ -42,6 +42,8 @@ head_node_type: ray.head.default
 # If needed, can copy files to remote machines.  However, they should be configured to run from a script,
 # so this should not be needed
 file_mounts: {
+  #push ray_script.sh to ALL nodes
+  "/home/ubuntu/ray_script.sh": "deploy_files/opics/ray_script.sh"
 }
 
 setup_commands:

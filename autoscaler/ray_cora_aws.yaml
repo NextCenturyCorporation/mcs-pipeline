@@ -31,6 +31,8 @@ available_node_types:
     node_config:
       InstanceType: p2.xlarge
       ImageId: ami-06b78349cc8d24604
+      IamInstanceProfile: 
+        Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
 auth:
   ssh_user: ubuntu
@@ -40,6 +42,8 @@ head_node_type: ray.head.default
 # If needed, can copy files to remote machines.  However, they should be configured to run from a script,
 # so this should not be needed
 file_mounts: {
+  #push ray_script.sh to ALL nodes
+  "/home/ubuntu/ray_script.sh": "deploy_files/cora/ray_script.sh"
 }
 
 setup_commands:

@@ -4,7 +4,7 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: baseline-clark-3
+cluster_name: baseline
 max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
@@ -12,7 +12,7 @@ max_workers: 8                       # 2 is the default
 provider:
   type: aws
   region: us-east-1
-  availability_zone: us-east-1a, us-east-1b, us-east-1c, us-east-1d
+  availability_zone: us-east-1a,us-east-1b,us-east-1c,us-east-1d
   cache_stopped_nodes: True          # Default True means stopped, false means terminate.
 
 
@@ -31,6 +31,8 @@ available_node_types:
     node_config:
       InstanceType: p2.xlarge
       ImageId: ami-0e230ba090bb7ad02
+      IamInstanceProfile: 
+        Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
 auth:
   ssh_user: ubuntu
@@ -40,6 +42,8 @@ head_node_type: ray.head.default
 # If needed, can copy files to remote machines.  However, they should be configured to run from a script,
 # so this should not be needed
 file_mounts: {
+  #push ray_script.sh to ALL nodes
+  "/home/ubuntu/ray_script.sh": "deploy_files/baseline/ray_script.sh"
 }
 
 setup_commands:
