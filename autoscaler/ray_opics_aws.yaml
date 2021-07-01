@@ -42,9 +42,9 @@ head_node_type: ray.head.default
 # If needed, can copy files to remote machines.  However, they should be configured to run from a script,
 # so this should not be needed
 file_mounts: {
-  "/home/ubuntu/ray_script.sh": ".tmp_pipeline_ray/ray_script.sh"
+  #push ray_script.sh to ALL nodes
+  "/home/ubuntu/ray_script.sh": "deploy_files/opics/ray_script.sh"
 }
-# file_mounts_sync_continuously: True
 
 setup_commands:
   - pip install -U ray==1.3.0

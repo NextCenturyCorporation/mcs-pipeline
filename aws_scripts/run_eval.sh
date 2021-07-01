@@ -15,13 +15,8 @@ RAY_LOCATIONS_CONFIG=configs/${MODULE}_aws.ini
 mkdir -p $TMP_DIR
 rm -rf $TMP_DIR/*
 
-ORIG_PWD=$PWD
-
-
-#cp -R configs $TMP_DIR
 cp -R deploy_files/${MODULE}/* $TMP_DIR/
-#mkdir -p $TMP_DIR/scenes/tmp
-#cp -R $LOCAL_SCENE_DIR/* $TMP_DIR/scenes/tmp/
+
 RAY_CONFIG="autoscaler/ray_${MODULE}_aws.yaml"
 
 ray up -y $RAY_CONFIG
