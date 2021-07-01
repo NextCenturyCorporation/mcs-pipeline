@@ -117,8 +117,8 @@ class SceneRunner:
             self.print_run_status(run, "      ")
 
     def print_run_status(self, run, prefix=""):
-        print(f"{prefix}Code:      {run.exit_code}")
-        print(f"{prefix}Status:    {run.status}")
+        print(f"{prefix}Code: {run.exit_code}")
+        print(f"{prefix}Status: {run.status}")
         print(f"{prefix}Retryable: {run.retry}")
 
     def read_mcs_config(self, mcs_config_filename: str):
@@ -156,9 +156,10 @@ class SceneRunner:
             for done_ref in done:
                 result,output = ray.get(done_ref)
                 run_status=self.get_run_status(result, output, scene_ref)
-                self.print_run_status(run_status)
                 scene_status=self.scene_statuses.get(done_ref)
                 scene_status.run_statuses.append(run_status)
+                print(f"file: {scene_status.scene_file}")
+                self.print_run_status(run_status)
                 if (run_status.retry and scene_status.retries < num_retries):
                     self.do_retry(not_done, scene_status)
                     scene_status.retries+=1
