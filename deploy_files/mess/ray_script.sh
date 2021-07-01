@@ -29,4 +29,3 @@ python3 script_mess.py scenes/$scene_file_basename
 
 mkdir -p /tmp/results/
 cp /home/ubuntu/mess_eval35/SCENE_HISTORY/* /tmp/results/
-
