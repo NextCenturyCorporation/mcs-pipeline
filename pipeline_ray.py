@@ -107,13 +107,19 @@ class SceneRunner:
             file=s_status.scene_file
             if file not in scenes_printed:
                 scenes_printed.append(file)
-                print(f"  Scene: {s_status.status} - {file}")
-                print(f"    retries: {s_status.retries}")
-                for x,run in enumerate(s_status.run_statuses):
-                    print(f"    Try {x}")
-                    print(f"      Code:      {run.exit_code}")
-                    print(f"      Status:    {run.status}")
-                    print(f"      Retryable: {run.retry}")
+                self.print_scene_status(s_status,"  ")
+    
+    def print_scene_status(self, s_status, prefix=""):
+        print(f"{prefix}Scene: {s_status.status} - {s_status.scene_file}")
+        print(f"{prefix}  retries: {s_status.retries}")
+        for x,run in enumerate(s_status.run_statuses):
+            print(f"{prefix}  Attempt {x}")
+            self.print_run_status(run, "      ")
+
+    def print_run_status(self, run, prefix=""):
+        print(f"{prefix}Code:      {run.exit_code}")
+        print(f"{prefix}Status:    {run.status}")
+        print(f"{prefix}Retryable: {run.retry}")
 
     def read_mcs_config(self, mcs_config_filename: str):
         with open(mcs_config_filename, 'r') as mcs_config_file:
@@ -135,6 +141,7 @@ class SceneRunner:
         print(f"Scenes {self.scene_files_list}")
 
     def run_scenes(self):
+        num_retries = 3
         print(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
         for scene_ref in self.scene_files_list:
@@ -149,10 +156,12 @@ class SceneRunner:
             for done_ref in done:
                 result,output = ray.get(done_ref)
                 run_status=self.get_run_status(result, output, scene_ref)
+                self.print_run_status(run_status)
                 scene_status=self.scene_statuses.get(done_ref)
                 scene_status.run_statuses.append(run_status)
-                if (run_status.retry):
+                if (run_status.retry and scene_status.retries < num_retries):
                     self.do_retry(not_done, scene_status)
+                    scene_status.retries+=1
                     scene_status.status="retrying"
                 else:
                     scene_status.status=run_status.status
@@ -167,7 +176,6 @@ class SceneRunner:
             not_done.append(job_id)
 
     def get_run_status(self, result:int, output:str, scene_file_path:str) -> RunStatus:
-        print(f"RESULT: {result}")
         status=RunStatus(result, output, "Success", False)
         if (result is not 0):
             status.retry|=False
