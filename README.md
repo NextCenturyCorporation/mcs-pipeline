@@ -30,14 +30,14 @@ $ source venv/bin/activate
 ### Run Eval Script
 
 To run an eval, run the following command:
-'''
+```
 aws_scripts/run_eval <module> <path/to/scene/directory> [metadata_level]
-'''
+```
 
 Here is an example:
-'''
+```
 ./aws_scripts/run_eval.sh baseline scenes/subset/
-'''
+```
 
 #### Eval test configuration
 
@@ -84,10 +84,10 @@ Some portions of ray_<module>_aws.yaml are important to how evals are executed a
   * Assign an IAM role to the worker node in ray_<module>_aws.yaml
     * Create an appropriate IAM role and verify it has an instance profile
     * In ray_<module>_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
-    '''
+    ```
     IamInstanceProfile: 
         Arn: <IAM role instance profile ARN>
-    '''
+    ```
 * In many modules, some files need to be pushed to all nodes including the worker nodes.  The best way we've found to do this is with the file_mounts property.
 
 ### Mess Example
