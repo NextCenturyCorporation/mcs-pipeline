@@ -31,7 +31,7 @@ $ source venv/bin/activate
 
 To run an eval, run the following command:
 ```
-aws_scripts/run_eval <module> <path/to/scene/directory> [metadata_level]
+aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level]
 ```
 
 Here is an example:
@@ -41,7 +41,7 @@ Here is an example:
 
 #### Eval test configuration
 
-When running test evals, its useful to know where the files will be uploaded and not override existing evals.  These are determined by properties configs/mcs_config_<MODULE>_level2.ini
+When running test evals, its useful to know where the files will be uploaded and not override existing evals.  These are determined by properties configs/mcs_config_MODULE_level2.ini
 
 Setting the s3_folder to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test will 
 
@@ -52,16 +52,16 @@ For any files to be uploaded to S3, 'evalution' needs to be set to 'true'
 #### Script Overview
 
 This script performs the following actions:
-* Start a Ray cluster based on the autoscaler/ray_<MODULE>_aws.yaml file
+* Start a Ray cluster based on the autoscaler/ray_MODULE_aws.yaml file
 * Generates a list of scene files and rsyncs that to the head node
 * Rsync the following into the head node:
   * pipeline folder
-  * deploy_files/<MODULE>/ folder
+  * deploy_files/MODULE/ folder
   * configs folder
   * provided scenes folder
 * submits a ray task via the pipeline_ray.py script with the following parameters:
-  * Ray locations config (configs/<MODULE>_aws.ini)
-  * MCS config (configs/mcs_config_<MODULE>_<METADAT_LEVEL>.ini)
+  * Ray locations config (configs/MODULE_aws.ini)
+  * MCS config (configs/mcs_config_MODULE_<METADAT_LEVEL>.ini)
     * Note: by default metadata level is level2
 
 ## Files
@@ -70,23 +70,23 @@ The pipeline is setup to run different "modules" and uses convention to file the
 
 ### Folder Structure
 
-* autoscaler - Contains ray configuration for different modules to run in AWS.  The file name convention is ray_<module>_aws.yaml.  See below and Ray documentation for more details of fields.
+* autoscaler - Contains ray configuration for different modules to run in AWS.  The file name convention is ray_MODULE_aws.yaml.  See below and Ray documentation for more details of fields.
 * aws_scripts - Contains scripts and text documents to facilitate to running in AWS.
 * configs - Contains all necessary configs for each module that will be pushed to Ray head node.  (maybe should be moved to individual deploy_files directories)
 * deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node
 * pipeline - python code used to run the pipeline that will be pushed to head node
 
-#### ray_<module>_aws.yaml
+#### ray_MODULE_aws.yaml
 
-Some portions of ray_<module>_aws.yaml are important to how evals are executed and are pointed out here:
+Some portions of ray_MODULE_aws.yaml are important to how evals are executed and are pointed out here:
 * All nodes need permissions to push data to S3.  The head node gets those permissions by default by Ray.  However, the worker nodes by default have no permissions.  To Grant permissions to the worker nodes 2 steps must be taken.
   * Once per AWS account, Add iam:PassRole permission to IAM role assigned to head node (typically ray-autoscaler-v1).  This has been done on MCS's AWS.  This allows the head node to assign IAM roles to the worker nodes.
-  * Assign an IAM role to the worker node in ray_<module>_aws.yaml
+  * Assign an IAM role to the worker node in ray_MODULE_aws.yaml
     * Create an appropriate IAM role and verify it has an instance profile
-    * In ray_<module>_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
+    * In ray_MODULE_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
     ```
     IamInstanceProfile: 
-        Arn: <IAM role instance profile ARN>
+        Arn: IAM role instance profile ARN
     ```
 * In many modules, some files need to be pushed to all nodes including the worker nodes.  The best way we've found to do this is with the file_mounts property.
 
