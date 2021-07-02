@@ -150,7 +150,7 @@ class SceneRunner:
         for scene_ref in self.scene_files_list:
             with open(str(scene_ref)) as scene_file:
                 job_id = run_scene.remote(self.exec_config['MCS']['run_script'], self.mcs_config, json.load(scene_file))
-                self.scene_statuses[job_id] = self.scene_statuses.get(job_id, SceneStatus(scene_ref, 0, "pending"))
+                self.scene_statuses[job_id] = SceneStatus(scene_ref, 0, "pending")
                 job_ids.append(job_id)
 
         not_done = job_ids
@@ -158,8 +158,8 @@ class SceneRunner:
             done, not_done = ray.wait(not_done)
             for done_ref in done:
                 result,output = ray.get(done_ref)
-                run_status = self.get_run_status(result, output, scene_ref)
                 scene_status = self.scene_statuses.get(done_ref)
+                run_status = self.get_run_status(result, output, scene_status.scene_file)
                 scene_status.run_statuses.append(run_status)
                 print(f"file: {scene_status.scene_file}")
                 self.print_run_status(run_status)
@@ -183,10 +183,10 @@ class SceneRunner:
     def get_run_status(self, result:int, output:str, scene_file_path:str) -> RunStatus:
         status = RunStatus(result, output, "Success", False)
         # Result is really the result of the copy result files (or last command in ray_script.sh)
-        if (result is not 0):
+        if result is not 0:
             status.retry |= False
             status.status = "Error"
-        if ("Exception in create_controller() Time out!" in output):
+        if "Exception in create_controller() Time out!" in output:
             print(f"Timeout occured for file={scene_file_path}")
             status.retry |= True
             status.status = "Error: Timeout"
