@@ -30,20 +30,6 @@ $ source venv/bin/activate
 
 ### Run Eval Script
 
-Note: Before running, read the Eval test configuration section below!
-
-To run an eval, run the following command:
-```
-aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level]
-```
-
-Here is an example:
-```
-./aws_scripts/run_eval.sh baseline scenes/subset/
-```
-
-Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster.
-
 #### Eval test configuration
 
 In order to test the pipeline and evaluations, the following is helpful:
@@ -56,6 +42,20 @@ In order to test the pipeline and evaluations, the following is helpful:
   * Files are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has 'evalution=true'
   * Setting the s3_folder to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test will 
   * The S3 file names are generated partially by the 'team' and 'evaluation_name' properties.  Prefixing 'evaluation_name' with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
+
+#### Commands
+
+To run an eval, run the following command:
+```
+aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level]
+```
+
+Here is an example:
+```
+./aws_scripts/run_eval.sh baseline scenes/subset/
+```
+
+Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster.
 
 #### Script Overview
 
