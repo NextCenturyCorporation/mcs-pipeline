@@ -30,6 +30,8 @@ $ source venv/bin/activate
 
 ### Run Eval Script
 
+Note: Before running, read the Eval test configuration section below!
+
 To run an eval, run the following command:
 ```
 aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level]
@@ -76,6 +78,8 @@ This script performs the following actions:
 * Copy files to head node: ray rsync_up /path/to/config.yaml SOURCE DEST
 * Execute shell command on head node: ray exec /path/to/config.yaml "COMMAND"
 * Submit a ray python script to the cluster: ray submit /path/to/config.yaml PARAMETER1 PARAMETER2
+* Monitor cluster (creates tunnel so you can see it locally): ray dashboard autoscaler/ray_baseline_aws.yaml
+  * Point browser to localhost:8265 (port will be in command output)
 * Connect to shell on head node: ray attach /path/to/config.yaml
 * Shutdown cluster (stops AWS instances): ray down /path/to/config.yaml
 
