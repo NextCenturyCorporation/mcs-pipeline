@@ -39,6 +39,18 @@ Here is an example:
 ./aws_scripts/run_eval.sh baseline scenes/subset/
 '''
 
+#### Eval test configuration
+
+When running test evals, its useful to know where the files will be uploaded and not override existing evals.  These are determined by properties configs/mcs_config_<MODULE>_level2.ini
+
+Setting the s3_folder to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test will 
+
+The S3 file names are generated partially by the 'team' and 'evaluation_name' properties.  Prefixing 'evaluation_name' with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
+
+For any files to be uploaded to S3, 'evalution' needs to be set to 'true'
+
+#### Script Overview
+
 This script performs the following actions:
 * Start a Ray cluster based on the autoscaler/ray_<MODULE>_aws.yaml file
 * Generates a list of scene files and rsyncs that to the head node
