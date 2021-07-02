@@ -1,6 +1,9 @@
 # mcs-pipeline
 
-TODO:  Rewrite this for using Ray.
+The pipeline makes heavy use of Ray.  Getting familiar with Ray is beneficial.
+
+Ray:
+https://docs.ray.io/en/master/index.html
 
 Ray Book of Knowledge: 
 https://nextcentury.atlassian.net/wiki/spaces/MCS/pages/2156757749/BoK
@@ -10,10 +13,8 @@ https://nextcentury.atlassian.net/wiki/spaces/MCS/pages/2156757749/BoK
 MCS Project for running evaluations
 
 This code runs scene files on EC2 machines.  Assumptions:
-* There are some number of identical EC2 machines running and that they can be identified (details below)
-* The EC2 machines have all the software running necessary
-* The scene files are already on the machines
-* You know how to run a single scene file on the remote the machine.   
+* There is an AMI that exists with the software necessary to run an evaluation.  (Usually this includes performer software, MCS, and MCS AI2THOR)
+* The scene files are on the local machine
 
 ### Python Environment Setup
 
@@ -26,43 +27,58 @@ $ source venv/bin/activate
 (pipeline) $ python -m pip install -r requirements.txt
 ```
 
-### Pre-requisites / setup 
+### Run Eval Script
 
-* Working ssh.  You should have a pem that will allow you to do something like:
+To run an eval, run the following command:
+'''
+aws_scripts/run_eval <module> <path/to/scene/directory> [metadata_level]
+'''
 
-    <code>ssh -i ~/.ssh/pemfilename.pem username@ec2.2.amazon.com run_script.sh</code>
-    
-* secrets file, containing the pemfilename and the username.  Copy from pipeline/secrets_template.py 
-to pipeline/secrets.py and fill it in.  Do not add to github.
-* AWS credentials file.  This should be in the file ~/.aws/credentials.  This will allow you to 
-use [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) to get 
-EC2 machines.  
-* Add the following to your ~/.ssh/config:   <code>StrictHostKeyChecking accept-new</code>
-This will allow the EC2 machines to be called without you agreeing to accept them 
-manually.
+Here is an example:
+'''
+./aws_scripts/run_eval.sh baseline scenes/subset/
+'''
 
-###  Logical Steps
+This script performs the following actions:
+* Start a Ray cluster based on the autoscaler/ray_<MODULE>_aws.yaml file
+* Generates a list of scene files and rsyncs that to the head node
+* Rsync the following into the head node:
+  * pipeline folder
+  * deploy_files/<MODULE>/ folder
+  * configs folder
+  * provided scenes folder
+* submits a ray task via the pipeline_ray.py script with the following parameters:
+  * Ray locations config (configs/<MODULE>_aws.ini)
+  * MCS config (configs/mcs_config_<MODULE>_<METADAT_LEVEL>.ini)
+    * Note: by default metadata level is level2
 
-* See what machines are running.  Within the code you can look for specific 
-types of machines (like 'p2.xlarge', the default) or a location ('us-east-1'). 
-It would be pretty easy to get it to look for tags. 
-* Get a list of the scenes to run
-* Create a thread pool of size of the number of machines
-* In each thread:
-  * Get the next scene to run 
-  * Call a TA1-performer specific class to run the scene
-  * On failure, add the scene back to the list of scenes to run
+## Files
 
-### Scene Running Class
+The pipeline is setup to run different "modules" and uses convention to file the files for each module.  At first, each module will be an evaluation for a specific team, but the goal is to add modules that perform different tasks uses Ray in AWS.
 
-The class that runs a single scene on an EC2 machine is TA1-performer specific.  
-The general idea is that it:
-* clears out any directories, as necessary
-* copies the scene file to the appropriate directory
-* runs the scene
-* determines if there was an error
+### Folder Structure
 
-### Usage
+* autoscaler - Contains ray configuration for different modules to run in AWS.  The file name convention is ray_<module>_aws.yaml.  See below and Ray documentation for more details of fields.
+* aws_scripts - Contains scripts and text documents to facilitate to running in AWS.
+* configs - Contains all necessary configs for each module that will be pushed to Ray head node.  (maybe should be moved to individual deploy_files directories)
+* deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node
+* pipeline - python code used to run the pipeline that will be pushed to head node
+
+#### ray_<module>_aws.yaml
+
+Some portions of ray_<module>_aws.yaml are important to how evals are executed and are pointed out here:
+* All nodes need permissions to push data to S3.  The head node gets those permissions by default by Ray.  However, the worker nodes by default have no permissions.  To Grant permissions to the worker nodes 2 steps must be taken.
+  * Once per AWS account, Add iam:PassRole permission to IAM role assigned to head node (typically ray-autoscaler-v1).  This has been done on MCS's AWS.  This allows the head node to assign IAM roles to the worker nodes.
+  * Assign an IAM role to the worker node in ray_<module>_aws.yaml
+    * Create an appropriate IAM role and verify it has an instance profile
+    * In ray_<module>_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
+    '''
+    IamInstanceProfile: 
+        Arn: <IAM role instance profile ARN>
+    '''
+* In many modules, some files need to be pushed to all nodes including the worker nodes.  The best way we've found to do this is with the file_mounts property.
+
+### Mess Example
 
 Here is an example of running the MESS code.  Warning:  It's not very pretty, but 
 we're going to use mess_tasks_runner.py as if it were an interactive tool.  
@@ -134,6 +150,21 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
     of minutes.  
     * Make a file with the correct list of tasks and set the TASK_FILE_PATH to point to it
     * Run the tasks
+
+### SSH
+
+* Working ssh.  To run an evaluation through Ray, you don't need to setup SSH, but it can sometimes be useful
+
+    <code>ssh -i ~/.ssh/pemfilename.pem username@ec2.2.amazon.com run_script.sh</code>
+    
+* secrets file, containing the pemfilename and the username.  Copy from pipeline/secrets_template.py 
+to pipeline/secrets.py and fill it in.  Do not add to github.
+* AWS credentials file.  This should be in the file ~/.aws/credentials.  This will allow you to 
+use [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) to get 
+EC2 machines.  
+* Add the following to your ~/.ssh/config:   <code>StrictHostKeyChecking accept-new</code>
+This will allow the EC2 machines to be called without you agreeing to accept them 
+manually.
 
 ### Logs
 
