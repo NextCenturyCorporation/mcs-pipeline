@@ -94,7 +94,7 @@ The pipeline is setup to run different "modules" and uses convention to locate f
 ### Folder Structure
 
 * autoscaler - Contains Ray configuration for different modules to run in AWS.  The file name convention is ray_MODULE_aws.yaml.  See below and Ray documentation for more details of fields.
-* aws_scripts - Contains scripts and text documents to facilitate to running in AWS.
+* aws_scripts - Contains scripts and text documents to facilitate running in AWS.
 * configs - Contains all necessary configs for each module that will be pushed to Ray head node.  (maybe should be moved to individual deploy_files directories)
 * deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node
 * pipeline - python code used to run the pipeline that will be pushed to head node
@@ -102,7 +102,7 @@ The pipeline is setup to run different "modules" and uses convention to locate f
 ### ray_MODULE_aws.yaml
 
 Some portions of ray_MODULE_aws.yaml are important to how evals are executed and are pointed out here:
-* All nodes need permissions to push data to S3.  The head node gets those permissions by default by Ray.  However, the worker nodes by default have no permissions.  To Grant permissions to the worker nodes 2 steps must be taken.
+* All nodes need permissions to push data to S3.  The head node gets those permissions by default from Ray.  However, the worker nodes by default have no permissions.  To Grant permissions to the worker nodes 2 steps must be taken.
   * Once per AWS account, Add iam:PassRole permission to IAM role assigned to head node (typically ray-autoscaler-v1).  This has been done on MCS's AWS.  This allows the head node to assign IAM roles to the worker nodes.
   * Assign an IAM role to the worker node in ray_MODULE_aws.yaml
     * Create an appropriate IAM role and verify it has an instance profile
