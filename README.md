@@ -36,11 +36,11 @@ In order to test the pipeline and evaluations, the following is helpful:
 
 * In the autoscaler/ray_MODULE_aws.yaml file you plan to use, add your initials or personal ID to the cluster name just so its easier to track in AWS.
 
-* Be sure to stop your cluster and/or terminate the AWS instances when you are done
+* Be sure to stop your cluster and/or terminate the AWS instances when you are done.
 
-* Know if/where your results will be upload to avoid conflicts:
-  * Files are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has 'evalution=true'
-  * Setting the s3_folder to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test will 
+* Know if/where your results will be uploaded to avoid conflicts:
+  * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has 'evalution=true'
+  * Setting the s3_folder to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test 
   * The S3 file names are generated partially by the 'team' and 'evaluation_name' properties.  Prefixing 'evaluation_name' with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
 
 #### Commands
@@ -67,7 +67,7 @@ This script performs the following actions:
   * deploy_files/MODULE/ folder
   * configs folder
   * provided scenes folder
-* submits a ray task via the pipeline_ray.py script with the following parameters:
+* submits a Ray task via the pipeline_ray.py script with the following parameters:
   * Ray locations config (configs/MODULE_aws.ini)
   * MCS config (configs/mcs_config_MODULE_<METADAT_LEVEL>.ini)
     * Note: by default metadata level is level2
@@ -77,7 +77,7 @@ This script performs the following actions:
 * Start a cluster: ray up /path/to/config.yaml
 * Copy files to head node: ray rsync_up /path/to/config.yaml SOURCE DEST
 * Execute shell command on head node: ray exec /path/to/config.yaml "COMMAND"
-* Submit a ray python script to the cluster: ray submit /path/to/config.yaml PARAMETER1 PARAMETER2
+* Submit a Ray python script to the cluster: ray submit /path/to/config.yaml PARAMETER1 PARAMETER2
 * Monitor cluster (creates tunnel so you can see it locally): ray dashboard autoscaler/ray_baseline_aws.yaml
   * Point browser to localhost:8265 (port will be in command output)
 * Connect to shell on head node: ray attach /path/to/config.yaml
@@ -89,11 +89,11 @@ TBD
 
 ## Project Structure
 
-The pipeline is setup to run different "modules" and uses convention to file the files for each module.  At first, each module will be an evaluation for a specific team, but the goal is to add modules that perform different tasks uses Ray in AWS.
+The pipeline is setup to run different "modules" and uses convention to locate files for each module.  At first, each module will be an evaluation for a specific team, but the goal is to add modules that perform different tasks using Ray in AWS.
 
 ### Folder Structure
 
-* autoscaler - Contains ray configuration for different modules to run in AWS.  The file name convention is ray_MODULE_aws.yaml.  See below and Ray documentation for more details of fields.
+* autoscaler - Contains Ray configuration for different modules to run in AWS.  The file name convention is ray_MODULE_aws.yaml.  See below and Ray documentation for more details of fields.
 * aws_scripts - Contains scripts and text documents to facilitate to running in AWS.
 * configs - Contains all necessary configs for each module that will be pushed to Ray head node.  (maybe should be moved to individual deploy_files directories)
 * deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node
@@ -117,7 +117,7 @@ Some portions of ray_MODULE_aws.yaml are important to how evals are executed and
 
 ### SSH
 
-* Use ray attach, can connect to a shell on the cluster head node.  That is usually more than you need.
+* Use the 'ray attach' command to connect to a shell on the cluster head node.
 * You can also connect to a node via the following:
 
     <code>ssh -i ~/.ssh/pemfilename.pem username@ec2.2.amazon.com run_script.sh</code>
