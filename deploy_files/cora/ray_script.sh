@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 # check passed mcs_config and scene file
 source /home/ubuntu/check_passed_variables.sh
@@ -11,9 +11,15 @@ LOC=/home/ubuntu/workspace
 cp $scene_file $LOC/scenes/
 cp $mcs_configfile $LOC/GenPRAM.jl/GenAgent/omg/mcs_config.ini
 
+# Get the name of the scene file without the leading /tmp/
+scene_file=`echo $scene_file | cut -d'/' -f3`
+echo "File name without leading dir $scene_file"
+
+# TODO: MCS-709 Handle:  'Exception in create_controller() Time out!' error gracefully
+
 # Look for the CORA docker container running.  This will occur if this
 # is the second or subsequent runs on this machine.  The X Server
-# runs within the docker container.  
+# runs within the docker container.
 CID=`docker ps -a | grep 'cora_with_x' | awk '{print $1}'`
 if [ -z $CID ]; then
 

@@ -4,7 +4,7 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: cora-clark-v4
+cluster_name: cora
 max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
@@ -23,14 +23,16 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-06b78349cc8d24604
+      ImageId: ami-00da8aa4b07be3e9a
   ray.worker.default:
     min_workers: 0
     max_workers: 2
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-06b78349cc8d24604
+      ImageId: ami-00da8aa4b07be3e9a
+      IamInstanceProfile: 
+        Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
 auth:
   ssh_user: ubuntu
@@ -40,6 +42,8 @@ head_node_type: ray.head.default
 # If needed, can copy files to remote machines.  However, they should be configured to run from a script,
 # so this should not be needed
 file_mounts: {
+  #push ray_script.sh to ALL nodes
+  "/home/ubuntu/ray_script.sh": "deploy_files/cora/ray_script.sh"
 }
 
 setup_commands:

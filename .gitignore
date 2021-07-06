@@ -2,6 +2,9 @@ old_pipeline/secrets.py
 
 __pycache__/
 
+# temp files
+.tmp_pipeline_ray/
+
 # Environments
 .env
 .venv
@@ -11,3 +14,4 @@ venv/
 # Output and IDE config files
 .idea/
 .logs/
+.vscode/
