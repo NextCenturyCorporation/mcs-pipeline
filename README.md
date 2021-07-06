@@ -10,9 +10,9 @@ https://nextcentury.atlassian.net/wiki/spaces/MCS/pages/2156757749/BoK
 
 ****
 
-MCS Project for running evaluations
+MCS Project for running evaluations.  Most of this code runs scene files on EC2 machines.  
 
-This code runs scene files on EC2 machines.  Assumptions:
+## Assumptions:
 * There is an AMI that exists with the software necessary to run an evaluation.  (Usually this includes performer software, MCS, and MCS AI2THOR)
 * The scene files are on the local machine
 
