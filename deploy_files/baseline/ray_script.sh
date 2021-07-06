@@ -1,35 +1,39 @@
 #!/bin/bash
 
-# check passed mcs_config and scene file
+# Check passed mcs_config and scene file
 source /home/ubuntu/check_passed_variables.sh
+
+EVAL_DIR=/home/ubuntu/
+SCENE_DIR="$EVAL_DIR/scenes/validation/"
+TMP_CFG_FILE="$EVAL_DIR/msc_cfg.ini.tmp"
 
 echo "Running Baseline with config $mcs_configfile and scene $scene_file"
 
-source /home/ubuntu/venv/bin/activate
-
 # Start X
-# TODO:  Check to see if the xserver is already running and do not restart
-cd mcs-pipeline/xserver
-sudo nohup python3 run_startx.py 1>startx-out.txt 2>startx-err.txt &
-sleep 20
+source /home/ubuntu/start_x_server.sh
 
 # Clear out the directories
-rm -f /home/ubuntu/scenes/validation/*
-rm -f /home/ubuntu/SCENE_HISTORY/*
+echo Clearing History at $EVAL_DIR/SCENE_HISTORY/
+rm -f $EVAL_DIR/SCENE_HISTORY/*
+echo Clearing $SCENE_DIR
+rm -rf $SCENE_DIR/*
 
-# Go to the home directory, which is where we will be run
-cd /home/ubuntu
+# Move files to appropriate locations
+echo Making SCENE_DIR=$SCENE_DIR
+mkdir -p $SCENE_DIR
+echo Moving scene_file=$scene_file to $SCENE_DIR
+cp $scene_file $SCENE_DIR/
 
-# Copy the scenes and config file to the right place 
-cp $scene_file /home/ubuntu/scenes/validation/
-cp $mcs_configfile /home/ubuntu/mcs_config.ini
+echo "Making temporary copy of config file ($mcs_configfile -> $TMP_CFG_FILE)"
+cp $mcs_configfile $TMP_CFG_FILE
+echo Removing old config file at $EVAL_DIR/mcs_config.ini
+rm $EVAL_DIR/mcs_config.ini
+echo Moving temporary config file to config location
+mv $TMP_CFG_FILE $EVAL_DIR/mcs_config.ini
 
-# Run the model
+# Run the Performer code
+cd $EVAL_DIR
+echo Starting Evaluation:
+echo
+source /home/ubuntu/venv/bin/activate
 python3 gravity_py.py
-
-# Copy the results to the right place
-mkdir -p /tmp/results/
-cp /home/ubuntu/SCENE_HISTORY/* /tmp/results/
-
-
-

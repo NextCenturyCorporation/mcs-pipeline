@@ -1,21 +1,13 @@
 #!/bin/bash
 
-# check passed mcs_config and scene file
+# Check passed mcs_config and scene file
 source /home/ubuntu/check_passed_variables.sh
 
+EVAL_DIR=/home/ubuntu/workspace
+SCENE_DIR="$EVAL_DIR/scenes/"
+TMP_CFG_FILE="$EVAL_DIR/msc_cfg.ini.tmp"
+
 echo "Running CORA with config $mcs_configfile and scene $scene_file"
-
-# Copy the scenes and config file to the right place
-LOC=/home/ubuntu/workspace
-
-cp $scene_file $LOC/scenes/
-cp $mcs_configfile $LOC/GenPRAM.jl/GenAgent/omg/mcs_config.ini
-
-# Get the name of the scene file without the leading /tmp/
-scene_file=`echo $scene_file | cut -d'/' -f3`
-echo "File name without leading dir $scene_file"
-
-# TODO: MCS-709 Handle:  'Exception in create_controller() Time out!' error gracefully
 
 # Look for the CORA docker container running.  This will occur if this
 # is the second or subsequent runs on this machine.  The X Server
@@ -48,7 +40,30 @@ if [ -z $CID ]; then
     sleep 20
 fi
 
-# Run the CORA software, using the passes mcs_config file and scene file
+# Clear out directories
+echo Clearing History at $EVAL_DIR/SCENE_HISTORY/
+rm -f $EVAL_DIR/SCENE_HISTORY/*
+echo Clearing $SCENE_DIR
+rm -rf $SCENE_DIR/*
+
+
+# Move files to appropriate locations
+echo Making SCENE_DIR=$SCENE_DIR
+mkdir -p $SCENE_DIR
+echo Moving scene_file=$scene_file to $SCENE_DIR
+cp $scene_file $SCENE_DIR/
+
+echo "Making temporary copy of config file ($mcs_configfile -> $TMP_CFG_FILE)"
+cp $mcs_configfile $TMP_CFG_FILE
+echo Removing old config file at $EVAL_DIR/GenPRAM.jl/GenAgent/omg/mcs_config.ini
+rm $EVAL_DIR/GenPRAM.jl/GenAgent/omg/mcs_config.ini
+echo Moving temporary config file to config location
+mv $TMP_CFG_FILE $EVAL_DIR/GenPRAM.jl/GenAgent/omg/mcs_config.ini
+
+# Run the Performer code
+echo Starting Evaluation:
+echo
+scene_file_basename=$(basename $scene_file)
 time docker exec $CID bash -c "MCS_CONFIG_FILE_PATH=/GenPRAM.jl/GenAgent/omg/mcs_config.ini MCS_INPUT_PATH=/scenes julia --project=@. -e '
       import Pkg;
       Pkg.develop([Pkg.PackageSpec(path=\"/GenPRAM.jl/GenAgent\"),
@@ -58,7 +73,7 @@ time docker exec $CID bash -c "MCS_CONFIG_FILE_PATH=/GenPRAM.jl/GenAgent/omg/mcs
                    Pkg.PackageSpec(path=\"/PoseComposition.jl\")])
       using GenAgent;
       scenes = [
-      \"$scene_file\",
+      \"$scene_file_basename\",
       ];
       GenAgent.main_run(scenes, \"submission\")
   ' 2>&1 | tee /output/testrun_log_$(date +%s)"
