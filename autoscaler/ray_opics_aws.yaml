@@ -23,14 +23,14 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0626f0e163938da2e
+      ImageId: ami-08b3c4d663c483fd0
   ray.worker.default:
     min_workers: 0
     max_workers: 2
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0626f0e163938da2e
+      ImageId: ami-08b3c4d663c483fd0
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
@@ -48,7 +48,6 @@ file_mounts: {
 
 setup_commands:
   - pip install -U ray==1.3.0
-  - rm -rf ~/.aws
 
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:

@@ -8,11 +8,14 @@
 import argparse
 import configparser
 import json
-import os
 import pathlib
 import time
 import traceback
 import uuid
+import subprocess
+import io
+from dataclasses import dataclass, field
+from typing import List
 
 import ray
 
@@ -41,19 +44,39 @@ def run_scene(run_script, mcs_config, scene_config):
     cmd = f'{run_script} {mcs_config_filename} {scene_config_filename}'
     print(f"In run scene.  Running {cmd}")
 
-    # TODO MCS-709:  Return more information from the script about how it went, and handle the
-    # results, either re-trying or reporting failure.
-    ret = os.system(cmd)
+    proc = subprocess.Popen(cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    lines=[]
+    for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
+        print(line.rstrip())
+        lines.append(line)
+    ret=proc.wait()
+    output = ''.join(lines)
 
     # TODO MCS-702:  Send AWS S3 Parameters in Pipeline, Make them Ephemeral.  Until MCS-674, which will
     # move it entirely to the pipeline
 
     # TODO  MCS-674:  Move Evaluation Code out of Python API (and into the pipeline)
 
-    return ret
+    return ret, output
 
+@dataclass
+class RunStatus:
+    exit_code: int
+    output: str
+    status: str 
+    job_id = None
+    retry: bool = False
 
+@dataclass
+class SceneStatus:
+    scene_file: str
+    retries: int = 0
+    status: str = ""
+    run_statuses: List[RunStatus] = field(default_factory=list)
+    
 class SceneRunner:
+
+    scene_statuses={}
 
     def __init__(self, args):
 
@@ -71,9 +94,33 @@ class SceneRunner:
 
         self.get_scenes()
         self.run_scenes()
+        self.print_results()
 
         date_str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
         print(f"Finished run scenes {date_str}")
+
+    def print_results(self):
+        # scenes may have multiple entries of they were retried
+        scenes_printed = []
+        print("Status:")
+        for key in self.scene_statuses:
+            s_status=self.scene_statuses[key]
+            file=s_status.scene_file
+            if file not in scenes_printed:
+                scenes_printed.append(file)
+                self.print_scene_status(s_status,"  ")
+    
+    def print_scene_status(self, s_status, prefix=""):
+        print(f"{prefix}Scene: {s_status.status} - {s_status.scene_file}")
+        print(f"{prefix}  retries: {s_status.retries}")
+        for x,run in enumerate(s_status.run_statuses):
+            print(f"{prefix}  Attempt {x}")
+            self.print_run_status(run, "      ")
+
+    def print_run_status(self, run, prefix=""):
+        print(f"{prefix}Code: {run.exit_code}")
+        print(f"{prefix}Status: {run.status}")
+        print(f"{prefix}Retryable: {run.retry}")
 
     def read_mcs_config(self, mcs_config_filename: str):
         with open(mcs_config_filename, 'r') as mcs_config_file:
@@ -95,20 +142,56 @@ class SceneRunner:
         print(f"Scenes {self.scene_files_list}")
 
     def run_scenes(self):
-
+        # This should probably be configurable and may need to be different depending on what errors we are detecting.
+        # This should work for a first step though.
+        num_retries = 3
         print(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
         for scene_ref in self.scene_files_list:
             with open(str(scene_ref)) as scene_file:
-                job_ids.append(run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file)))
+                job_id = run_scene.remote(self.exec_config['MCS']['run_script'], self.mcs_config, json.load(scene_file))
+                self.scene_statuses[job_id] = SceneStatus(scene_ref, 0, "pending")
+                job_ids.append(job_id)
 
         not_done = job_ids
         while not_done:
             done, not_done = ray.wait(not_done)
             for done_ref in done:
-                result = ray.get(done_ref)
+                result,output = ray.get(done_ref)
+                scene_status = self.scene_statuses.get(done_ref)
+                run_status = self.get_run_status(result, output, scene_status.scene_file)
+                scene_status.run_statuses.append(run_status)
+                print(f"file: {scene_status.scene_file}")
+                self.print_run_status(run_status)
+                if (run_status.retry and scene_status.retries < num_retries):
+                    self.do_retry(not_done, scene_status)
+                    scene_status.retries += 1
+                    scene_status.status = "retrying"
+                else:
+                    # If we are finished, full scene status should be same as last run status
+                    scene_status.status = run_status.status
                 print(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
+    def do_retry(self, not_done, scene_status):
+        scene_ref=scene_status.scene_file
+        with open(str(scene_ref)) as scene_file:
+            job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file))
+            print(f"Retrying {scene_ref} with job_id={job_id}")
+            self.scene_statuses[job_id] = scene_status
+            not_done.append(job_id)
+
+    def get_run_status(self, result:int, output:str, scene_file_path:str) -> RunStatus:
+        status = RunStatus(result, output, "Success", False)
+        # Result is really the result of the copy result files (or last command in ray_script.sh)
+        if result is not 0:
+            status.retry |= False
+            status.status = "Error"
+        if "Exception in create_controller() Time out!" in output:
+            print(f"Timeout occured for file={scene_file_path}")
+            status.retry |= True
+            status.status = "Error: Timeout"
+        # Add more conditions to retry here
+        return status
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run scenes using ray')
