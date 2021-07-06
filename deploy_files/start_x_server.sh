@@ -1,9 +1,8 @@
 #!/bin/bash
 
 # Common code to determine if the X server is running and start it if it is not.
-
-XPROCESS=`ps aux | grep 'sudo /usr/bin/Xorg :0' | grep -v grep | awk '{print $1}'`
-if [ -z $XPROCESS ]; then
+if pgrep -x Xorg > /dev/null
+then
   echo 'X Server is running'
 else
   echo "Starting X Server"
@@ -13,8 +12,8 @@ else
   sleep 20
   echo "Sleep finished"
 
-  XPROCESS=`ps aux | grep 'sudo /usr/bin/Xorg :0' | grep -v grep | awk '{print $1}'`
-  if [ -z $XPROCESS ]; then
+  if pgrep -x Xorg > /dev/null
+  then
     echo 'Successfully started X Server'
   else
     echo 'Error:  Unable to start X Server!!'
