@@ -41,8 +41,8 @@ head_node_type: ray.head.default
 
 # Copy script files to ALL nodes
 file_mounts: {
-  "/home/ubuntu/ray_script.sh": "deploy_files/cora/ray_script.sh"
-  "/home/ubuntu/check_passed_variables.sh": "deploy_files/check_passed_variables.sh"
+  "/home/ubuntu/ray_script.sh": "deploy_files/cora/ray_script.sh",
+  "/home/ubuntu/check_passed_variables.sh": "deploy_files/check_passed_variables.sh",
   "/home/ubuntu/start_x_server.sh": "deploy_files/start_x_server.sh"
 }
 
