@@ -10,44 +10,49 @@ import configparser
 import json
 import pathlib
 import time
-import traceback
 import uuid
 import subprocess
 import io
+import logging
 from dataclasses import dataclass, field
 from typing import List
 
 import ray
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 @ray.remote(num_gpus=1)
 def run_scene(run_script, mcs_config, scene_config):
     """ Ray """
 
+    # Need to initialize because its on a remote machine.
+    logging.basicConfig(level=logging.DEBUG)
+
     identifier = uuid.uuid4()
     run_script = run_script
 
     # Save the mcs_config information as /tmp/mcs_config.ini
     mcs_config_filename = "/tmp/mcs_config.ini"
-    print(f"Saving mcs config information to {mcs_config_filename}")
+    logging.info(f"Saving mcs config information to {mcs_config_filename}")
     with open(mcs_config_filename, 'w') as mcs_config_file:
         for line in mcs_config:
             mcs_config_file.write(line)
 
     # Save the scene config information
     scene_config_filename = "/tmp/" + str(identifier) + ".json"
-    print(f"Saving scene information to {scene_config_filename}")
+    logging.info(f"Saving scene information to {scene_config_filename}")
     with open(scene_config_filename, 'w') as scene_config_file:
         json.dump(scene_config, scene_config_file)
 
     # Run the script on the machine
     cmd = f'{run_script} {mcs_config_filename} {scene_config_filename}'
-    print(f"In run scene.  Running {cmd}")
+    logging.info(f"In run scene.  Running {cmd}")
 
     proc = subprocess.Popen(cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     lines=[]
     for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
-        print(line.rstrip())
+        logging.info(line.rstrip())
         lines.append(line)
     ret=proc.wait()
     output = ''.join(lines)
@@ -90,19 +95,19 @@ class SceneRunner:
         self.scene_files_list = []
 
         date_str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-        print(f"Starting run scenes {date_str}")
+        logging.info(f"Starting run scenes {date_str}")
 
         self.get_scenes()
         self.run_scenes()
         self.print_results()
 
         date_str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-        print(f"Finished run scenes {date_str}")
+        logging.info(f"Finished run scenes {date_str}")
 
     def print_results(self):
         # scenes may have multiple entries of they were retried
         scenes_printed = []
-        print("Status:")
+        logging.info("Status:")
         for key in self.scene_statuses:
             s_status=self.scene_statuses[key]
             file=s_status.scene_file
@@ -111,16 +116,16 @@ class SceneRunner:
                 self.print_scene_status(s_status,"  ")
     
     def print_scene_status(self, s_status, prefix=""):
-        print(f"{prefix}Scene: {s_status.status} - {s_status.scene_file}")
-        print(f"{prefix}  retries: {s_status.retries}")
+        logging.info(f"{prefix}Scene: {s_status.status} - {s_status.scene_file}")
+        logging.info(f"{prefix}  retries: {s_status.retries}")
         for x,run in enumerate(s_status.run_statuses):
-            print(f"{prefix}  Attempt {x}")
+            logging.info(f"{prefix}  Attempt {x}")
             self.print_run_status(run, "      ")
 
     def print_run_status(self, run, prefix=""):
-        print(f"{prefix}Code: {run.exit_code}")
-        print(f"{prefix}Status: {run.status}")
-        print(f"{prefix}Retryable: {run.retry}")
+        logging.info(f"{prefix}Code: {run.exit_code}")
+        logging.info(f"{prefix}Status: {run.status}")
+        logging.info(f"{prefix}Retryable: {run.retry}")
 
     def read_mcs_config(self, mcs_config_filename: str):
         with open(mcs_config_filename, 'r') as mcs_config_file:
@@ -138,14 +143,14 @@ class SceneRunner:
                 self.scene_files_list.append(base_dir / line.strip())
 
         self.scene_files_list.sort()
-        print(f"Number of scenes: {len(self.scene_files_list)}")
-        print(f"Scenes {self.scene_files_list}")
+        logging.info(f"Number of scenes: {len(self.scene_files_list)}")
+        logging.info(f"Scenes {self.scene_files_list}")
 
     def run_scenes(self):
         # This should probably be configurable and may need to be different depending on what errors we are detecting.
         # This should work for a first step though.
         num_retries = 3
-        print(f"Running {len(self.scene_files_list)} scenes")
+        logging.info(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
         for scene_ref in self.scene_files_list:
             with open(str(scene_ref)) as scene_file:
@@ -161,7 +166,7 @@ class SceneRunner:
                 scene_status = self.scene_statuses.get(done_ref)
                 run_status = self.get_run_status(result, output, scene_status.scene_file)
                 scene_status.run_statuses.append(run_status)
-                print(f"file: {scene_status.scene_file}")
+                logging.info(f"file: {scene_status.scene_file}")
                 self.print_run_status(run_status)
                 if (run_status.retry and scene_status.retries < num_retries):
                     self.do_retry(not_done, scene_status)
@@ -170,13 +175,13 @@ class SceneRunner:
                 else:
                     # If we are finished, full scene status should be same as last run status
                     scene_status.status = run_status.status
-                print(f"{len(not_done)}  Result of {done_ref}:  {result}")
+                logging.info(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
     def do_retry(self, not_done, scene_status):
         scene_ref=scene_status.scene_file
         with open(str(scene_ref)) as scene_file:
             job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file))
-            print(f"Retrying {scene_ref} with job_id={job_id}")
+            logging.info(f"Retrying {scene_ref} with job_id={job_id}")
             self.scene_statuses[job_id] = scene_status
             not_done.append(job_id)
 
@@ -187,7 +192,7 @@ class SceneRunner:
             status.retry |= False
             status.status = "Error"
         if "Exception in create_controller() Time out!" in output:
-            print(f"Timeout occured for file={scene_file_path}")
+            logging.info(f"Timeout occured for file={scene_file_path}")
             status.retry |= True
             status.status = "Error: Timeout"
         # Add more conditions to retry here
@@ -216,10 +221,9 @@ if __name__ == '__main__':
     try:
         scene_runner = SceneRunner(args)
     except Exception as e:
-        print(f"exception {e}")
-        traceback.print_exc()
+        logging.info(f"Exception: ", exc_info=e)
 
     # Give it time to wrap up, produce output from the ray workers
     time.sleep(2)
-    print("\n*********************************")
+    logging.info("\n*********************************")
     input("Finished.  Hit enter to finish ")
