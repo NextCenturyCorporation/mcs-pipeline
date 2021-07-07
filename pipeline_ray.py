@@ -8,18 +8,20 @@
 import argparse
 import configparser
 import json
+from os import mkdir
 import pathlib
 import time
 import uuid
 import subprocess
 import io
 import logging
+import shutil
 from dataclasses import dataclass, field
 from typing import List
 
 import ray
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG,format="%(message)s")
 
 
 @ray.remote(num_gpus=1)
@@ -27,7 +29,7 @@ def run_scene(run_script, mcs_config, scene_config):
     """ Ray """
 
     # Need to initialize because its on a remote machine.
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG,format="%(message)s")
 
     identifier = uuid.uuid4()
     run_script = run_script
@@ -149,6 +151,10 @@ class SceneRunner:
     def run_scenes(self):
         # This should probably be configurable and may need to be different depending on what errors we are detecting.
         # This should work for a first step though.
+        log_dir = pathlib.Path("/tmp/results/logs")
+        shutil.rmtree(log_dir, ignore_errors=True)
+        log_dir.mkdir(parents=True, exist_ok=True)
+
         num_retries = 3
         logging.info(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
@@ -167,6 +173,9 @@ class SceneRunner:
                 run_status = self.get_run_status(result, output, scene_status.scene_file)
                 scene_status.run_statuses.append(run_status)
                 logging.info(f"file: {scene_status.scene_file}")
+
+                self.write_log(output, scene_status, log_dir)
+
                 self.print_run_status(run_status)
                 if (run_status.retry and scene_status.retries < num_retries):
                     self.do_retry(not_done, scene_status)
@@ -177,7 +186,15 @@ class SceneRunner:
                     scene_status.status = run_status.status
                 logging.info(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
-    def do_retry(self, not_done, scene_status):
+    def write_log(self, output, scene_status:SceneStatus, log_dir:pathlib.Path):
+        log_file = f"{pathlib.Path(scene_status.scene_file).name}-{scene_status.retries + 1}.log"
+        log_file = log_dir.joinpath(log_file)
+        logging.info(f"Writing to {log_file.absolute()}")
+        with open(log_file.absolute(), "a") as f:
+            f.write(output)
+        f.close()
+
+    def do_retry(self, not_done, scene_status:SceneStatus):
         scene_ref=scene_status.scene_file
         with open(str(scene_ref)) as scene_file:
             job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file))
