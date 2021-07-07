@@ -157,7 +157,7 @@ manually.
 
 ### Logs
 
-Logs are written to the head node and sometimes be pushed to S3.  Details TBD
+Logs will be written to the head node and sometimes be pushed to S3.  Details TBD.
 
 ### Mess Example
 
