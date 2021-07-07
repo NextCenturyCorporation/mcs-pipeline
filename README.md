@@ -30,7 +30,7 @@ $ source venv/bin/activate
 
 ### Run Eval Script
 
-#### Eval test configuration
+#### Eval test Configuration
 
 In order to test the pipeline and evaluations, the following is helpful:
 
@@ -40,12 +40,12 @@ In order to test the pipeline and evaluations, the following is helpful:
 
 * Know if/where your results will be uploaded to avoid conflicts:
   * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has 'evalution=true'
-  * Setting the s3_folder to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test 
-  * The S3 file names are generated partially by the 'team' and 'evaluation_name' properties.  Prefixing 'evaluation_name' with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
+  * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test 
+  * The S3 file names are generated partially by the 'team' and 'evaluation_name' properties in the MCS config file.  Prefixing 'evaluation_name' with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
 
 #### Commands
 
-To run an eval, run the following command:
+To run an eval, run the following command on your local development machine (driver):
 ```
 aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level]
 ```
@@ -64,13 +64,36 @@ This script performs the following actions:
 * Generates a list of scene files and rsyncs that to the head node
 * Rsync the following into the head node:
   * pipeline folder
-  * deploy_files/MODULE/ folder
-  * configs folder
+  * 'deploy_files/MODULE/' folder
+  * 'configs' folder
   * provided scenes folder
 * submits a Ray task via the pipeline_ray.py script with the following parameters:
   * Ray locations config (configs/MODULE_aws.ini)
   * MCS config (configs/mcs_config_MODULE_<METADAT_LEVEL>.ini)
     * Note: by default metadata level is level2
+
+#### Expected Output 
+
+There can be a lot of output and users may want to verify it is working properly
+
+Once the Ray instance is setup and is running a Ray task, you should see output prefixed with:
+  '(pid=#####)' or '(pid=#####, ip=###.###.###.###)' for running on the head node or a non-head worker node respectively
+
+Eval tasks with:
+
+```
+(pid=16265) Saving mcs config information to /tmp/mcs_config.ini
+(pid=16265) Saving scene information to /tmp/cd2344f9-fb75-4dc8-8f8b-6292c9614189.json
+```
+
+We currently output a results summary when a task finishes that looks similiar to:
+
+```
+file: /home/ubuntu/scenes/tmp/eval_3_5_validation_0001_01.json
+Code: 0
+Status: Success
+Retryable: False
+```
 
 ### Common Ray Commands
 
@@ -95,6 +118,7 @@ The pipeline is setup to run different "modules" and uses convention to locate f
 
 * autoscaler - Contains Ray configuration for different modules to run in AWS.  The file name convention is ray_MODULE_aws.yaml.  See below and Ray documentation for more details of fields.
 * aws_scripts - Contains scripts and text documents to facilitate running in AWS.
+  * Note: 
 * configs - Contains all necessary configs for each module that will be pushed to Ray head node.  (maybe should be moved to individual deploy_files directories)
 * deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node
 * pipeline - python code used to run the pipeline that will be pushed to head node
@@ -113,7 +137,7 @@ Some portions of ray_MODULE_aws.yaml are important to how evals are executed and
     ```
 * In many modules, some files need to be pushed to all nodes including the worker nodes.  The best way we've found to do this is with the file_mounts property.
 
-## Other (rename?) Should we keep these:
+## Additional Information
 
 ### SSH
 
@@ -133,12 +157,7 @@ manually.
 
 ### Logs
 
-Is this still true?
-
-Logs are written into a subdirectory called logs/.   There is one large log file and 
-many machine-specific logs, one per machine.  The information is the same, but 
-the one large log file can have many machines writing to it at once, so it's 
-hard to parse sometimes.  
+Logs are written to the head node and sometimes be pushed to S3.  Details TBD
 
 ### Mess Example
 

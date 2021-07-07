@@ -1,5 +1,5 @@
 #!/bin/bash
-# This file is intended to be run on local development machine.
+# This file is intended to be run on local development machine (driver machine).
 # This will perform the following actions:
 #  1. Start a ray cluster for the appropriate module
 #  2. Upload the appropriate scenes
