@@ -18,18 +18,36 @@ import logging
 import shutil
 from dataclasses import dataclass, field
 from typing import List
+from logging import config
 
 import ray
+import boto3
 
 logging.basicConfig(level=logging.DEBUG,format="%(message)s")
 
+def push_to_s3(filepath: pathlib):
+    client = boto3.client('s3')
+    bucket = "test-kdrumm"
+    s3_filename=filepath.name
+    mimetype='text/plain'
+    client.upload_file(
+            str(filepath),
+            bucket,
+            s3_filename,
+            ExtraArgs={
+                'ACL': 'public-read',
+                'ContentType': mimetype,
+            }
+    )
 
 @ray.remote(num_gpus=1)
-def run_scene(run_script, mcs_config, scene_config):
+def run_scene(run_script, mcs_config, scene_config, scene_name, scene_try):
     """ Ray """
 
-    # Need to initialize because its on a remote machine.
-    logging.basicConfig(level=logging.DEBUG,format="%(message)s")
+    log_dir = pathlib.Path("/tmp/results/logs")
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file=log_dir.joinpath(f"{scene_name}-{scene_try}.log")
+    setup_logging(log_file)
 
     identifier = uuid.uuid4()
     run_script = run_script
@@ -64,7 +82,51 @@ def run_scene(run_script, mcs_config, scene_config):
 
     # TODO  MCS-674:  Move Evaluation Code out of Python API (and into the pipeline)
 
+    push_to_s3(log_file)
+
     return ret, output
+
+def setup_logging(log_file):
+    # Need to initialize because its on a remote machine.
+    log_config = {
+        "version": 1,
+        "root": {
+            "level": "DEBUG",
+            "handlers": ["console", "log-file"],
+            "propagate": False
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "brief",
+                "level": "DEBUG",
+                "stream": "ext://sys.stdout"
+            },
+            "log-file": {
+                "level": "DEBUG",
+                "class": "logging.handlers.RotatingFileHandler",
+                "formatter": "brief",
+                "filename": "",
+                "maxBytes": 10240000,
+                "backupCount": 1
+            }
+        },
+        "formatters": {
+            "brief": {
+                "format": "%(message)s"
+            },
+            "precise": {
+                "format": "%(asctime)s <%(levelname)s>: %(message)s"
+            },
+            "full": {
+                "format": "[%(name)s] %(asctime)s <%(levelname)s>: " +
+                "%(message)s"
+            }
+        }
+    }
+    log_config["handlers"]["log-file"]["filename"]=str(log_file)
+    #logging.basicConfig(level=logging.DEBUG,format="%(message)s",hanlders=handlers)
+    config.dictConfig(log_config)
 
 @dataclass
 class RunStatus:
@@ -160,7 +222,7 @@ class SceneRunner:
         job_ids = []
         for scene_ref in self.scene_files_list:
             with open(str(scene_ref)) as scene_file:
-                job_id = run_scene.remote(self.exec_config['MCS']['run_script'], self.mcs_config, json.load(scene_file))
+                job_id = run_scene.remote(self.exec_config['MCS']['run_script'], self.mcs_config, json.load(scene_file), scene_ref.name, 1)
                 self.scene_statuses[job_id] = SceneStatus(scene_ref, 0, "pending")
                 job_ids.append(job_id)
 
@@ -187,7 +249,8 @@ class SceneRunner:
                 logging.info(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
     def write_log(self, output, scene_status:SceneStatus, log_dir:pathlib.Path):
-        log_file = f"{pathlib.Path(scene_status.scene_file).name}-{scene_status.retries + 1}.log"
+        #Retries is +2 to get test number because +1 for next run increment and +1 for changing to 0 base to 1 base index
+        log_file = f"{pathlib.Path(scene_status.scene_file).name}-{scene_status.retries + 2}.log"
         log_file = log_dir.joinpath(log_file)
         logging.info(f"Writing to {log_file.absolute()}")
         with open(log_file.absolute(), "a") as f:
@@ -197,7 +260,7 @@ class SceneRunner:
     def do_retry(self, not_done, scene_status:SceneStatus):
         scene_ref=scene_status.scene_file
         with open(str(scene_ref)) as scene_file:
-            job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file))
+            job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file), scene_ref.name, scene_status.retries + 1)
             logging.info(f"Retrying {scene_ref} with job_id={job_id}")
             self.scene_statuses[job_id] = scene_status
             not_done.append(job_id)
