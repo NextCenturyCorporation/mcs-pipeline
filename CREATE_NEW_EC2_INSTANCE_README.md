@@ -90,7 +90,13 @@ cd ~
 git clone https://github.com/NextCenturyCorporation/mcs-pipeline.git
 ```
 
-You can install other linux packages, like maybe ffmpeg for making videos:
+You can install other linux packages, like the AWS CLI:
+
+```
+sudo apt install awscli
+```
+
+Or maybe ffmpeg for making videos:
 
 ```
 sudo apt install ffmpeg
