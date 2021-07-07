@@ -30,6 +30,20 @@ $ source venv/bin/activate
 
 ### Run Eval Script
 
+### MCS Config File 
+
+When running an eval, there are checks to ensure that the MCS config file used is using the correct naming conventions, so that all the ingest
+and UI related functionality will work correctly (these can be turned off for testing):
+
+- **metadata** - has to be either `level1`, `level2`, or `oracle`
+- **evaluation_name** - has to be one of the following, in the exact format: `eval_3-75`, `eval_4`, `eval_5`, `eval_6`, `eval_7`, `eval_8`
+- **evaluation** - must be set to `true`
+- **team** - has to be either `mess`, `mit`, `opics`, or `baseline`
+- **s3_bucket** - should be `evaluation-images`
+- **s3_folder** - has to be the folder we store output for the current eval (right now, `eval-3.75`)
+
+If anything above changes, we will need to make sure those changes are incorporated into the ingest process/UI as needed. 
+
 #### Eval test configuration
 
 In order to test the pipeline and evaluations, the following is helpful:
@@ -42,12 +56,18 @@ In order to test the pipeline and evaluations, the following is helpful:
   * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has 'evalution=true'
   * Setting the s3_folder to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test 
   * The S3 file names are generated partially by the 'team' and 'evaluation_name' properties.  Prefixing 'evaluation_name' with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
+  * Make sure MCS config file validation is off if for testing (see commands below).
 
 #### Commands
 
 To run an eval, run the following command:
 ```
 aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level]
+```
+
+There is an optional flag to disable config file validation checks if you are just running tests:
+```
+aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level] --disable_validation
 ```
 
 Here is an example:
