@@ -249,8 +249,8 @@ class SceneRunner:
                 logging.info(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
     def write_log(self, output, scene_status:SceneStatus, log_dir:pathlib.Path):
-        #Retries is +2 to get test number because +1 for next run increment and +1 for changing to 0 base to 1 base index
-        log_file = f"{pathlib.Path(scene_status.scene_file).name}-{scene_status.retries + 2}.log"
+        
+        log_file = f"{pathlib.Path(scene_status.scene_file).name}-{scene_status.retries + 1}.log"
         log_file = log_dir.joinpath(log_file)
         logging.info(f"Writing to {log_file.absolute()}")
         with open(log_file.absolute(), "a") as f:
@@ -260,7 +260,8 @@ class SceneRunner:
     def do_retry(self, not_done, scene_status:SceneStatus):
         scene_ref=scene_status.scene_file
         with open(str(scene_ref)) as scene_file:
-            job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file), scene_ref.name, scene_status.retries + 1)
+            #Retries is +2 to get test number because +1 for next run increment and +1 for changing to 0 base to 1 base index
+            job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file), scene_ref.name, scene_status.retries + 2)
             logging.info(f"Retrying {scene_ref} with job_id={job_id}")
             self.scene_statuses[job_id] = scene_status
             not_done.append(job_id)
