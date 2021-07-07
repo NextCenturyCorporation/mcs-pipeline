@@ -10,7 +10,7 @@ echo "Running MESS with config $mcs_configfile and scene $scene_file"
 # Start X
 # TODO: Check to see if the xserver is already running and do not restart (MCS-727)
 cd mcs-pipeline/xserver
-sudo python3 run_startx.py &
+sudo nohup python3 run_startx.py 1>startx-out.txt 2>startx-err.txt &
 sleep 20
 
 # Clear out the directories
