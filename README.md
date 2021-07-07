@@ -62,12 +62,12 @@ In order to test the pipeline and evaluations, the following is helpful:
 
 To run an eval, run the following command:
 ```
-aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level]
+aws_scripts/run_eval MODULE path/to/scene/directory --metadata [metadata_level]
 ```
 
 There is an optional flag to disable config file validation checks if you are just running tests:
 ```
-aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level] --disable_validation
+aws_scripts/run_eval MODULE path/to/scene/directory --metadata [metadata_level] --disable_validation
 ```
 
 Here is an example:

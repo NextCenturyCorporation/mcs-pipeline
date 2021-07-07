@@ -36,8 +36,22 @@ DEFAULT_METADATA="level2"
 LOCAL_SCENE_DIR=$2
 # Removing ending slash of scene dir so we have consistency
 LOCAL_SCENE_DIR=$(echo $LOCAL_SCENE_DIR | sed 's:/*$::')
-METADATA=${3:-$DEFAULT_METADATA}
-VALIDATE_CONFIG=${4}
+METADATA=${METADATA:-$DEFAULT_METADATA}
+VALIDATE_CONFIG=''
+
+# Parse optional --parameters
+while [ $# -gt 0 ]; do
+    if [[ $1 == *"--"* ]]; then
+        if [ $1 == "--disable_validation" ] ; then
+            VALIDATE_CONFIG="$1"
+        else
+            uppercase_param=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+            param="${uppercase_param/--/}"
+            declare $param="$2"
+        fi
+   fi
+   shift
+done
 
 MCS_CONFIG=configs/mcs_config_${MODULE}_${METADATA}.ini
 
