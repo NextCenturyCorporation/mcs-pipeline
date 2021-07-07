@@ -76,6 +76,8 @@ This script performs the following actions:
 
 There can be a lot of output and users may want to verify it is working properly
 
+Startup of the Ray cluster can take a couple minutes and include failed attempts to connect to the head node via SSH if the instance was not running prior.
+
 Once the Ray instance is setup and is running a Ray task, you should see output prefixed with:
   '(pid=#####)' or '(pid=#####, ip=###.###.###.###)' for running on the head node or a non-head worker node respectively
 
@@ -97,14 +99,14 @@ Retryable: False
 
 ### Common Ray Commands
 
-* Start a cluster: ray up /path/to/config.yaml
-* Copy files to head node: ray rsync_up /path/to/config.yaml SOURCE DEST
-* Execute shell command on head node: ray exec /path/to/config.yaml "COMMAND"
-* Submit a Ray python script to the cluster: ray submit /path/to/config.yaml PARAMETER1 PARAMETER2
-* Monitor cluster (creates tunnel so you can see it locally): ray dashboard autoscaler/ray_baseline_aws.yaml
+* Start a cluster: 'ray up /path/to/config.yaml'
+* Copy files to head node: 'ray rsync_up /path/to/config.yaml SOURCE DEST'
+* Execute shell command on head node: 'ray exec /path/to/config.yaml "COMMAND"'
+* Submit a Ray python script to the cluster: 'ray submit /path/to/config.yaml PARAMETER1 PARAMETER2'
+* Monitor cluster (creates tunnel so you can see it locally): 'ray dashboard autoscaler/ray_baseline_aws.yaml'
   * Point browser to localhost:8265 (port will be in command output)
-* Connect to shell on head node: ray attach /path/to/config.yaml
-* Shutdown cluster (stops AWS instances): ray down /path/to/config.yaml
+* Connect to shell on head node: 'ray attach /path/to/config.yaml'
+* Shutdown cluster (stops AWS instances): 'ray down /path/to/config.yaml'
 
 ## Run Pipeline Locally
 
@@ -148,7 +150,8 @@ Some portions of ray_MODULE_aws.yaml are important to how evals are executed and
     
 * secrets file, containing the pemfilename and the username.  Copy from pipeline/secrets_template.py 
 to pipeline/secrets.py and fill it in.  Do not add to github.
-* AWS credentials file.  This should be in the file ~/.aws/credentials.  This will allow you to 
+* We no longer use an AWS credentials file for Ray.  Instances in AWS should be given an IAM role via configurations.
+  * When running locally, your system may need an AWS credentials file.  This should be in the file ~/.aws/credentials.  This will allow you to 
 use [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) to get 
 EC2 machines.  
 * Add the following to your ~/.ssh/config:   <code>StrictHostKeyChecking accept-new</code>
