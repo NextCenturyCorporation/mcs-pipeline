@@ -163,7 +163,8 @@ class SceneRunner:
                 valid = False
 
             if(valid == False):
-                raise Exception('Invalid property value in MCS config file.')
+                raise Exception('Invalid property value in MCS config file. If only testing and not '
+                    'running an evaluation, please use the --disable_validation flag.')
 
     def get_scenes(self):
         """Read the scene files to use from the argument scene_list"""
