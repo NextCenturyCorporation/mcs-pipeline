@@ -24,12 +24,12 @@ if [ -z $CID ]; then
            --rm \
            --privileged \
            -d -t \
-           -v $LOC/GenPRAM.jl:/GenPRAM.jl \
-           -v $LOC/Perception.jl:/Perception.jl \
-           -v $LOC/GenSceneGraphs.jl:/GenSceneGraphs.jl \
-           -v $LOC/PoseComposition.jl:/PoseComposition.jl \
-           -v $LOC/scenes:/scenes \
-           -v $LOC/output:/output \
+           -v $EVAL_DIR/GenPRAM.jl:/GenPRAM.jl \
+           -v $EVAL_DIR/Perception.jl:/Perception.jl \
+           -v $EVAL_DIR/GenSceneGraphs.jl:/GenSceneGraphs.jl \
+           -v $EVAL_DIR/PoseComposition.jl:/PoseComposition.jl \
+           -v $EVAL_DIR/scenes:/scenes \
+           -v $EVAL_DIR/output:/output \
            cora_with_x tail -f /dev/null
 
     # Get the docker container ID
