@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 set -x
 
@@ -24,16 +24,17 @@ fi
 
 echo "Running Cora with config $mcs_configfile and scene $scene_file"
 
-
 # Copy the scenes and config file to the right place
 LOC=/home/ubuntu/workspace
 
 cp $scene_file $LOC/scenes/
 cp $mcs_configfile $LOC/GenPRAM.jl/GenAgent/omg/mcs_config.ini
 
+# Get the name of the scene file without the leading /tmp/
+scene_file=`echo $scene_file | cut -d'/' -f3`
+echo "File name without leading dir $scene_file"
 
 # TODO: MCS-709 Handle:  'Exception in create_controller() Time out!' error gracefully
-
 
 # Look for the CORA docker container running.  This will occur if this
 # is the second or subsequent runs on this machine.

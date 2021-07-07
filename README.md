@@ -1,21 +1,22 @@
 # mcs-pipeline
 
-TODO:  Rewrite this for using Ray.
+The pipeline makes heavy use of Ray.  Getting familiar with Ray is beneficial.
+
+Ray:
+https://docs.ray.io/en/master/index.html
 
 Ray Book of Knowledge: 
 https://nextcentury.atlassian.net/wiki/spaces/MCS/pages/2156757749/BoK
 
 ****
 
-MCS Project for running evaluations
+MCS Project for running evaluations.  Most of this code runs scene files on EC2 machines.  
 
-This code runs scene files on EC2 machines.  Assumptions:
-* There are some number of identical EC2 machines running and that they can be identified (details below)
-* The EC2 machines have all the software running necessary
-* The scene files are already on the machines
-* You know how to run a single scene file on the remote the machine.   
+## Assumptions:
+* There is an AMI that exists with the software necessary to run an evaluation.  (Usually this includes performer software, MCS, and MCS AI2THOR)
+* The scene files are on the local machine
 
-### Python Environment Setup
+## Python Environment Setup
 
 From the mcs-pipeline root, create a virtual environment.
 
@@ -25,44 +26,143 @@ $ source venv/bin/activate
 (pipeline) $ python -m pip install --upgrade pip setuptools wheel
 (pipeline) $ python -m pip install -r requirements.txt
 ```
+## Run Pipeline in AWS
 
-### Pre-requisites / setup 
+### Run Eval Script
 
-* Working ssh.  You should have a pem that will allow you to do something like:
+#### Eval test Configuration
+
+In order to test the pipeline and evaluations, the following is helpful:
+
+* In the autoscaler/ray_MODULE_aws.yaml file you plan to use, add your initials or personal ID to the cluster name just so its easier to track in AWS.
+
+* Be sure to stop your cluster and/or terminate the AWS instances when you are done.
+
+* Know if/where your results will be uploaded to avoid conflicts:
+  * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has `evalution=true`
+  * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test 
+  * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
+
+#### Commands
+
+To run an eval, run the following command on your local development machine (driver):
+```
+aws_scripts/run_eval MODULE path/to/scene/directory [metadata_level]
+```
+
+Here is an example:
+```
+./aws_scripts/run_eval.sh baseline scenes/subset/
+```
+
+Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster.
+
+#### Script Overview
+
+This script performs the following actions:
+* Start a Ray cluster based on the autoscaler/ray_MODULE_aws.yaml file
+* Generates a list of scene files and rsyncs that to the head node
+* Rsync the following into the head node:
+  * pipeline folder
+  * `deploy_files/MODULE/` folder
+  * `configs` folder
+  * provided scenes folder
+* submits a Ray task via the pipeline_ray.py script with the following parameters:
+  * Ray locations config (configs/MODULE_aws.ini)
+  * MCS config (configs/mcs_config_MODULE_<METADAT_LEVEL>.ini)
+    * Note: by default metadata level is level2
+
+#### Expected Output 
+
+There can be a lot of output and users may want to verify it is working properly
+
+Startup of the Ray cluster can take a couple minutes and include failed attempts to connect to the head node via SSH if the instance was not running
+
+Once the Ray instance is setup and is running a Ray task, you should see output prefixed with:
+  `(pid=#####)` or `(pid=#####, ip=###.###.###.###)` for running on the head node or a non-head worker node respectively
+
+Eval tasks with:
+
+```
+(pid=16265) Saving mcs config information to /tmp/mcs_config.ini
+(pid=16265) Saving scene information to /tmp/cd2344f9-fb75-4dc8-8f8b-6292c9614189.json
+```
+
+We currently output a results summary when a task finishes that looks similiar to:
+
+```
+file: /home/ubuntu/scenes/tmp/eval_3_5_validation_0001_01.json
+Code: 0
+Status: Success
+Retryable: False
+```
+
+### Common Ray Commands
+
+* Start a cluster: `ray up /path/to/config.yaml`
+* Copy files to head node: `ray rsync_up /path/to/config.yaml SOURCE DEST`
+* Execute shell command on head node: `ray exec /path/to/config.yaml "COMMAND"`
+* Submit a Ray python script to the cluster: `ray submit /path/to/config.yaml PARAMETER1 PARAMETER2`
+* Monitor cluster (creates tunnel so you can see it locally): `ray dashboard autoscaler/ray_baseline_aws.yaml`
+  * Point browser to localhost:8265 (port will be in command output)
+* Connect to shell on head node: `ray attach /path/to/config.yaml`
+* Shutdown cluster (stops AWS instances): `ray down /path/to/config.yaml`
+
+## Run Pipeline Locally
+
+TBD
+
+## Project Structure
+
+The pipeline is setup to run different "modules" and uses convention to locate files for each module.  At first, each module will be an evaluation for a specific team, but the goal is to add modules that perform different tasks using Ray in AWS.
+
+### Folder Structure
+
+* autoscaler - Contains Ray configuration for different modules to run in AWS.  The file name convention is ray_MODULE_aws.yaml.  See below and Ray documentation for more details of fields.
+* aws_scripts - Contains scripts and text documents to facilitate running in AWS.
+  * Note: 
+* configs - Contains all necessary configs for each module that will be pushed to Ray head node.  (maybe should be moved to individual deploy_files directories)
+* deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node
+* pipeline - python code used to run the pipeline that will be pushed to head node
+
+### ray_MODULE_aws.yaml
+
+Some portions of ray_MODULE_aws.yaml are important to how evals are executed and are pointed out here:
+* All nodes need permissions to push data to S3.  The head node gets those permissions by default from Ray.  However, the worker nodes by default have no permissions.  To Grant permissions to the worker nodes 2 steps must be taken.
+  * Once per AWS account, Add iam:PassRole permission to IAM role assigned to head node (typically ray-autoscaler-v1).  This has been done on MCS's AWS.  This allows the head node to assign IAM roles to the worker nodes.
+  * Assign an IAM role to the worker node in ray_MODULE_aws.yaml
+    * Create an appropriate IAM role and verify it has an instance profile
+    * In ray_MODULE_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
+    ```
+    IamInstanceProfile: 
+        Arn: IAM role instance profile ARN
+    ```
+* In many modules, some files need to be pushed to all nodes including the worker nodes.  The best way we've found to do this is with the file_mounts property.
+
+## Additional Information
+
+### SSH
+
+* Use the `ray attach` command to connect to a shell on the cluster head node.
+* You can also connect to a node via the following:
 
     <code>ssh -i ~/.ssh/pemfilename.pem username@ec2.2.amazon.com run_script.sh</code>
     
 * secrets file, containing the pemfilename and the username.  Copy from pipeline/secrets_template.py 
 to pipeline/secrets.py and fill it in.  Do not add to github.
-* AWS credentials file.  This should be in the file ~/.aws/credentials.  This will allow you to 
+* We no longer use an AWS credentials file for Ray.  Instances in AWS should be given an IAM role via configurations.
+  * When running locally, your system may need an AWS credentials file.  This should be in the file ~/.aws/credentials.  This will allow you to 
 use [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) to get 
 EC2 machines.  
 * Add the following to your ~/.ssh/config:   <code>StrictHostKeyChecking accept-new</code>
 This will allow the EC2 machines to be called without you agreeing to accept them 
 manually.
 
-###  Logical Steps
+### Logs
 
-* See what machines are running.  Within the code you can look for specific 
-types of machines (like 'p2.xlarge', the default) or a location ('us-east-1'). 
-It would be pretty easy to get it to look for tags. 
-* Get a list of the scenes to run
-* Create a thread pool of size of the number of machines
-* In each thread:
-  * Get the next scene to run 
-  * Call a TA1-performer specific class to run the scene
-  * On failure, add the scene back to the list of scenes to run
+Logs will be written to the head node and sometimes be pushed to S3.  Details TBD.
 
-### Scene Running Class
-
-The class that runs a single scene on an EC2 machine is TA1-performer specific.  
-The general idea is that it:
-* clears out any directories, as necessary
-* copies the scene file to the appropriate directory
-* runs the scene
-* determines if there was an error
-
-### Usage
+### Mess Example
 
 Here is an example of running the MESS code.  Warning:  It's not very pretty, but 
 we're going to use mess_tasks_runner.py as if it were an interactive tool.  
@@ -134,13 +234,6 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
     of minutes.  
     * Make a file with the correct list of tasks and set the TASK_FILE_PATH to point to it
     * Run the tasks
-
-### Logs
-
-Logs are written into a subdirectory called logs/.   There is one large log file and 
-many machine-specific logs, one per machine.  The information is the same, but 
-the one large log file can have many machines writing to it at once, so it's 
-hard to parse sometimes.  
 
 ## Acknowledgements
 
