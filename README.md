@@ -39,9 +39,9 @@ In order to test the pipeline and evaluations, the following is helpful:
 * Be sure to stop your cluster and/or terminate the AWS instances when you are done.
 
 * Know if/where your results will be uploaded to avoid conflicts:
-  * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has 'evalution=true'
+  * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has `evalution=true`
   * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test 
-  * The S3 file names are generated partially by the 'team' and 'evaluation_name' properties in the MCS config file.  Prefixing 'evaluation_name' with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
+  * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
 
 #### Commands
 
@@ -64,8 +64,8 @@ This script performs the following actions:
 * Generates a list of scene files and rsyncs that to the head node
 * Rsync the following into the head node:
   * pipeline folder
-  * 'deploy_files/MODULE/' folder
-  * 'configs' folder
+  * `deploy_files/MODULE/` folder
+  * `configs` folder
   * provided scenes folder
 * submits a Ray task via the pipeline_ray.py script with the following parameters:
   * Ray locations config (configs/MODULE_aws.ini)
@@ -76,10 +76,10 @@ This script performs the following actions:
 
 There can be a lot of output and users may want to verify it is working properly
 
-Startup of the Ray cluster can take a couple minutes and include failed attempts to connect to the head node via SSH if the instance was not running prior.
+Startup of the Ray cluster can take a couple minutes and include failed attempts to connect to the head node via SSH if the instance was not running
 
 Once the Ray instance is setup and is running a Ray task, you should see output prefixed with:
-  '(pid=#####)' or '(pid=#####, ip=###.###.###.###)' for running on the head node or a non-head worker node respectively
+  `(pid=#####)` or `(pid=#####, ip=###.###.###.###)` for running on the head node or a non-head worker node respectively
 
 Eval tasks with:
 
@@ -99,14 +99,14 @@ Retryable: False
 
 ### Common Ray Commands
 
-* Start a cluster: 'ray up /path/to/config.yaml'
-* Copy files to head node: 'ray rsync_up /path/to/config.yaml SOURCE DEST'
-* Execute shell command on head node: 'ray exec /path/to/config.yaml "COMMAND"'
-* Submit a Ray python script to the cluster: 'ray submit /path/to/config.yaml PARAMETER1 PARAMETER2'
-* Monitor cluster (creates tunnel so you can see it locally): 'ray dashboard autoscaler/ray_baseline_aws.yaml'
+* Start a cluster: `ray up /path/to/config.yaml`
+* Copy files to head node: `ray rsync_up /path/to/config.yaml SOURCE DEST`
+* Execute shell command on head node: `ray exec /path/to/config.yaml "COMMAND"`
+* Submit a Ray python script to the cluster: `ray submit /path/to/config.yaml PARAMETER1 PARAMETER2`
+* Monitor cluster (creates tunnel so you can see it locally): `ray dashboard autoscaler/ray_baseline_aws.yaml`
   * Point browser to localhost:8265 (port will be in command output)
-* Connect to shell on head node: 'ray attach /path/to/config.yaml'
-* Shutdown cluster (stops AWS instances): 'ray down /path/to/config.yaml'
+* Connect to shell on head node: `ray attach /path/to/config.yaml`
+* Shutdown cluster (stops AWS instances): `ray down /path/to/config.yaml`
 
 ## Run Pipeline Locally
 
@@ -143,7 +143,7 @@ Some portions of ray_MODULE_aws.yaml are important to how evals are executed and
 
 ### SSH
 
-* Use the 'ray attach' command to connect to a shell on the cluster head node.
+* Use the `ray attach` command to connect to a shell on the cluster head node.
 * You can also connect to a node via the following:
 
     <code>ssh -i ~/.ssh/pemfilename.pem username@ec2.2.amazon.com run_script.sh</code>
