@@ -1,6 +1,6 @@
 # Create a New AWS EC2 Instance
 
-## TA2 Development (non-TA1)
+## TA2 Development (Non-TA1)
 
 ### Launch an EC2 Instance
 
@@ -27,7 +27,7 @@ sudo reboot
 
 ### On Reboot
 
-Whenever you reboot your EC2 instance, you'll need to kill the Xorg process that starts automatically and restart it manually. Before you do this, you'll need to set the nvidia xconfig to use an incorrect BusID (I've used `PCI:0:31:0` here), so Xorg fails to restart when you kill its process. Then you'll kill the Xorg process, set the nvidia xconfig to use the correct BusID (currently `PCI:0:30:0`), and restart Xorg.
+Whenever you reboot your EC2 instance, you'll need to kill the Xorg process that starts automatically and restart it manually. Before you do this, you'll need to set the nvidia xconfig to use an incorrect BusID (I've used `PCI:0:31:0` here), so Xorg fails to restart when you kill its process (it tries to restart itself automatically). Then you'll kill the Xorg process, set the nvidia xconfig to use the correct BusID (currently `PCI:0:30:0`), and restart Xorg. (Yes, this is hacky -- feedback welcome.)
 
 ```
 sudo nvidia-xconfig --use-display-device=None --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:31:0
