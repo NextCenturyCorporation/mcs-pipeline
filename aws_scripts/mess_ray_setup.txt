@@ -2,5 +2,13 @@
 # Additionally, will need to update scenes + scene file list/path referenced in mess_aws.ini
 
 ray up autoscaler/ray_mess_aws.yaml
+
 ray rsync_up -v autoscaler/ray_mess_aws.yaml configs/ '~/configs/'
+ray rsync_up -v autoscaler/ray_mess_aws.yaml <datadir> /home/ubuntu/scenes/tmp
+ray rsync_up -v autoscaler/ray_mess_aws.yaml scenes_single_scene.txt '~'
+
 ray submit autoscaler/ray_mess_aws.yaml pipeline_ray.py configs/mess_aws.ini configs/mcs_config_mess_<metadata_level>.ini
+
+For example:
+ray submit autoscaler/ray_mess_aws.yaml pipeline_ray.py configs/mess_aws.ini configs/mcs_config_mess_level2.ini
+ray submit autoscaler/ray_mess_aws.yaml pipeline_ray.py configs/mess_aws.ini configs/mcs_config_mess_oracle.ini
