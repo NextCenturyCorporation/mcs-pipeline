@@ -58,27 +58,36 @@ sudo apt install python3-venv
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip setuptools wheel
+deactivate
 ```
 
 If you don't want to access the source code, just pip-install the library:
 
 ```
+source venv/bin/activate
 pip install git+https://github.com/NextCenturyCorporation/MCS@master#egg=machine_common_sense
+deactivate
 ```
 
 If you want to access the source code, then git-clone the MCS repository:
 
 ```
+cd ~
+source venv/bin/activate
 git clone https://github.com/NextCenturyCorporation/MCS.git
 cd MCS
 pip install -e .
+deactivate
 ```
 
 You can use a scene file from the source code to test your installation. For example:
 
 ```
+cd ~
+source venv/bin/activate
 python MCS/scripts/run_last_action.py --mcs_unity_build_file /home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.3.x86_64 MCS/docs/source/scenes/gravity_support_ex_01.json --debug
 ls gravity_support_ex_01
+deactivate
 ```
 
 ### Install Python and Pip
@@ -89,6 +98,21 @@ You must install python and pip outside of the python virtual environment so tha
 sudo apt install python3 python3-pip
 ```
 
+### Setup to Run an MCS Evaluation
+
+Install the AWS CLI and update the corresponding pip library outside of your python virtual environment:
+
+```
+sudo apt install awscli
+pip3 install --upgrade awscli
+```
+
+Install ffmpeg to make output videos:
+
+```
+sudo apt install ffmpeg
+```
+
 ### Other Setup
 
 You can git-clone other repositories, like maybe mcs-pipeline:
@@ -96,16 +120,4 @@ You can git-clone other repositories, like maybe mcs-pipeline:
 ```
 cd ~
 git clone https://github.com/NextCenturyCorporation/mcs-pipeline.git
-```
-
-You can install other linux packages, like the AWS CLI:
-
-```
-sudo apt install awscli
-```
-
-Or maybe ffmpeg for making videos:
-
-```
-sudo apt install ffmpeg
 ```
