@@ -7,6 +7,7 @@
 #
 import argparse
 import configparser
+import datetime
 import json
 from os import mkdir
 import pathlib
@@ -25,13 +26,12 @@ import boto3
 
 logging.basicConfig(level=logging.DEBUG,format="%(message)s")
 
-def push_to_s3(filepath: pathlib):
-    client = boto3.client('s3')
-    bucket = "test-kdrumm"
-    s3_filename=filepath.name
-    mimetype='text/plain'
+def push_to_s3(source_file: pathlib, bucket: str, s3_filename: str, mimetype:str='text/plain', client=None):
+    if client is None:
+        client = boto3.client('s3')
+    logging.debug(f"Pushing {str(source_file)} to {bucket} / {s3_filename}")
     client.upload_file(
-            str(filepath),
+            str(source_file),
             bucket,
             s3_filename,
             ExtraArgs={
@@ -43,10 +43,19 @@ def push_to_s3(filepath: pathlib):
 @ray.remote(num_gpus=1)
 def run_scene(run_script, mcs_config, scene_config, scene_name, scene_try):
     """ Ray """
+    timestamp=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    config = configparser.ConfigParser()
+    config.read_string("\n".join(mcs_config))
 
     log_dir = pathlib.Path("/tmp/results/logs")
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_file=log_dir.joinpath(f"{scene_name}-{scene_try}.log")
+    print("setup logging at "+str(log_dir))
+    # Do we want the timestamp?  If so, we will leave a bunch of log files on a single machien.  
+    # Do we clean up files?  If we don't do the timestamp, we will need to cleanup logs here so we 
+    # don't end up with old executes logs at the top of a new execution.  This may not really happen 
+    # in real evals, but happens when testing often.
+    log_file = log_dir.joinpath(f"{scene_name}-{scene_try}-{timestamp}.log")
+    print("setup logging at "+str(log_file))
     setup_logging(log_file)
 
     identifier = uuid.uuid4()
@@ -82,7 +91,21 @@ def run_scene(run_script, mcs_config, scene_config, scene_name, scene_try):
 
     # TODO  MCS-674:  Move Evaluation Code out of Python API (and into the pipeline)
 
-    push_to_s3(log_file)
+    # This seems a little dirty, but its mostly copied from MCS project.
+    # There is a retry number added so we save all retries and don't overwrite.
+    bucket = config.get("MCS", "s3_bucket")
+    folder = config.get("MCS", "s3_folder")
+    eval_name=config.get("MCS", "evaluation_name")
+    team = config.get("MCS", "team")
+    metadata = config.get("MCS", "metadata")
+    s3_filename = folder + "/" + '_'.join(
+            [eval_name, metadata,
+             team,
+             scene_name, str(scene_try),
+             "log"]) + '.txt'
+
+    # Might need to find way to flush logs and/or stop logging.
+    push_to_s3(log_file, bucket, s3_filename)
 
     return ret, output
 
@@ -222,7 +245,7 @@ class SceneRunner:
         job_ids = []
         for scene_ref in self.scene_files_list:
             with open(str(scene_ref)) as scene_file:
-                job_id = run_scene.remote(self.exec_config['MCS']['run_script'], self.mcs_config, json.load(scene_file), scene_ref.name, 1)
+                job_id = run_scene.remote(self.exec_config['MCS']['run_script'], self.mcs_config, json.load(scene_file), scene_ref.with_suffix('').name, 1)
                 self.scene_statuses[job_id] = SceneStatus(scene_ref, 0, "pending")
                 job_ids.append(job_id)
 
@@ -261,7 +284,7 @@ class SceneRunner:
         scene_ref=scene_status.scene_file
         with open(str(scene_ref)) as scene_file:
             #Retries is +2 to get test number because +1 for next run increment and +1 for changing to 0 base to 1 base index
-            job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file), scene_ref.name, scene_status.retries + 2)
+            job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file), scene_ref.with_suffix('').name, scene_status.retries + 2)
             logging.info(f"Retrying {scene_ref} with job_id={job_id}")
             self.scene_statuses[job_id] = scene_status
             not_done.append(job_id)
