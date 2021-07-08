@@ -1,43 +1,17 @@
 #!/bin/bash
 
-set -x
+# Check passed mcs_config and scene file
+source /home/ubuntu/check_passed_variables.sh
 
-# Will be passed in two things:
-#    mcs_configfile  scene_file
-if [ -z $1 ] || [ -z $2 ]; then
-    echo "Need mcs_configfile as first parameter, scene_file as second"
-    exit 1
-fi
-mcs_configfile=$1
-scene_file=$2
+EVAL_DIR=/home/ubuntu/workspace
+SCENE_DIR="$EVAL_DIR/scenes/"
+TMP_CFG_FILE="$EVAL_DIR/msc_cfg.ini.tmp"
 
-# Check that the files exist
-if [ ! -f "$mcs_configfile" ]; then
-    echo "The file $mcs_configfile does not exist"
-    exit 1
-fi
-if [ ! -f "$scene_file" ]; then
-    echo "The file $scene_file does not exist"
-    exit 1
-fi
-
-
-echo "Running Cora with config $mcs_configfile and scene $scene_file"
-
-# Copy the scenes and config file to the right place
-LOC=/home/ubuntu/workspace
-
-cp $scene_file $LOC/scenes/
-cp $mcs_configfile $LOC/GenPRAM.jl/GenAgent/omg/mcs_config.ini
-
-# Get the name of the scene file without the leading /tmp/
-scene_file=`echo $scene_file | cut -d'/' -f3`
-echo "File name without leading dir $scene_file"
-
-# TODO: MCS-709 Handle:  'Exception in create_controller() Time out!' error gracefully
+echo "Running CORA with config $mcs_configfile and scene $scene_file"
 
 # Look for the CORA docker container running.  This will occur if this
-# is the second or subsequent runs on this machine.
+# is the second or subsequent runs on this machine.  The X Server
+# runs within the docker container.
 CID=`docker ps -a | grep 'cora_with_x' | awk '{print $1}'`
 if [ -z $CID ]; then
 
@@ -50,12 +24,12 @@ if [ -z $CID ]; then
            --rm \
            --privileged \
            -d -t \
-           -v $LOC/GenPRAM.jl:/GenPRAM.jl \
-           -v $LOC/Perception.jl:/Perception.jl \
-           -v $LOC/GenSceneGraphs.jl:/GenSceneGraphs.jl \
-           -v $LOC/PoseComposition.jl:/PoseComposition.jl \
-           -v $LOC/scenes:/scenes \
-           -v $LOC/output:/output \
+           -v $EVAL_DIR/GenPRAM.jl:/GenPRAM.jl \
+           -v $EVAL_DIR/Perception.jl:/Perception.jl \
+           -v $EVAL_DIR/GenSceneGraphs.jl:/GenSceneGraphs.jl \
+           -v $EVAL_DIR/PoseComposition.jl:/PoseComposition.jl \
+           -v $EVAL_DIR/scenes:/scenes \
+           -v $EVAL_DIR/output:/output \
            cora_with_x tail -f /dev/null
 
     # Get the docker container ID
@@ -66,7 +40,30 @@ if [ -z $CID ]; then
     sleep 20
 fi
 
-# Run the CORA software, using the passes mcs_config file and scene file
+# Clear out directories
+echo Clearing History at $EVAL_DIR/SCENE_HISTORY/
+rm -f $EVAL_DIR/SCENE_HISTORY/*
+echo Clearing $SCENE_DIR
+rm -rf $SCENE_DIR/*
+
+
+# Move files to appropriate locations
+echo Making SCENE_DIR=$SCENE_DIR
+mkdir -p $SCENE_DIR
+echo Moving scene_file=$scene_file to $SCENE_DIR
+cp $scene_file $SCENE_DIR/
+
+echo "Making temporary copy of config file ($mcs_configfile -> $TMP_CFG_FILE)"
+cp $mcs_configfile $TMP_CFG_FILE
+echo Removing old config file at $EVAL_DIR/GenPRAM.jl/GenAgent/omg/mcs_config.ini
+rm $EVAL_DIR/GenPRAM.jl/GenAgent/omg/mcs_config.ini
+echo Moving temporary config file to config location
+mv $TMP_CFG_FILE $EVAL_DIR/GenPRAM.jl/GenAgent/omg/mcs_config.ini
+
+# Run the Performer code
+echo Starting Evaluation:
+echo
+scene_file_basename=$(basename $scene_file)
 time docker exec $CID bash -c "MCS_CONFIG_FILE_PATH=/GenPRAM.jl/GenAgent/omg/mcs_config.ini MCS_INPUT_PATH=/scenes julia --project=@. -e '
       import Pkg;
       Pkg.develop([Pkg.PackageSpec(path=\"/GenPRAM.jl/GenAgent\"),
@@ -76,7 +73,7 @@ time docker exec $CID bash -c "MCS_CONFIG_FILE_PATH=/GenPRAM.jl/GenAgent/omg/mcs
                    Pkg.PackageSpec(path=\"/PoseComposition.jl\")])
       using GenAgent;
       scenes = [
-      \"$scene_file\",
+      \"$scene_file_basename\",
       ];
       GenAgent.main_run(scenes, \"submission\")
   ' 2>&1 | tee /output/testrun_log_$(date +%s)"

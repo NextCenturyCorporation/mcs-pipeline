@@ -41,15 +41,16 @@ auth:
 
 head_node_type: ray.head.default
 
-# If needed, can copy files to remote machines. Commenting out for now, since
-# a copy is of this script is included in the AMI. 
+# Copy script files to ALL nodes
 file_mounts: {
-  #push ray_script.sh to ALL nodes
-  "/home/ubuntu/ray_script.sh": "deploy_files/mess/ray_script.sh"
+  "/home/ubuntu/ray_script.sh": "deploy_files/mess/ray_script.sh",
+  "/home/ubuntu/check_passed_variables.sh": "deploy_files/check_passed_variables.sh",
+  "/home/ubuntu/start_x_server.sh": "deploy_files/start_x_server.sh"
 }
 
 setup_commands:
   - pip install -U ray==1.3.0
+  - chmod +x /home/ubuntu/ray_script.sh /home/ubuntu/check_passed_variables.sh /home/ubuntu/start_x_server.sh
   - rm -rf ~/.aws/
 
 # Command to start ray on the head node. You don't need to change this.

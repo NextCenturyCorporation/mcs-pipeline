@@ -1,37 +1,46 @@
 #!/bin/bash
 
-# Will be passed in two things:
-#    mcs_configfile  scene_file
-mcs_configfile=$1
-scene_file=$2
+# Check passed mcs_config and scene file
+source /home/ubuntu/check_passed_variables.sh
+
+EVAL_DIR=/home/ubuntu/mess_eval35/
+SCENE_DIR="$EVAL_DIR/scenes/"
+TMP_CFG_FILE="$EVAL_DIR/msc_cfg.ini.tmp"
 
 echo "Running MESS with config $mcs_configfile and scene $scene_file"
 
 # Start X
-# TODO: Check to see if the xserver is already running and do not restart (MCS-727)
-cd mcs-pipeline/xserver
-sudo python3 run_startx.py &
-sleep 20
+source /home/ubuntu/start_x_server.sh
 
 # Clear out the directories
-rm -f /home/ubuntu/mess_eval35/scenes/*
-rm -f /home/ubuntu/mess_eval35/SCENE_HISTORY/*
+echo Clearing History at $EVAL_DIR/SCENE_HISTORY/
+rm -f $EVAL_DIR/SCENE_HISTORY/*
+echo Clearing $SCENE_DIR
+rm -f SCENE_DIR
 
-# Copy the scenes and config file to the right place 
-scene_file_basename=$(basename $scene_file)
-cp $scene_file /home/ubuntu/mess_eval35/scenes/
-cp $mcs_configfile /home/ubuntu/mess_eval35/level1.config
+# Move files to appropriate locations
+echo Making SCENE_DIR=$SCENE_DIR
+mkdir -p $SCENE_DIR
+echo Moving scene_file=$scene_file to $SCENE_DIR
+cp $scene_file $SCENE_DIR/
+
+echo "Making temporary copy of config file ($mcs_configfile -> $TMP_CFG_FILE)"
+cp $mcs_configfile $TMP_CFG_FILE
+cp $mcs_configfile $EVAL_DIR/level1.config
+rm $EVAL_DIR/mcs_config.ini
+echo Moving temporary config file to config location
+mv $TMP_CFG_FILE $EVAL_DIR/mcs_config.ini
 
 # Go to the mess_eval35/, which is where we will be running things
-echo $scene_file
-cd /home/ubuntu/mess_eval35/
+cd $EVAL_DIR
 
 # Activate conda environment
 source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
 conda activate myenv
 
-# run model
+# Run the Performer code
+echo Starting Evaluation:
+echo
+scene_file_basename=$(basename $scene_file)
 python3 script_mess.py scenes/$scene_file_basename
 
-mkdir -p /tmp/results/
-cp /home/ubuntu/mess_eval35/SCENE_HISTORY/* /tmp/results/
