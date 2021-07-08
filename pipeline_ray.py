@@ -232,23 +232,26 @@ class SceneRunner:
         if(self.disable_validation == False):
             valid = True
 
-            if(self.mcs_config['MCS']['evaluation'] != 'true'):
+            if(self.mcs_config.getboolean('MCS', 'evaluation') != True):
                 print('Error: Evaluation property in MCS config file is not set to true.')
                 valid = False
-            if(self.mcs_config['MCS']['s3_bucket'] != self.CURRENT_EVAL_BUCKET):
+            if(self.mcs_config.get('MCS', 's3_bucket') != self.CURRENT_EVAL_BUCKET):
                 print('Error: MCS Config file does not have the correct s3 bucket specified.')
                 valid = False
-            if(self.mcs_config['MCS']['s3_folder'] != self.CURRENT_EVAL_FOLDER):
+            if(self.mcs_config.get('MCS', 's3_folder')!= self.CURRENT_EVAL_FOLDER):
                 print('Error: MCS Config file does not have the correct s3 folder specified.')
                 valid = False
-            if(self.mcs_config['MCS']['metadata'] not in self.METADATA_LVLS):
+            if(self.mcs_config.get('MCS', 'metadata') not in self.METADATA_LVLS):
                 print('Error: MCS Config file does not include valid metadata level.')
                 valid = False
-            if(self.mcs_config['MCS']['evaluation_name'] not in self.EVAL_NAMES):
+            if(self.mcs_config.get('MCS', 'evaluation_name') not in self.EVAL_NAMES):
                 print('Error: MCS Config file does not include valid evaluation_name.')
                 valid = False
-            if(self.mcs_config['MCS']['team'] not in self.TEAM_NAMES):
+            if(self.mcs_config.get('MCS', 'team') not in self.TEAM_NAMES):
                 print('Error: MCS Config file does not include valid team name.')
+                valid = False
+            if(self.mcs_config.getboolean('MCS', 'logs_to_s3', fallback=True) == False):
+                print('Error: MCS Config does not have logs_to_s3 enabled.')
                 valid = False
 
             if(valid == False):
