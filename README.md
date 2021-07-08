@@ -56,6 +56,7 @@ In order to test the pipeline and evaluations, the following is helpful:
   * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has `evalution=true`
   * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test 
   * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
+  * If you'd like to disable logs being uploaded to s3 while testing, set this in your MCS config: `logs_to_s3=false`
   * Make sure MCS config file validation is off if for testing (see commands below).
 
 #### Commands
