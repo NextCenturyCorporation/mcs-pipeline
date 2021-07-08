@@ -9,7 +9,6 @@ import argparse
 import configparser
 import datetime
 import json
-from os import mkdir
 import pathlib
 import time
 import uuid
