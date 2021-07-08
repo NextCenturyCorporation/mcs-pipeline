@@ -22,6 +22,7 @@ from logging import config
 import ray
 import boto3
 
+# This is logging for head node during setup and distribution.  
 logging.basicConfig(level=logging.DEBUG,format="%(message)s")
 
 def push_to_s3(source_file: pathlib, bucket: str, s3_filename: str, mimetype:str='text/plain', client=None):
@@ -41,8 +42,8 @@ def push_to_s3(source_file: pathlib, bucket: str, s3_filename: str, mimetype:str
 @ray.remote(num_gpus=1)
 def run_scene(run_script, mcs_config, scene_config, scene_try):
     """ Ray """
-    scene_name=scene_config.get("name","")
-    timestamp=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    scene_name = scene_config.get("name","")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     config = configparser.ConfigParser()
     config.read_string("\n".join(mcs_config))
 
@@ -76,11 +77,11 @@ def run_scene(run_script, mcs_config, scene_config, scene_try):
     logging.info(f"In run scene.  Running {cmd}")
 
     proc = subprocess.Popen(cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    lines=[]
+    lines = []
     for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
         logging.info(line.rstrip())
         lines.append(line)
-    ret=proc.wait()
+    ret = proc.wait()
     output = ''.join(lines)
 
     # TODO MCS-702:  Send AWS S3 Parameters in Pipeline, Make them Ephemeral.  Until MCS-674, which will
@@ -91,7 +92,7 @@ def run_scene(run_script, mcs_config, scene_config, scene_try):
     # This seems a little dirty, but its mostly copied from MCS project.
     bucket = config.get("MCS", "s3_bucket")
     folder = config.get("MCS", "s3_folder")
-    eval_name=config.get("MCS", "evaluation_name")
+    eval_name = config.get("MCS", "evaluation_name")
     team = config.get("MCS", "team")
     metadata = config.get("MCS", "metadata")
     s3_filename = folder + "/" + '_'.join(
@@ -194,8 +195,8 @@ class SceneRunner:
         scenes_printed = []
         logging.info("Status:")
         for key in self.scene_statuses:
-            s_status=self.scene_statuses[key]
-            file=s_status.scene_file
+            s_status = self.scene_statuses[key]
+            file = s_status.scene_file
             if file not in scenes_printed:
                 scenes_printed.append(file)
                 self.print_scene_status(s_status,"  ")
@@ -262,7 +263,7 @@ class SceneRunner:
                 logging.info(f"{len(not_done)}  Result of {done_ref}:  {result}")
 
     def do_retry(self, not_done, scene_status:SceneStatus):
-        scene_ref=scene_status.scene_file
+        scene_ref = scene_status.scene_file
         with open(str(scene_ref)) as scene_file:
             #Retries is +2 to get test number because +1 for next run increment and +1 for changing to 0 base to 1 base index
             job_id = run_scene.remote(self.exec_config['MCS']['run_script'],self.mcs_config, json.load(scene_file), scene_status.retries + 2)
