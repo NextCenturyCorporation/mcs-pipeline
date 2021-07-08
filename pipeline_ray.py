@@ -184,8 +184,8 @@ class SceneRunner:
         self.disable_validation = args.disable_validation
 
         # Get MCS configuration, which has infomation about how to run the MCS code, metadata level, etc.
-        self.check_for_valid_mcs_config(args.mcs_config_file)
         self.mcs_config = self.read_mcs_config(args.mcs_config_file)
+        self.check_for_valid_mcs_config()
 
         self.scene_files_list = []
 
@@ -228,29 +228,26 @@ class SceneRunner:
             mcs_config.read_file(mcs_config_file)
         return mcs_config
 
-    def check_for_valid_mcs_config(self, config_file_path):
+    def check_for_valid_mcs_config(self):
         if(self.disable_validation == False):
-            mcs_config_parse = configparser.ConfigParser()
-            mcs_config_parse.read(config_file_path)
-
             valid = True
 
-            if(mcs_config_parse['MCS']['evaluation'] != 'true'):
+            if(self.mcs_config['MCS']['evaluation'] != 'true'):
                 print('Error: Evaluation property in MCS config file is not set to true.')
                 valid = False
-            if(mcs_config_parse['MCS']['s3_bucket'] != self.CURRENT_EVAL_BUCKET):
+            if(self.mcs_config['MCS']['s3_bucket'] != self.CURRENT_EVAL_BUCKET):
                 print('Error: MCS Config file does not have the correct s3 bucket specified.')
                 valid = False
-            if(mcs_config_parse['MCS']['s3_folder'] != self.CURRENT_EVAL_FOLDER):
+            if(self.mcs_config['MCS']['s3_folder'] != self.CURRENT_EVAL_FOLDER):
                 print('Error: MCS Config file does not have the correct s3 folder specified.')
                 valid = False
-            if(mcs_config_parse['MCS']['metadata'] not in self.METADATA_LVLS):
+            if(self.mcs_config['MCS']['metadata'] not in self.METADATA_LVLS):
                 print('Error: MCS Config file does not include valid metadata level.')
                 valid = False
-            if(mcs_config_parse['MCS']['evaluation_name'] not in self.EVAL_NAMES):
+            if(self.mcs_config['MCS']['evaluation_name'] not in self.EVAL_NAMES):
                 print('Error: MCS Config file does not include valid evaluation_name.')
                 valid = False
-            if(mcs_config_parse['MCS']['team'] not in self.TEAM_NAMES):
+            if(self.mcs_config['MCS']['team'] not in self.TEAM_NAMES):
                 print('Error: MCS Config file does not include valid team name.')
                 valid = False
 
