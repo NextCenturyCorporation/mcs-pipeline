@@ -7,7 +7,7 @@
 1. Open the EC2 dashboard: https://console.aws.amazon.com/ec2
 2. Click on "Instances"
 3. Click on "Launch instances"
-4. Under "Choose AMI", select "Ubuntu Server 20.04"
+4. Under "Choose AMI", select "Ubuntu Server 20.04" *(You can also try one of the Deep Learning AMIs, but this documentation is not tailored to them.)*
 5. Under "Choose Instance Type", select p2.xlarge
 6. Click "Next", click "Next"
 7. Under "Add Storage", increase size (I used 32 GB)
@@ -81,6 +81,14 @@ python MCS/scripts/run_last_action.py --mcs_unity_build_file /home/ubuntu/unity_
 ls gravity_support_ex_01
 ```
 
+### Install Python and Pip
+
+You must install python and pip outside of the python virtual environment so that our pipeline code can install the ray module:
+
+```
+sudo apt install python3 python3-pip
+```
+
 ### Other Setup
 
 You can git-clone other repositories, like maybe mcs-pipeline:
@@ -101,4 +109,3 @@ Or maybe ffmpeg for making videos:
 ```
 sudo apt install ffmpeg
 ```
-
