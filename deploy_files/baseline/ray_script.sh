@@ -3,7 +3,7 @@
 # Check passed mcs_config and scene file
 source /home/ubuntu/check_passed_variables.sh
 
-EVAL_DIR=/home/ubuntu/
+EVAL_DIR=/home/ubuntu
 SCENE_DIR="$EVAL_DIR/scenes/validation/"
 TMP_CFG_FILE="$EVAL_DIR/msc_cfg.ini.tmp"
 

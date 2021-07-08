@@ -77,14 +77,23 @@ class SceneStatus:
 class SceneRunner:
 
     scene_statuses={}
+    # Valid properties for various fields in mcs_config_file
+    METADATA_LVLS = ["level1", "level2", "oracle"]
+    EVAL_NAMES = ["eval_3-75", "eval_4", "eval_5", "eval_6", "eval_7", "eval_8"]
+    TEAM_NAMES = ["mess", "mit", "opics", "baseline"]
+    # TODO: MCS-754: Need to make the following properties more flexible for Eval 4+ and update folder structure
+    CURRENT_EVAL_BUCKET = "evaluation-images"
+    CURRENT_EVAL_FOLDER = "eval-3.75"
 
     def __init__(self, args):
 
         # Get Execution Configuration, which has scene information and how to run scripts on the worker machines
         self.exec_config = configparser.ConfigParser()
         self.exec_config.read(args.execution_config_file)
+        self.disable_validation = args.disable_validation
 
         # Get MCS configuration, which has infomation about how to run the MCS code, metadata level, etc.
+        self.check_for_valid_mcs_config(args.mcs_config_file)
         self.mcs_config = self.read_mcs_config(args.mcs_config_file)
 
         self.scene_files_list = []
@@ -126,6 +135,36 @@ class SceneRunner:
         with open(mcs_config_filename, 'r') as mcs_config_file:
             lines = mcs_config_file.readlines()
         return lines
+
+    def check_for_valid_mcs_config(self, config_file_path):
+        if(self.disable_validation == False):
+            mcs_config_parse = configparser.ConfigParser()
+            mcs_config_parse.read(config_file_path)
+
+            valid = True
+
+            if(mcs_config_parse['MCS']['evaluation'] != 'true'):
+                print('Error: Evaluation property in MCS config file is not set to true.')
+                valid = False
+            if(mcs_config_parse['MCS']['s3_bucket'] != self.CURRENT_EVAL_BUCKET):
+                print('Error: MCS Config file does not have the correct s3 bucket specified.')
+                valid = False
+            if(mcs_config_parse['MCS']['s3_folder'] != self.CURRENT_EVAL_FOLDER):
+                print('Error: MCS Config file does not have the correct s3 folder specified.')
+                valid = False
+            if(mcs_config_parse['MCS']['metadata'] not in self.METADATA_LVLS):
+                print('Error: MCS Config file does not include valid metadata level.')
+                valid = False
+            if(mcs_config_parse['MCS']['evaluation_name'] not in self.EVAL_NAMES):
+                print('Error: MCS Config file does not include valid evaluation_name.')
+                valid = False
+            if(mcs_config_parse['MCS']['team'] not in self.TEAM_NAMES):
+                print('Error: MCS Config file does not include valid team name.')
+                valid = False
+
+            if(valid == False):
+                raise Exception('Invalid property value in MCS config file. If only testing and not '
+                    'running an evaluation, please use the --disable_validation flag.')
 
     def get_scenes(self):
         """Read the scene files to use from the argument scene_list"""
@@ -201,6 +240,12 @@ def parse_args():
     parser.add_argument(
         'mcs_config_file',
         help='Ini file that describes MCS configuration, debug, metadata, team, etc. '
+    )
+    parser.add_argument(
+        '--disable_validation',
+        default=False,
+        action='store_true',
+        help='Whether or not to skip validatation of MCS config file'
     )
     return parser.parse_args()
 

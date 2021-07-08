@@ -36,7 +36,22 @@ DEFAULT_METADATA="level2"
 LOCAL_SCENE_DIR=$2
 # Removing ending slash of scene dir so we have consistency
 LOCAL_SCENE_DIR=$(echo $LOCAL_SCENE_DIR | sed 's:/*$::')
-METADATA=${3:-$DEFAULT_METADATA}
+METADATA=${METADATA:-$DEFAULT_METADATA}
+VALIDATE_CONFIG=''
+
+# Parse optional --parameters
+while [ $# -gt 0 ]; do
+    if [[ $1 == *"--"* ]]; then
+        if [ $1 == "--disable_validation" ] ; then
+            VALIDATE_CONFIG="$1"
+        else
+            uppercase_param=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+            param="${uppercase_param/--/}"
+            declare $param="$2"
+        fi
+   fi
+   shift
+done
 
 MCS_CONFIG=configs/mcs_config_${MODULE}_${METADATA}.ini
 
@@ -51,12 +66,13 @@ done
 # Debug info
 
 echo "Starting Ray Eval:"
-echo "  Module:        $MODULE"
-echo "  Metadata:      $METADATA"
-echo "  Scene Dir:     $LOCAL_SCENE_DIR"
-echo "  Ray Config:    $RAY_CONFIG"
-echo "  Ray Locations: $RAY_LOCATIONS_CONFIG"
-echo "  MCS config:    $MCS_CONFIG" 
+echo "  Module:             $MODULE"
+echo "  Metadata:           $METADATA"
+echo "  Scene Dir:          $LOCAL_SCENE_DIR"
+echo "  Ray Config:         $RAY_CONFIG"
+echo "  Ray Locations:      $RAY_LOCATIONS_CONFIG"
+echo "  MCS config:         $MCS_CONFIG"
+echo "  Skip Validate Flag: $VALIDATE_CONFIG"
 
 ray exec $RAY_CONFIG "mkdir -p ~/scenes/tmp/"
 
@@ -65,7 +81,11 @@ ray exec $RAY_CONFIG "mkdir -p ~/scenes/tmp/"
 ray rsync_up -v $RAY_CONFIG $LOCAL_SCENE_DIR/ '~/scenes/tmp/'
 ray rsync_up -v $RAY_CONFIG $TMP_DIR/scenes_single_scene.txt '~/scenes_single_scene.txt'
 
-ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG
+if [ "$VALIDATE_CONFIG" = '--disable_validation' ] ; then
+    ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG $VALIDATE_CONFIG
+else
+    ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG
+fi
 
 # Remove to cleanup?  or keep for debugging?
 # rm -rf $TMP_DIR
