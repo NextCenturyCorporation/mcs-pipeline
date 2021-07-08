@@ -48,11 +48,9 @@ file_mounts: {
 }
 
 setup_commands:
+  - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
   - pip install -U ray==1.3.0
   - rm -rf ~/.aws/
-
-worker_setup_commands:
-  - sudo mv /home/ubuntu/asound.conf /etc/asound.conf
 
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
