@@ -55,8 +55,6 @@ source /home/ubuntu/venv/bin/activate
 UNITY_APP=/home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.3.x86_64
 
 # Read variables from MCS config file
-AWS_ACCESS_KEY_ID=$(awk -F '=' '/aws_access_key_id/ {print $2}' $mcs_configfile | xargs)
-AWS_SECRET_ACCESS_KEY=$(awk -F '=' '/aws_secret_access_key/ {print $2}' $mcs_configfile | xargs)
 S3_BUCKET=$(awk -F '=' '/s3_bucket/ {print $2}' $mcs_configfile | xargs)
 S3_FOLDER=$(awk -F '=' '/s3_folder/ {print $2}' $mcs_configfile | xargs)
 EVAL_NAME=$(awk -F '=' '/evaluation_name/ {print $2}' $mcs_configfile | xargs)
@@ -64,11 +62,6 @@ TEAM_NAME=$(awk -F '=' '/team/ {print $2}' $mcs_configfile | xargs)
 
 # Set the output prefix by checking if EVAL_NAME or TEAM_NAME are blank
 [[ -z $EVAL_NAME || -z $TEAM_NAME ]] && OUTPUT_PREFIX=${EVAL_NAME}${TEAM_NAME} || OUTPUT_PREFIX=${EVAL_NAME}_${TEAM_NAME}
-
-# Save AWS credentials file to enable CLI calls
-AWS_FOLDER=/home/ubuntu/.aws/
-mkdir -p $AWS_FOLDER
-printf "[default]\naws_access_key_id = $AWS_ACCESS_KEY_ID\naws_secret_access_key = $AWS_SECRET_ACCESS_KEY\n" > ${AWS_FOLDER}credentials
 
 # Run the scene and create an mp4 video
 if [ -z $OUTPUT_PREFIX ]
@@ -78,7 +71,7 @@ else
   python3 MCS/scripts/run_last_action.py --mcs_unity_build_file $UNITY_APP --config_file $mcs_configfile --prefix $OUTPUT_PREFIX --save-videos $scene_file
 fi
 
-# Upload the mp4 video to S3
+# Upload the mp4 video to S3 with credentials from the worker's AWS IAM role
 OUTPUT_FOLDER=/home/ubuntu/output/
 mkdir -p $OUTPUT_FOLDER
 cp ${OUTPUT_PREFIX}*.mp4 $OUTPUT_FOLDER
@@ -86,4 +79,3 @@ aws s3 sync $OUTPUT_FOLDER s3://${S3_BUCKET}/${S3_FOLDER}/ --acl public-read
 
 # Cleanup the worker for future use
 rm ${OUTPUT_FOLDER}${OUTPUT_PREFIX}*.mp4
-rm ${AWS_FOLDER}credentials
