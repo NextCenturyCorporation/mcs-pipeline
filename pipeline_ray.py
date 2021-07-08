@@ -16,7 +16,6 @@ import uuid
 import subprocess
 import io
 import logging
-import shutil
 from dataclasses import dataclass, field
 from typing import List
 from logging import config
