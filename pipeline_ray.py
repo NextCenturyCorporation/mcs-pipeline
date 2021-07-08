@@ -89,20 +89,22 @@ def run_scene(run_script, mcs_config, scene_config, scene_try):
 
     # TODO  MCS-674:  Move Evaluation Code out of Python API (and into the pipeline)
 
-    # This seems a little dirty, but its mostly copied from MCS project.
-    bucket = config.get("MCS", "s3_bucket")
-    folder = config.get("MCS", "s3_folder")
-    eval_name = config.get("MCS", "evaluation_name")
-    team = config.get("MCS", "team")
-    metadata = config.get("MCS", "metadata")
-    s3_filename = folder + "/" + '_'.join(
-            [eval_name, metadata,
-             team,
-             scene_name, timestamp,
-             "log"]) + '.txt'
+    logs_to_s3 = config.getboolean("MCS", "logs_to_s3", fallback=True)
+    if (logs_to_s3):
+        # This seems a little dirty, but its mostly copied from MCS project.
+        bucket = config.get("MCS", "s3_bucket")
+        folder = config.get("MCS", "s3_folder")
+        eval_name = config.get("MCS", "evaluation_name")
+        team = config.get("MCS", "team")
+        metadata = config.get("MCS", "metadata")
+        s3_filename = folder + "/" + '_'.join(
+                [eval_name, metadata,
+                team,
+                scene_name, timestamp,
+                "log"]) + '.txt'
 
-    # Might need to find way to flush logs and/or stop logging.
-    push_to_s3(log_file, bucket, s3_filename)
+        # Might need to find way to flush logs and/or stop logging.
+        push_to_s3(log_file, bucket, s3_filename)
 
     logging.shutdown()
     log_file.unlink()
