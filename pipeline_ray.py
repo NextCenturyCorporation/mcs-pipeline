@@ -40,12 +40,10 @@ def push_to_s3(source_file: pathlib, bucket: str, s3_filename: str, mimetype:str
     )
 
 @ray.remote(num_gpus=1)
-def run_scene(run_script, mcs_config, scene_config, scene_try):
+def run_scene(run_script, mcs_config:configparser.ConfigParser, scene_config, scene_try):
     """ Ray """
     scene_name = scene_config.get("name","")
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    config = configparser.ConfigParser()
-    config.read_string("\n".join(mcs_config))
 
     log_dir = pathlib.Path("/tmp/results/logs")
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -62,9 +60,9 @@ def run_scene(run_script, mcs_config, scene_config, scene_try):
     # Save the mcs_config information as /tmp/mcs_config.ini
     mcs_config_filename = "/tmp/mcs_config.ini"
     logging.info(f"Saving mcs config information to {mcs_config_filename}")
+
     with open(mcs_config_filename, 'w') as mcs_config_file:
-        for line in mcs_config:
-            mcs_config_file.write(line)
+        mcs_config.write(mcs_config_file)
 
     # Save the scene config information
     scene_config_filename = "/tmp/" + str(identifier) + ".json"
@@ -89,14 +87,14 @@ def run_scene(run_script, mcs_config, scene_config, scene_try):
 
     # TODO  MCS-674:  Move Evaluation Code out of Python API (and into the pipeline)
 
-    logs_to_s3 = config.getboolean("MCS", "logs_to_s3", fallback=True)
+    logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if (logs_to_s3):
         # This seems a little dirty, but its mostly copied from MCS project.
-        bucket = config.get("MCS", "s3_bucket")
-        folder = config.get("MCS", "s3_folder")
-        eval_name = config.get("MCS", "evaluation_name")
-        team = config.get("MCS", "team")
-        metadata = config.get("MCS", "metadata")
+        bucket = mcs_config.get("MCS", "s3_bucket")
+        folder = mcs_config.get("MCS", "s3_folder")
+        eval_name = mcs_config.get("MCS", "evaluation_name")
+        team = mcs_config.get("MCS", "team")
+        metadata = mcs_config.get("MCS", "metadata")
         s3_filename = folder + "/" + '_'.join(
                 [eval_name, metadata,
                 team,
@@ -216,9 +214,10 @@ class SceneRunner:
         logging.info(f"{prefix}Retryable: {run.retry}")
 
     def read_mcs_config(self, mcs_config_filename: str):
+        mcs_config = configparser.ConfigParser()
         with open(mcs_config_filename, 'r') as mcs_config_file:
-            lines = mcs_config_file.readlines()
-        return lines
+            mcs_config.read_file(mcs_config_file)
+        return mcs_config
 
     def get_scenes(self):
         """Read the scene files to use from the argument scene_list"""
