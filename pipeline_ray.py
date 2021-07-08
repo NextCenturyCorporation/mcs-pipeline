@@ -234,12 +234,6 @@ class SceneRunner:
         logging.info(f"Scenes {self.scene_files_list}")
 
     def run_scenes(self):
-        # This should probably be configurable and may need to be different depending on what errors we are detecting.
-        # This should work for a first step though.
-        log_dir = pathlib.Path("/tmp/results/logs")
-        shutil.rmtree(log_dir, ignore_errors=True)
-        log_dir.mkdir(parents=True, exist_ok=True)
-
         num_retries = 3
         logging.info(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
