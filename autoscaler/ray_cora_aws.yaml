@@ -43,10 +43,12 @@ head_node_type: ray.head.default
 file_mounts: {
   "/home/ubuntu/ray_script.sh": "deploy_files/cora/ray_script.sh",
   "/home/ubuntu/check_passed_variables.sh": "deploy_files/check_passed_variables.sh",
-  "/home/ubuntu/start_x_server.sh": "deploy_files/start_x_server.sh"
+  "/home/ubuntu/start_x_server.sh": "deploy_files/start_x_server.sh",
+  "/home/ubuntu/asound.conf": "deploy_files/asound.conf"
 }
 
 setup_commands:
+  - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
   - pip install -U ray==1.3.0
   - rm -rf ~/.aws/
 
