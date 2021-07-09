@@ -48,7 +48,7 @@ file_mounts: {
 }
 
 setup_commands:
-  - sudo mv /home/ubuntu/asound.conf /etc/asound.conf
+  - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
   - pip install -U ray==1.3.0
   - rm -rf ~/.aws/
 
