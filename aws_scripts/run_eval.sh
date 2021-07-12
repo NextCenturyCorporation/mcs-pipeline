@@ -55,22 +55,7 @@ done
 
 MCS_CONFIG=configs/mcs_config_${MODULE}_${METADATA}.ini
 
-# Read locations file and put in variables.  Variables are simply the concatentation of section and then variable with
-# an underscore between.
-
-#See https://serverfault.com/questions/345665/how-to-parse-and-convert-ini-file-into-bash-array-variables
-
-while IFS='= ' read var val
-do
-    if [[ $var == \[*] ]]
-    then
-        section=${var//[}
-        section=${section//]}
-    elif [[ $val ]]
-    then
-        declare "${section}_${var}=$val"
-    fi
-done < $RAY_LOCATIONS_CONFIG
+source aws_scripts/load_ini.sh $RAY_LOCATIONS_CONFIG
 
 # Create necessary files:
 
