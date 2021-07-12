@@ -55,6 +55,8 @@ done
 
 MCS_CONFIG=configs/mcs_config_${MODULE}_${METADATA}.ini
 
+source aws_scripts/load_ini.sh $RAY_LOCATIONS_CONFIG
+
 # Create necessary files:
 
 # Create list of scenes for head node to run.  All scenes will also be rsync'ed.
@@ -74,12 +76,13 @@ echo "  Ray Locations:      $RAY_LOCATIONS_CONFIG"
 echo "  MCS config:         $MCS_CONFIG"
 echo "  Skip Validate Flag: $VALIDATE_CONFIG"
 
-ray exec $RAY_CONFIG "mkdir -p ~/scenes/tmp/"
+ray exec $RAY_CONFIG "mkdir -p $MCS_scene_location"
 
 # this may cause re-used machines to have more scenes than necessary in the follow location.
 # I believe this is ok since we use the txt file to control exactly which files are run.
-ray rsync_up -v $RAY_CONFIG $LOCAL_SCENE_DIR/ '~/scenes/tmp/'
-ray rsync_up -v $RAY_CONFIG $TMP_DIR/scenes_single_scene.txt '~/scenes_single_scene.txt'
+
+ray rsync_up -v $RAY_CONFIG $LOCAL_SCENE_DIR/ "$MCS_scene_location"
+ray rsync_up -v $RAY_CONFIG $TMP_DIR/scenes_single_scene.txt "$MCS_scene_list"
 
 if [ "$VALIDATE_CONFIG" = '--disable_validation' ] ; then
     ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG $VALIDATE_CONFIG
