@@ -20,6 +20,7 @@ import subprocess
 import time
 import uuid
 from dataclasses import dataclass, field
+from enum import Enum
 from logging import config
 from typing import List
 
@@ -176,11 +177,20 @@ def setup_logging(log_file):
 
 # Classes to keep track of status of individual scenes and (possibly
 # multiple) runs of those scenes
+class RunStatusEnum(Enum):
+    UNKNOWN = 0,
+    PENDING = 1,
+    RETRYING = 2,
+    SUCCESS = 3,
+    ERROR = 4,
+    ERROR_TIMEOUT = 5
+
+
 @dataclass
 class RunStatus:
     exit_code: int
     output: str
-    status: str
+    status: RunStatusEnum
     job_id = None
     retry: bool = False
 
@@ -189,7 +199,7 @@ class RunStatus:
 class SceneStatus:
     scene_file: str
     retries: int = 0
-    status: str = ""
+    status: RunStatusEnum = RunStatusEnum.UNKNOWN
     run_statuses: List[RunStatus] = field(default_factory=list)
 
 
@@ -224,7 +234,7 @@ class SceneRunner:
 
         self.scene_files_list = []
 
-        # Scene_statuses keeps track of all the scenes and their current status.
+        # Scene_statuses keeps track of all the scenes and current status.
         # Maps job_id to SceneStatus object
         self.scene_statuses = {}
 
@@ -232,15 +242,9 @@ class SceneRunner:
         # have not completed.  We call ray.wait on these to get job outputs
         self.not_done_jobs = []
 
-        date_str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-        logging.info(f"Starting run scenes {date_str}")
-
         self.get_scenes()
         self.run_scenes()
         self.print_results()
-
-        date_str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-        logging.info(f"Finished run scenes {date_str}")
 
     def read_mcs_config(self, mcs_config_filename: str):
         mcs_config = configparser.ConfigParser()
@@ -325,7 +329,7 @@ class SceneRunner:
                                           self.mcs_config,
                                           json.load(scene_file), 1)
                 self.scene_statuses[job_id] = SceneStatus(scene_ref, 0,
-                                                          "pending")
+                                                          RunStatusEnum.PENDING)
                 job_ids.append(job_id)
 
         self.not_done_jobs = job_ids
@@ -337,19 +341,31 @@ class SceneRunner:
                 run_status = self.get_run_status(result, output,
                                                  scene_status.scene_file)
                 scene_status.run_statuses.append(run_status)
-                logging.info(f"file: {scene_status.scene_file}")
 
-                self.print_run_status(run_status)
+                logging.info(f"Run results for file: {scene_status.scene_file}")
+                self.print_run_status(run_status, "    ")
+
                 if run_status.retry and scene_status.retries < NUM_RETRIES:
                     self.retry_job(scene_status)
                     scene_status.retries += 1
-                    scene_status.status = "retrying"
+                    scene_status.status = RunStatusEnum.RETRYING
                 else:
                     # If we are finished, full scene status should be
                     # same as last run status
                     scene_status.status = run_status.status
-                logging.info(f"{len(self.not_done_jobs)}  " +
-                             f"Result of {done_ref}:  {result}")
+
+                self.print_status()
+
+    def print_status(self):
+        """ During the run, print out the number of completed jobs,
+        number current running, number to go, number failed, etc """
+        frequency = {}
+        current_statuses = [scene_status.status for scene_status
+                            in self.scene_statuses.values()]
+        for scene_status in current_statuses:
+            frequency[scene_status] = current_statuses.count(scene_status)
+        for key, value in frequency.items():
+            logging.info(f"{key} -> {value}")
 
     def retry_job(self, scene_status: SceneStatus):
         scene_ref = scene_status.scene_file
@@ -389,14 +405,14 @@ class SceneRunner:
 
     def get_run_status(self, result: int, output: str,
                        scene_file_path: str) -> RunStatus:
-        status = RunStatus(result, output, "Success", False)
+        status = RunStatus(result, output, RunStatusEnum.SUCCESS, False)
         if result != 0:
             status.retry |= False
-            status.status = "Error"
+            status.status = RunStatusEnum.ERROR
         if "Exception in create_controller() Time out!" in output:
             logging.info(f"Timeout occured for file={scene_file_path}")
             status.retry |= True
-            status.status = "Error: Timeout"
+            status.status = RunStatusEnum.ERROR_TIMEOUT
         # Add more conditions to retry here
         return status
 
@@ -424,6 +440,10 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
+    start_time = time.time()
+    date_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
+    logging.info(f"Starting run scenes {date_str}")
+
     # TODO MCS-711:  If running local, do ray.init().  If doing remote/cluster,
     #  do (address='auto').  Add command line switch or configuration to
     #  determine which to use
@@ -437,4 +457,10 @@ if __name__ == '__main__':
 
     # Give it time to wrap up, produce output from the ray workers
     time.sleep(2)
-    logging.info("\n*********************************")
+
+    end_time = time.time()
+    date_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end_time))
+    logging.info(f"Finished run scenes {date_str}")
+
+    elapsed_sec = end_time - start_time
+    logging.info(f"Elapsed: {elapsed_sec} sec")
