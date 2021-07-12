@@ -223,7 +223,13 @@ class SceneRunner:
         self.check_for_valid_mcs_config()
 
         self.scene_files_list = []
+
+        # Scene_statuses keeps track of all the scenes and their current status.
+        # Maps job_id to SceneStatus object
         self.scene_statuses = {}
+
+        # List of all the job references that have been submitted to Ray that
+        # have not completed.  We call ray.wait on these to get job outputs
         self.not_done_jobs = []
 
         date_str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
