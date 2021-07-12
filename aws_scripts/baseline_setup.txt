@@ -7,4 +7,4 @@ ray rsync_up -v autoscaler/ray_baseline_aws.yaml configs/ '~/configs/'
 ray rsync_up -v autoscaler/ray_baseline_aws.yaml scenes_single_scene.txt '~'
 ray rsync_up -v autoscaler/ray_baseline_aws.yaml <datadir> /home/ubuntu/scenes/tmp
 
-ray submit autoscaler/ray_baseline_aws.yaml pipeline_ray.py configs/opics_aws.ini configs/mcs_config_opics_oracle.ini
+ray submit autoscaler/ray_baseline_aws.yaml pipeline_ray.py configs/baseline_aws.ini configs/mcs_config_baseline_level2.ini

@@ -38,7 +38,7 @@ def push_to_s3(source_file: pathlib, bucket: str, s3_filename: str,
     """Copy a file to a S3 bucket"""
     if client is None:
         client = boto3.client('s3')
-    logging.debug(f"Pushing {str(source_file)} to {bucket} / {s3_filename}")
+    logging.debug(f"Pushing {str(source_file)} to {bucket}/{s3_filename}")
     client.upload_file(
         str(source_file),
         bucket,
@@ -438,4 +438,3 @@ if __name__ == '__main__':
     # Give it time to wrap up, produce output from the ray workers
     time.sleep(2)
     logging.info("\n*********************************")
-    input("Finished.  Hit enter to finish ")
