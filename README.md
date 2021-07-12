@@ -71,9 +71,20 @@ There is an optional flag to disable config file validation checks if you are ju
 aws_scripts/run_eval MODULE path/to/scene/directory --metadata [metadata_level] --disable_validation
 ```
 
-Here is an example:
+To capture the output in a log file, add the following after the command.  Tee will allow the output to be sent both to stdout as well as the file.  
+
+```
+|& tee <log_filename>
+```
+
+You can also use linux pipes to only push to a file.
+
+Here are examples:
 ```
 ./aws_scripts/run_eval.sh baseline scenes/subset/
+
+
+./aws_scripts/run_eval.sh baseline scenes/subset/ |& tee out.txt
 ```
 
 Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster.
@@ -255,6 +266,28 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
     of minutes.  
     * Make a file with the correct list of tasks and set the TASK_FILE_PATH to point to it
     * Run the tasks
+
+
+## Linting
+
+### Python Code
+
+We are currently using [flake8](https://flake8.pycqa.org/en/latest/) and [autopep8](https://pypi.org/project/autopep8/) for linting and formatting our Python code. This is enforced within the python_api\
+ and scene_generator projects. Both are [PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant (besides some inline exceptions), although we are ignoring the following rules:
+- **E402**: Module level import not at top of file
+- **W504**: Line break occurred after a binary operator
+
+A full list of error codes and warnings enforced can be found [here](https://flake8.pycqa.org/en/latest/user/error-codes.html)
+
+Both have settings so that they should run on save within Visual Studio Code [settings.json](.vscode/settings.json) as well as on commit after running `pre-commit install` (see [.pre-commit-config.yaml]\
+(.pre-commit-config.yaml) and [.flake8](.flake8)), but can also be run on the command line:
+
+### Shell Scripts
+
+The shell scripts do not currently have a linter, but it should be added and then 
+documented here.
+
+
 
 ## Acknowledgements
 
