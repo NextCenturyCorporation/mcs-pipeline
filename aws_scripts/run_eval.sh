@@ -5,7 +5,7 @@
 #  2. Upload the appropriate scenes
 #  3. Upload the config files
 #  4. Start the eval
-
+{
 MODULE=$1
 TMP_DIR=.tmp_pipeline_ray
 
@@ -89,3 +89,4 @@ fi
 
 # Remove to cleanup?  or keep for debugging?
 # rm -rf $TMP_DIR
+} 
