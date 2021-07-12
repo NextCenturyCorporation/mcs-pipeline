@@ -143,12 +143,12 @@ def setup_logging(log_file):
             "propagate": False
         },
         "loggers": {
-                "s3transfer": {
-                    "level": "INFO",
-                    "handlers": ["console", "log-file"],
-                    "propagate": False
-                }
-            },
+            "s3transfer": {
+                "level": "INFO",
+                "handlers": ["console", "log-file"],
+                "propagate": False
+            }
+        },
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
@@ -184,7 +184,7 @@ def setup_logging(log_file):
 
 # Classes to keep track of status of individual scenes and (possibly
 # multiple) runs of those scenes
-class RunStatusEnum(Enum):
+class StatusEnum(Enum):
     UNKNOWN = 0,
     PENDING = 1,
     RETRYING = 2,
@@ -197,7 +197,7 @@ class RunStatusEnum(Enum):
 class RunStatus:
     exit_code: int
     output: str
-    status: RunStatusEnum
+    status: StatusEnum
     job_id = None
     retry: bool = False
 
@@ -206,7 +206,7 @@ class RunStatus:
 class SceneStatus:
     scene_file: str
     retries: int = 0
-    status: RunStatusEnum = RunStatusEnum.UNKNOWN
+    status: StatusEnum = StatusEnum.UNKNOWN
     run_statuses: List[RunStatus] = field(default_factory=list)
 
 
@@ -336,7 +336,7 @@ class SceneRunner:
                                           self.mcs_config,
                                           json.load(scene_file), 1)
                 self.scene_statuses[job_id] = SceneStatus(scene_ref, 0,
-                                                          RunStatusEnum.PENDING)
+                                                          StatusEnum.PENDING)
                 job_ids.append(job_id)
 
         self.not_done_jobs = job_ids
@@ -349,13 +349,14 @@ class SceneRunner:
                                                  scene_status.scene_file)
                 scene_status.run_statuses.append(run_status)
 
-                logging.info(f"Run results for file: {scene_status.scene_file}")
+                logging.info("Run results for file: " +
+                             f"{scene_status.scene_file}")
                 self.print_run_status(run_status, "    ")
 
                 if run_status.retry and scene_status.retries < NUM_RETRIES:
                     self.retry_job(scene_status)
                     scene_status.retries += 1
-                    scene_status.status = RunStatusEnum.RETRYING
+                    scene_status.status = StatusEnum.RETRYING
                 else:
                     # If we are finished, full scene status should be
                     # same as last run status
@@ -366,13 +367,14 @@ class SceneRunner:
     def print_status(self):
         """ During the run, print out the number of completed jobs,
         number current running, number to go, number failed, etc """
+        logging.info(f"Status for {len(self.scene_statuses)} scenes: ")
         frequency = {}
         current_statuses = [scene_status.status for scene_status
                             in self.scene_statuses.values()]
         for scene_status in current_statuses:
             frequency[scene_status] = current_statuses.count(scene_status)
         for key, value in frequency.items():
-            logging.info(f"{key} -> {value}")
+            logging.info(f"    {key} -> {value}")
 
     def retry_job(self, scene_status: SceneStatus):
         scene_ref = scene_status.scene_file
@@ -398,7 +400,7 @@ class SceneRunner:
                 self.print_scene_status(s_status, "  ")
 
     def print_scene_status(self, s_status, prefix=""):
-        logging.info(f"{prefix}Scene: {s_status.status} - '+"
+        logging.info(f"{prefix}Scene: {s_status.status} - " +
                      f"'{s_status.scene_file}")
         logging.info(f"{prefix}  retries: {s_status.retries}")
         for x, run in enumerate(s_status.run_statuses):
@@ -412,14 +414,14 @@ class SceneRunner:
 
     def get_run_status(self, result: int, output: str,
                        scene_file_path: str) -> RunStatus:
-        status = RunStatus(result, output, RunStatusEnum.SUCCESS, False)
+        status = RunStatus(result, output, StatusEnum.SUCCESS, False)
         if result != 0:
             status.retry |= False
-            status.status = RunStatusEnum.ERROR
+            status.status = StatusEnum.ERROR
         if "Exception in create_controller() Time out!" in output:
             logging.info(f"Timeout occured for file={scene_file_path}")
             status.retry |= True
-            status.status = RunStatusEnum.ERROR_TIMEOUT
+            status.status = StatusEnum.ERROR_TIMEOUT
         # Add more conditions to retry here
         return status
 
