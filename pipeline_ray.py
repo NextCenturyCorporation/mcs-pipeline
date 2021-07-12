@@ -141,6 +141,13 @@ def setup_logging(log_file):
             "handlers": ["console", "log-file"],
             "propagate": False
         },
+        "loggers": {
+                "s3transfer": {
+                    "level": "INFO",
+                    "handlers": ["console", "log-file"],
+                    "propagate": False
+                }
+            },
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
