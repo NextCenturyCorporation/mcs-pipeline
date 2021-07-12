@@ -71,9 +71,20 @@ There is an optional flag to disable config file validation checks if you are ju
 aws_scripts/run_eval MODULE path/to/scene/directory --metadata [metadata_level] --disable_validation
 ```
 
-Here is an example:
+To capture the output in a log file, add the following after the command.  Tee will allow the output to be sent both to stdout as well as the file.  
+
+```
+|& tee <log_filename>
+```
+
+You can also use linux pipes to only push to a file.
+
+Here are examples:
 ```
 ./aws_scripts/run_eval.sh baseline scenes/subset/
+
+
+./aws_scripts/run_eval.sh baseline scenes/subset/ |& tee out.txt
 ```
 
 Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster.
