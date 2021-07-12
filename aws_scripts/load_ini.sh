@@ -14,6 +14,14 @@
 
 while IFS='= ' read var val
 do
+    if [[ $var == \;* ]]
+    then
+        continue
+    fi
+    if [[ $var == \#* ]]
+    then
+        continue
+    fi
     if [[ $var == \[*] ]]
     then
         section=${var//[}
