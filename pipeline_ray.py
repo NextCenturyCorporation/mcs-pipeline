@@ -335,10 +335,8 @@ class SceneRunner:
                 for line in lines:
                     file=pathlib.Path(line.strip())
                     logging.debug(f"Attempting to remove {line} from file list")
-                    for scene_file in self.scene_files_list:
-                        if ((scene_file)==(file)):
-                            self.scene_files_list.remove(scene_file)
-                            break
+                    if (file in self.scene_files_list ):
+                        self.scene_files_list.remove(file)
         
         self.scene_files_list.sort()
         logging.info(f"Number of scenes: {len(self.scene_files_list)}")
