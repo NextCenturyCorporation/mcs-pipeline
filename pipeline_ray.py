@@ -29,6 +29,9 @@ import ray
 # Number of retries before we give up on a job and call it failed
 NUM_RETRIES = 3
 
+# File the records the files that finished.  If we want to restart, we can skip these files.
+FINISHED_SCENES_LIST_FILENAME = "./.last_run_finished.txt"
+
 # This is logging for head node during setup and distribution.
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 
@@ -243,7 +246,9 @@ class SceneRunner:
         logging.info(f"Starting run scenes {date_str}")
 
         self.get_scenes()
+        self.on_start_scenes()
         self.run_scenes()
+        self.on_finish_scenes()
         self.print_results()
 
         date_str = time.strftime('%Y-%m-%d', time.localtime(time.time()))
@@ -355,6 +360,7 @@ class SceneRunner:
                     # If we are finished, full scene status should be
                     # same as last run status
                     scene_status.status = run_status.status
+                    self.on_scene_finished(scene_status)
                 logging.info(f"{len(self.not_done_jobs)}  " +
                              f"Result of {done_ref}:  {result}")
 
@@ -406,6 +412,27 @@ class SceneRunner:
             status.status = "Error: Timeout"
         # Add more conditions to retry here
         return status
+
+    def on_start_scenes(self):
+        # for stop and restart
+        finished_scenes_filename = pathlib.Path(FINISHED_SCENES_LIST_FILENAME)
+        print(str(finished_scenes_filename.absolute()))
+        # missing_ok parameter was failing for me.
+        if finished_scenes_filename.exists():
+            finished_scenes_filename.unlink()
+        self.finished_scenes_file = open(str(finished_scenes_filename), 'a')
+
+    def on_scene_finished(self, status:SceneStatus):
+        self.finished_scenes_file.write(f"{status.scene_file}\n")
+        self.finished_scenes_file.flush()
+
+    def on_finish_scenes(self):
+        # For stop and restart
+        finished_scenes_filename = pathlib.Path(FINISHED_SCENES_LIST_FILENAME)
+        # missing_ok parameter was failing for me.
+        if finished_scenes_filename.exists():
+            finished_scenes_filename.unlink()
+        
 
 
 def parse_args():
