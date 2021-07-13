@@ -398,6 +398,7 @@ class SceneRunner:
             if file not in scenes_printed:
                 scenes_printed.append(file)
                 self.print_scene_status(s_status, "  ")
+        self.print_status()
 
     def print_scene_status(self, s_status, prefix=""):
         logging.info(f"{prefix}Scene: {s_status.status} - " +
