@@ -20,7 +20,7 @@ import subprocess
 import time
 import uuid
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, auto
 from logging import config
 from typing import List
 
@@ -185,12 +185,12 @@ def setup_logging(log_file):
 # Classes to keep track of status of individual scenes and (possibly
 # multiple) runs of those scenes
 class StatusEnum(Enum):
-    UNKNOWN = 0,
-    PENDING = 1,
-    RETRYING = 2,
-    SUCCESS = 3,
-    ERROR = 4,
-    ERROR_TIMEOUT = 5
+    UNKNOWN = auto()
+    PENDING = auto()
+    RETRYING = auto()
+    SUCCESS = auto()
+    ERROR = auto()
+    ERROR_TIMEOUT = auto()
 
 
 @dataclass
@@ -374,7 +374,7 @@ class SceneRunner:
         for scene_status in current_statuses:
             frequency[scene_status] = current_statuses.count(scene_status)
         for key, value in frequency.items():
-            logging.info(f"    {key} -> {value}")
+            logging.info(f"    {key.name} -> {value}")
 
     def retry_job(self, scene_status: SceneStatus):
         scene_ref = scene_status.scene_file
@@ -447,12 +447,23 @@ def parse_args():
     return parser.parse_args()
 
 
+def format_datetime(time_obj):
+    """Format a time (from time.time() in format like: 2021-07-13 13:01:35"""
+    date_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time_obj))
+    return date_str
+
+
+def show_datetime_string(prefix: str = ""):
+    now_time = time.time()
+    date_str = format_datetime(now_time)
+    logging.info(f"{prefix}{date_str}")
+    return now_time
+
+
 if __name__ == '__main__':
     args = parse_args()
 
-    start_time = time.time()
-    date_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
-    logging.info(f"Starting run scenes {date_str}")
+    start_time = show_datetime_string("Start time: ")
 
     # TODO MCS-711:  If running local, do ray.init().  If doing remote/cluster,
     #  do (address='auto').  Add command line switch or configuration to
@@ -468,9 +479,7 @@ if __name__ == '__main__':
     # Give it time to wrap up, produce output from the ray workers
     time.sleep(2)
 
-    end_time = time.time()
-    date_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(end_time))
-    logging.info(f"Finished run scenes {date_str}")
+    end_time = show_datetime_string("End time: ")
 
     elapsed_sec = end_time - start_time
     logging.info(f"Elapsed: {elapsed_sec} sec")
