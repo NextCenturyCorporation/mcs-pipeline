@@ -37,13 +37,15 @@ LOCAL_SCENE_DIR=$2
 # Removing ending slash of scene dir so we have consistency
 LOCAL_SCENE_DIR=$(echo $LOCAL_SCENE_DIR | sed 's:/*$::')
 METADATA=${METADATA:-$DEFAULT_METADATA}
-VALIDATE_CONFIG=''
+SUBMIT_PARAMS=''
 
 # Parse optional --parameters
 while [ $# -gt 0 ]; do
     if [[ $1 == *"--"* ]]; then
         if [ $1 == "--disable_validation" ] ; then
-            VALIDATE_CONFIG="$1"
+            SUBMIT_PARAMS="$SUBMIT_PARAMS $1"
+        elif [ $1 == "--resume" ] ; then
+            SUBMIT_PARAMS="$SUBMIT_PARAMS $1"
         else
             uppercase_param=$(echo "$1" | tr '[:lower:]' '[:upper:]')
             param="${uppercase_param/--/}"
@@ -84,11 +86,8 @@ ray exec $RAY_CONFIG "mkdir -p $MCS_scene_location"
 ray rsync_up -v $RAY_CONFIG $LOCAL_SCENE_DIR/ "$MCS_scene_location"
 ray rsync_up -v $RAY_CONFIG $TMP_DIR/scenes_single_scene.txt "$MCS_scene_list"
 
-if [ "$VALIDATE_CONFIG" = '--disable_validation' ] ; then
-    ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG $VALIDATE_CONFIG
-else
-    ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG
-fi
+ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG $SUBMIT_PARAMS
+
 
 # Remove to cleanup?  or keep for debugging?
 # rm -rf $TMP_DIR
