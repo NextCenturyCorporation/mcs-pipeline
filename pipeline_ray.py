@@ -246,8 +246,8 @@ class SceneRunner:
 
         self.scene_files_list = []
 
-        # Scene_statuses keeps track of all the scenes and current status.
-        # Maps job_id to SceneStatus object
+        # Scene_statuses keeps track of all the scenes and their current
+        # status. Maps job_id to SceneStatus object
         self.scene_statuses = {}
 
         # List of all the job references that have been submitted to Ray that
@@ -490,6 +490,14 @@ def parse_args():
         action='store_true',
         help='Whether to attempt to resume last run.'
     )
+    parser.add_argument(
+        '--local_only',
+        default=False,
+        action='store_true',
+        help='Whether or not one is running on a local machine ' +
+             'or on a remote cluster'
+    )
+
     return parser.parse_args()
 
 
@@ -511,11 +519,12 @@ if __name__ == '__main__':
 
     start_time = show_datetime_string("Start time: ")
 
-    # TODO MCS-711:  If running local, do ray.init().  If doing remote/cluster,
-    #  do (address='auto').  Add command line switch or configuration to
-    #  determine which to use
-    ray.init(address='auto')
-    # ray.init()
+    # Note that logging_level is set to logging.INFO by default
+    # in ray.init() call (in case we need to change logging levels)
+    if(args.local_only):
+        ray.init(local_mode=True)
+    else:
+        ray.init(address='auto')
 
     try:
         scene_runner = SceneRunner(args)

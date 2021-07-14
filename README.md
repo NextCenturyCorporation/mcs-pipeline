@@ -142,7 +142,13 @@ Retryable: False
 
 ## Run Pipeline Locally
 
-TBD
+To run the pipeline locally, make sure to update the paths in configs/test_local.ini and the EVAL_DIR in deploy_files/local/ray_script.sh to match your local machine. Then run the following:
+
+```
+python pipeline_ray.py configs/test_local.ini configs/mcs_config_local_level2.ini --disable_validation --local_only
+```
+
+The ray_script.sh here is set to run run_just_pass.py from the MCS project on the list of scenes passed along, but that can be changed to whatever is needed.
 
 ## Project Structure
 
