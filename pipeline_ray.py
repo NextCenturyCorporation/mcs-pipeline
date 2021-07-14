@@ -450,7 +450,6 @@ class SceneRunner:
     def on_start_scenes(self):
         # for stop and restart
         finished_scenes_filename = pathlib.Path(FINISHED_SCENES_LIST_FILENAME)
-        # missing_ok parameter was failing for me.
         # we added self.resume check because if we are resuming, we want that
         # previous list to stay.  Those are already completed successfully
         if finished_scenes_filename.exists() and not self.resume:
@@ -464,7 +463,6 @@ class SceneRunner:
     def on_finish_scenes(self):
         # For stop and restart
         finished_scenes_filename = pathlib.Path(FINISHED_SCENES_LIST_FILENAME)
-        # missing_ok parameter was failing for me.
         if finished_scenes_filename.exists():
             finished_scenes_filename.unlink()
 
