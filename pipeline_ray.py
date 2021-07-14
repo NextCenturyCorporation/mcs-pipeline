@@ -30,7 +30,8 @@ import ray
 # Number of retries before we give up on a job and call it failed
 NUM_RETRIES = 3
 
-# File the records the files that finished.  If we want to restart, we can skip these files.
+# File the records the files that finished.  If we want to restart,
+# we can skip these files.
 FINISHED_SCENES_LIST_FILENAME = "./.last_run_finished.txt"
 
 # This is logging for head node during setup and distribution.
@@ -329,15 +330,17 @@ class SceneRunner:
                 self.scene_files_list.append(base_dir / line.strip())
 
         # Filter scene_files_list based on last run file.
-        if self.resume and pathlib.Path(FINISHED_SCENES_LIST_FILENAME).exists():
+        if (self.resume and
+                pathlib.Path(FINISHED_SCENES_LIST_FILENAME).exists()):
             with open(FINISHED_SCENES_LIST_FILENAME) as last_run_list:
                 lines = last_run_list.readlines()
                 for line in lines:
-                    file=pathlib.Path(line.strip())
-                    logging.debug(f"Attempting to remove {line} from file list")
-                    if (file in self.scene_files_list ):
+                    file = pathlib.Path(line.strip())
+                    logging.debug(
+                        f"Attempting to remove {line} from file list")
+                    if (file in self.scene_files_list):
                         self.scene_files_list.remove(file)
-        
+
         self.scene_files_list.sort()
         logging.info(f"Number of scenes: {len(self.scene_files_list)}")
         logging.info(f"Scenes {self.scene_files_list}")
@@ -448,13 +451,13 @@ class SceneRunner:
         # for stop and restart
         finished_scenes_filename = pathlib.Path(FINISHED_SCENES_LIST_FILENAME)
         # missing_ok parameter was failing for me.
-        # we added self.resume check because if we are resuming, we want that previous list to stay.  
-        # Those are already completed successfully
+        # we added self.resume check because if we are resuming, we want that
+        # previous list to stay.  Those are already completed successfully
         if finished_scenes_filename.exists() and not self.resume:
             finished_scenes_filename.unlink()
         self.finished_scenes_file = open(str(finished_scenes_filename), 'a')
 
-    def on_scene_finished(self, status:SceneStatus):
+    def on_scene_finished(self, status: SceneStatus):
         self.finished_scenes_file.write(f"{status.scene_file}\n")
         self.finished_scenes_file.flush()
 
@@ -464,7 +467,6 @@ class SceneRunner:
         # missing_ok parameter was failing for me.
         if finished_scenes_filename.exists():
             finished_scenes_filename.unlink()
-        
 
 
 def parse_args():
