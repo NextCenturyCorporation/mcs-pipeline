@@ -447,7 +447,6 @@ class SceneRunner:
     def on_start_scenes(self):
         # for stop and restart
         finished_scenes_filename = pathlib.Path(FINISHED_SCENES_LIST_FILENAME)
-        print(str(finished_scenes_filename.absolute()))
         # missing_ok parameter was failing for me.
         # we added self.resume check because if we are resuming, we want that previous list to stay.  
         # Those are already completed successfully
