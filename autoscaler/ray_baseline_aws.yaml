@@ -26,7 +26,6 @@ available_node_types:
       ImageId: ami-0e230ba090bb7ad02
   ray.worker.default:
     min_workers: 0
-    max_workers: 3
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge

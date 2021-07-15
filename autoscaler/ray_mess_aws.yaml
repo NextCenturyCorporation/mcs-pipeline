@@ -28,7 +28,6 @@ available_node_types:
       ImageId: ami-01cdf3366349ef0b2 # AMI 'mess-3.5-ray-v7' originally built from 'mess-35-beta'
   ray.worker.default:
     min_workers: 0
-    max_workers: 3
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
