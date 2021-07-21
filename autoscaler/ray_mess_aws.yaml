@@ -4,8 +4,8 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: mess-375-test
-max_workers: 8                       # 2 is the default
+cluster_name: mess-375-rerun
+max_workers: 20                       # 2 is the default
 
 idle_timeout_minutes: 10
 
@@ -25,13 +25,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-01cdf3366349ef0b2 # AMI 'mess-3.5-ray-v7' originally built from 'mess-35-beta'
+      ImageId: ami-0e52dc0cee6777e12 # AMI 'mess-3.75-submission'
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-01cdf3366349ef0b2 # AMI 'mess-3.5-ray-v7' originally built from 'mess-35-beta'
+      ImageId: ami-0e52dc0cee6777e12 # AMI 'mess-3.75-submission'
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 

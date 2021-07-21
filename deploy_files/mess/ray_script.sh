@@ -3,7 +3,7 @@
 # Check passed mcs_config and scene file
 source /home/ubuntu/check_passed_variables.sh
 
-EVAL_DIR=/home/ubuntu/mess_eval35
+EVAL_DIR=/home/ubuntu/mess_eval375
 SCENE_DIR="$EVAL_DIR/scenes/"
 TMP_CFG_FILE="$EVAL_DIR/msc_cfg.ini.tmp"
 
@@ -26,12 +26,12 @@ cp $scene_file $SCENE_DIR/
 
 echo "Making temporary copy of config file ($mcs_configfile -> $TMP_CFG_FILE)"
 cp $mcs_configfile $TMP_CFG_FILE
-cp $mcs_configfile $EVAL_DIR/level1.config
+cp $mcs_configfile $EVAL_DIR/level2.config
 rm $EVAL_DIR/mcs_config.ini
 echo Moving temporary config file to config location
 mv $TMP_CFG_FILE $EVAL_DIR/mcs_config.ini
 
-# Go to the mess_eval35/, which is where we will be running things
+# Go to the mess_eval375/, which is where we will be running things
 cd $EVAL_DIR
 
 # Activate conda environment
@@ -42,5 +42,9 @@ conda activate myenv
 echo Starting Evaluation:
 echo
 scene_file_basename=$(basename $scene_file)
-python3 script_mess.py scenes/$scene_file_basename
+# TODO: Changing this manually, but we need a way to handle arguments
+# for different submissions (perhaps this is another MCS config file
+# addition)
+# run with '1' and '2'
+python3 script_mess.py scenes/$scene_file_basename 1
 
