@@ -38,7 +38,7 @@ and UI related functionality will work correctly (these can be turned off for te
 - **metadata** - has to be either `level1`, `level2`, or `oracle`
 - **evaluation_name** - has to be one of the following, in the exact format: `eval_3-75`, `eval_4`, `eval_5`, `eval_6`, `eval_7`, `eval_8`
 - **evaluation** - must be set to `true`
-- **team** - has to be either `mess`, `mit`, `opics`, or `baseline`
+- **team** - has to be either `mess`, `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
 - **s3_bucket** - should be `evaluation-images`
 - **s3_folder** - has to be the folder we store output for the current eval (right now, `eval-3.75`)
 
