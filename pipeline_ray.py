@@ -70,6 +70,10 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
     :rtype (int, str)"""
 
     scene_name = scene_config.get("name", "")
+
+    # replace slashes in filenames with dashes
+    scene_name = scene_name.replace("/", "-")
+
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     log_dir = pathlib.Path("/tmp/results/logs")

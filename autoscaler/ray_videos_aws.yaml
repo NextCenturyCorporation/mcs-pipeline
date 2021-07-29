@@ -22,13 +22,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0017467294d97d05c
+      ImageId: ami-09c84c2b05b015aa4 # ami 'dev_0_4_3_v3' - we will want to update the MCS version/AMI later
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0017467294d97d05c
+      ImageId: ami-09c84c2b05b015aa4 # ami 'dev_0_4_3_v3' - we will want to update the MCS version/AMI later
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
