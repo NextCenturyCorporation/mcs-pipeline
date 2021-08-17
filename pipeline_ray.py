@@ -118,7 +118,7 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
     output = ''.join(lines)
 
     evaluation = mcs_config.getboolean("MCS", "evaluation", fallback=False)
-    # movies_folder = mcs_config.get("MCS", "s3_movies_folder")
+    movies_folder = mcs_config.get("MCS", "s3_movies_folder", fallback=None)
     bucket = mcs_config.get("MCS", "s3_bucket", fallback=None)
     folder = mcs_config.get("MCS", "s3_folder", fallback=None)
     eval_name = mcs_config.get("MCS", "evaluation_name")
@@ -158,7 +158,9 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
             # end of the filename, before timestamp
             vid_type = vid_file.split('_')[-2]
         
-            vid_file_dest = folder + "/" + '_'.join(
+            video_folder = movies_folder if movies_folder is not None else folder
+
+            vid_file_dest = video_folder + "/" + '_'.join(
             [eval_name, metadata,
              team,
              scene_name,
