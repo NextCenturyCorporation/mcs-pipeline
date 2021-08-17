@@ -12,6 +12,7 @@
 import argparse
 import configparser
 import datetime
+import glob
 import io
 import json
 import logging
@@ -57,7 +58,7 @@ def push_to_s3(source_file: pathlib, bucket: str, s3_filename: str,
 
 @ray.remote(num_gpus=1)
 def run_scene(run_script, mcs_config: configparser.ConfigParser,
-              scene_config, scene_try):
+              scene_config, eval_dir, scene_try):
     """ Code to run a single scene on a worker machine using Ray.
     This function should not have code dependencies because they
     are not automatically copied to remote machines.
@@ -104,7 +105,7 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
         json.dump(scene_config, scene_config_file)
 
     # Run the script on the machine
-    cmd = f'{run_script} {mcs_config_filename} {scene_config_filename}'
+    cmd = f'{run_script} {mcs_config_filename} {scene_config_filename} {eval_dir}'
     logging.info(f"In run scene.  Running {cmd}")
 
     proc = subprocess.Popen(cmd.split(" "), stdout=subprocess.PIPE,
@@ -116,24 +117,66 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
     result = proc.wait()
     output = ''.join(lines)
 
-    # TODO  MCS-674:  Move Evaluation Code out of Python API and into pipeline
+    evaluation = mcs_config.getboolean("MCS", "evaluation", fallback=False)
+    # movies_folder = mcs_config.get("MCS", "s3_movies_folder")
+    bucket = mcs_config.get("MCS", "s3_bucket", fallback=None)
+    folder = mcs_config.get("MCS", "s3_folder", fallback=None)
+    eval_name = mcs_config.get("MCS", "evaluation_name")
+    team = mcs_config.get("MCS", "team")
+    metadata = mcs_config.get("MCS", "metadata")
+    video_enabled = mcs_config.getboolean("MCS", "video_enabled", fallback=False)
+
+    if video_enabled:
+        # find scene history file
+        find_scene_hist = glob.glob(eval_dir + '/SCENE_HISTORY/' + scene_name + '*.json')[0]
+        scene_hist_dest = folder + "/" + '_'.join(
+            [eval_name, metadata,
+             team,
+             scene_name]) + '.json'
+
+        scene_hist_file = pathlib.Path(find_scene_hist)
+
+        # update history file with additional info needed for ingest
+        with open(scene_hist_file, "r") as history_file:
+            data = json.load(history_file)
+
+        data["info"]["team"] = team
+        data["info"]["evaluation_name"] = eval_name
+        data["info"]["evaluation"] = evaluation
+
+        with open(scene_hist_file, "w") as history_file:
+            logging.info(json.dumps(data["info"]))
+            json.dump(data, history_file)
+
+        # upload scene history
+        push_to_s3(scene_hist_file, bucket, scene_hist_dest, "application/json")
+
+        # find and upload videos
+        find_video_files = glob.glob(eval_dir + '/' + scene_name + '/*.mp4')
+        for vid_file in find_video_files:
+            # type of video (depth, segmentation, etc) should be at the
+            # end of the filename, before timestamp
+            vid_type = vid_file.split('_')[-2]
+        
+            vid_file_dest = folder + "/" + '_'.join(
+            [eval_name, metadata,
+             team,
+             scene_name,
+             vid_type]) + '.mp4'
+
+            push_to_s3(pathlib.Path(vid_file), bucket, vid_file_dest, "video/mp4")
 
     logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if logs_to_s3:
         # This seems a little dirty, but its mostly copied from MCS project.
-        bucket = mcs_config.get("MCS", "s3_bucket")
-        folder = mcs_config.get("MCS", "s3_folder")
-        eval_name = mcs_config.get("MCS", "evaluation_name")
-        team = mcs_config.get("MCS", "team")
-        metadata = mcs_config.get("MCS", "metadata")
-        s3_filename = folder + "/" + '_'.join(
+        log_s3_filename = folder + "/" + '_'.join(
             [eval_name, metadata,
              team,
              scene_name, timestamp,
              "log"]) + '.txt'
 
         # Might need to find way to flush logs and/or stop logging.
-        push_to_s3(log_file, bucket, s3_filename)
+        push_to_s3(log_file, bucket, log_s3_filename)
 
     logging.shutdown()
     log_file.unlink()
@@ -282,6 +325,18 @@ class SceneRunner:
                   'config file is not set to true.')
             valid = False
 
+        video_enabled = self.mcs_config.getboolean('MCS', 'video_enabled')
+        if not video_enabled:
+            print('Error: Video enabled property in MCS ' +
+                  'config file is not set to true.')
+            valid = False
+
+        history_enabled = self.mcs_config.getboolean('MCS', 'history_enabled')
+        if not history_enabled:
+            print('Error: History enabled property in MCS ' +
+                  'config file is not set to true.')
+            valid = False
+
         bucket = self.mcs_config.get('MCS', 's3_bucket')
         if bucket != self.CURRENT_EVAL_BUCKET:
             print('Error: MCS Config file does not have ' +
@@ -353,11 +408,13 @@ class SceneRunner:
         logging.info(f"Running {len(self.scene_files_list)} scenes")
         job_ids = []
         run_script = self.exec_config['MCS']['run_script']
+        eval_dir = self.exec_config['MCS']['eval_dir']
         for scene_ref in self.scene_files_list:
             with open(str(scene_ref)) as scene_file:
                 job_id = run_scene.remote(run_script,
                                           self.mcs_config,
-                                          json.load(scene_file), 1)
+                                          json.load(scene_file),
+                                          eval_dir, 1)
                 self.scene_statuses[job_id] = SceneStatus(scene_ref, 0,
                                                           StatusEnum.PENDING)
                 job_ids.append(job_id)
@@ -408,6 +465,7 @@ class SceneRunner:
             # increment and +1 for changing to 0 base to 1 base index
             job_id = run_scene.remote(self.exec_config['MCS']['run_script'],
                                       self.mcs_config, json.load(scene_file),
+                                      self.exec_config['MCS']['eval_dir'],
                                       scene_status.retries + 2)
             logging.info(f"Retrying {scene_ref} with job_id={job_id}")
             self.scene_statuses[job_id] = scene_status

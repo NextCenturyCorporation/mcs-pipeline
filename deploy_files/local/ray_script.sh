@@ -8,21 +8,20 @@ source $CHECK_PASSED_VAR_LOC
 
 # Your local directory - for this example, its where ever you have your 
 # MCS python API package checked out
-EVAL_DIR=some/local/path/mcs-python
-SCENE_DIR="$EVAL_DIR/tmp_scenes/"
-TMP_CFG_FILE="$EVAL_DIR/msc_cfg.ini.tmp"
+SCENE_DIR="$eval_dir/tmp_scenes/"
+TMP_CFG_FILE="$eval_dir/msc_cfg.ini.tmp"
 
-echo "Running local test with config $mcs_configfile and scene $scene_file"
+echo "Running local test with config $mcs_configfile and scene $scene_file using eval dir $eval_dir"
 
 echo "Making temporary copy of config file ($mcs_configfile -> $TMP_CFG_FILE)"
 cp $mcs_configfile $TMP_CFG_FILE
-echo Removing old config file at $EVAL_DIR/mcs_config_local.ini
-rm $EVAL_DIR/mcs_config_local.ini
+echo Removing old config file at $eval_dir/mcs_config_local.ini
+rm $eval_dir/mcs_config_local.ini
 echo Moving temporary config file to config location
-mv $TMP_CFG_FILE $EVAL_DIR/mcs_config_local.ini
+mv $TMP_CFG_FILE $eval_dir/mcs_config_local.ini
 
 # Run a test script
-cd $EVAL_DIR
+cd $eval_dir
 echo Starting Evaluation:
 source venv/bin/activate
-python scripts/run_just_pass.py $scene_file --config_file $EVAL_DIR/mcs_config_local.ini 
+python scripts/run_just_pass.py $scene_file --config_file $eval_dir/mcs_config_local.ini 

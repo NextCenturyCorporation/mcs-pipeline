@@ -3,11 +3,10 @@
 # Check passed mcs_config and scene file
 source /home/ubuntu/check_passed_variables.sh
 
-EVAL_DIR=/home/ubuntu/workspace
-SCENE_DIR="$EVAL_DIR/scenes/"
-TMP_CFG_FILE="$EVAL_DIR/msc_cfg.ini.tmp"
+SCENE_DIR="$eval_dir/scenes/"
+TMP_CFG_FILE="$eval_dir/msc_cfg.ini.tmp"
 
-echo "Running CORA with config $mcs_configfile and scene $scene_file"
+echo "Running CORA with config $mcs_configfile and scene $scene_file using eval dir $eval_dir"
 
 # Look for the CORA docker container running.  This will occur if this
 # is the second or subsequent runs on this machine.  The X Server
@@ -24,12 +23,12 @@ if [ -z $CID ]; then
            --rm \
            --privileged \
            -d -t \
-           -v $EVAL_DIR/GenPRAM.jl:/GenPRAM.jl \
-           -v $EVAL_DIR/Perception.jl:/Perception.jl \
-           -v $EVAL_DIR/GenSceneGraphs.jl:/GenSceneGraphs.jl \
-           -v $EVAL_DIR/PoseComposition.jl:/PoseComposition.jl \
-           -v $EVAL_DIR/scenes:/scenes \
-           -v $EVAL_DIR/output:/output \
+           -v $eval_dir/GenPRAM.jl:/GenPRAM.jl \
+           -v $eval_dir/Perception.jl:/Perception.jl \
+           -v $eval_dir/GenSceneGraphs.jl:/GenSceneGraphs.jl \
+           -v $eval_dir/PoseComposition.jl:/PoseComposition.jl \
+           -v $eval_dir/scenes:/scenes \
+           -v $eval_dir/output:/output \
            cora_with_x tail -f /dev/null
 
     # Get the docker container ID
@@ -41,8 +40,8 @@ if [ -z $CID ]; then
 fi
 
 # Clear out directories
-echo Clearing History at $EVAL_DIR/SCENE_HISTORY/
-rm -f $EVAL_DIR/SCENE_HISTORY/*
+echo Clearing History at $eval_dir/SCENE_HISTORY/
+rm -f $eval_dir/SCENE_HISTORY/*
 echo Clearing $SCENE_DIR
 rm -rf $SCENE_DIR/*
 
@@ -55,10 +54,10 @@ cp $scene_file $SCENE_DIR/
 
 echo "Making temporary copy of config file ($mcs_configfile -> $TMP_CFG_FILE)"
 cp $mcs_configfile $TMP_CFG_FILE
-echo Removing old config file at $EVAL_DIR/GenPRAM.jl/GenAgent/omg/mcs_config.ini
-rm $EVAL_DIR/GenPRAM.jl/GenAgent/omg/mcs_config.ini
+echo Removing old config file at $eval_dir/GenPRAM.jl/GenAgent/omg/mcs_config.ini
+rm $eval_dir/GenPRAM.jl/GenAgent/omg/mcs_config.ini
 echo Moving temporary config file to config location
-mv $TMP_CFG_FILE $EVAL_DIR/GenPRAM.jl/GenAgent/omg/mcs_config.ini
+mv $TMP_CFG_FILE $eval_dir/GenPRAM.jl/GenAgent/omg/mcs_config.ini
 
 # Run the Performer code
 echo Starting Evaluation:

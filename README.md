@@ -142,7 +142,8 @@ Retryable: False
 
 ## Run Pipeline Locally
 
-To run the pipeline locally, make sure to update the paths in configs/test_local.ini and the EVAL_DIR in deploy_files/local/ray_script.sh to match your local machine. Then run the following:
+To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine. If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in 
+configs/mcs_config_local_level2.ini. Then run the following:
 
 ```
 python pipeline_ray.py configs/test_local.ini configs/mcs_config_local_level2.ini --disable_validation --local_only
