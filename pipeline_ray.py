@@ -158,7 +158,7 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
         else:
             logging.warning("History file not found for scene " + scene_name)
 
-        # find and upload videos (use timestamp)
+        # find and upload videos
         find_video_files = glob.glob(eval_dir + '/' + scene_name + '/*.mp4')
 
         if(len(find_video_files) == 0):
