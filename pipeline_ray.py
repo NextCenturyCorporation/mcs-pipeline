@@ -127,6 +127,8 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
     video_enabled = mcs_config.getboolean("MCS", "video_enabled", fallback=False)
 
     if evaluation:
+        hist_file_timestamp = ''
+
         # find scene history file (should only be one file in directory)
         scene_hist_matches = glob.glob(eval_dir + '/SCENE_HISTORY/' + scene_name + '*.json')
 
@@ -145,6 +147,7 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
             with open(scene_hist_file, "r") as history_file:
                 data = json.load(history_file)
 
+            hist_file_timestamp = data["info"]["timestamp"]
             data["info"]["team"] = team
             data["info"]["evaluation_name"] = eval_name
             data["info"]["evaluation"] = evaluation
@@ -157,8 +160,8 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
         else:
             logging.warn("History file not found for scene " + scene_name)
 
-        # find and upload videos
-        find_video_files = glob.glob(eval_dir + '/' + scene_name + '/*.mp4')
+        # find and upload videos (use timestamp)
+        find_video_files = glob.glob(eval_dir + '/' + scene_name + '/*' + hist_file_timestamp + '.mp4')
 
         if(len(find_video_files) == 0):
             logging.warn("No video files found for scene " + scene_name)
