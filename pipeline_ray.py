@@ -128,32 +128,41 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
 
     if evaluation:
         # find scene history file (should only be one file in directory)
-        find_scene_hist = glob.glob(eval_dir + '/SCENE_HISTORY/' + scene_name + '*.json')[0]
-        scene_hist_dest = folder + "/" + '_'.join(
-            [eval_name, metadata,
-             team,
-             scene_name]) + '.json'
+        scene_hist_matches = glob.glob(eval_dir + '/SCENE_HISTORY/' + scene_name + '*.json')
 
-        scene_hist_file = pathlib.Path(find_scene_hist)
+        if(len(scene_hist_matches) > 0):
+            found_scene_hist = scene_hist_matches[0]
+            scene_hist_dest = folder + "/" + '_'.join(
+                [eval_name, metadata,
+                team,
+                scene_name]) + '.json'
 
-        # update history file with additional info needed for ingest
-        logging.info("Update history file with team and eval info...")
+            scene_hist_file = pathlib.Path(found_scene_hist)
 
-        with open(scene_hist_file, "r") as history_file:
-            data = json.load(history_file)
+            # update history file with additional info needed for ingest
+            logging.info("Update history file with team and eval info...")
 
-        data["info"]["team"] = team
-        data["info"]["evaluation_name"] = eval_name
-        data["info"]["evaluation"] = evaluation
+            with open(scene_hist_file, "r") as history_file:
+                data = json.load(history_file)
 
-        with open(scene_hist_file, "w") as history_file:
-            json.dump(data, history_file)
+            data["info"]["team"] = team
+            data["info"]["evaluation_name"] = eval_name
+            data["info"]["evaluation"] = evaluation
 
-        # upload scene history
-        push_to_s3(scene_hist_file, bucket, scene_hist_dest, "application/json")
+            with open(scene_hist_file, "w") as history_file:
+                json.dump(data, history_file)
+
+            # upload scene history
+            push_to_s3(scene_hist_file, bucket, scene_hist_dest, "application/json")
+        else:
+            logging.warn("History file not found for scene " + scene_name)
 
         # find and upload videos
         find_video_files = glob.glob(eval_dir + '/' + scene_name + '/*.mp4')
+
+        if(len(find_video_files) == 0):
+            logging.warn("No video files found for scene " + scene_name)
+
         for vid_file in find_video_files:
             # type of video (depth, segmentation, etc) should be at the
             # end of the filename, before timestamp
@@ -167,7 +176,12 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
              scene_name,
              vid_type]) + '.mp4'
 
-            push_to_s3(pathlib.Path(vid_file), bucket, vid_file_dest, "video/mp4")
+            vid_file_path = pathlib.Path(vid_file)
+
+            push_to_s3(vid_file_path, bucket, vid_file_dest, "video/mp4")
+
+            # Remove video files after upload
+            vid_file_path.unlink()
 
     logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if logs_to_s3:
@@ -324,56 +338,56 @@ class SceneRunner:
 
         eval = self.mcs_config.getboolean('MCS', 'evaluation')
         if not eval:
-            print('Error: Evaluation property in MCS ' +
+            logging.error('Error: Evaluation property in MCS ' +
                   'config file is not set to true.')
             valid = False
 
         video_enabled = self.mcs_config.getboolean('MCS', 'video_enabled')
         if not video_enabled:
-            print('Error: Video enabled property in MCS ' +
+            logging.error('Error: Video enabled property in MCS ' +
                   'config file is not set to true.')
             valid = False
 
         history_enabled = self.mcs_config.getboolean('MCS', 'history_enabled')
         if not history_enabled:
-            print('Error: History enabled property in MCS ' +
+            logging.error('Error: History enabled property in MCS ' +
                   'config file is not set to true.')
             valid = False
 
         bucket = self.mcs_config.get('MCS', 's3_bucket')
         if bucket != self.CURRENT_EVAL_BUCKET:
-            print('Error: MCS Config file does not have ' +
+            logging.error('Error: MCS Config file does not have ' +
                   'the correct s3 bucket specified.')
             valid = False
 
         s3_folder = self.mcs_config.get('MCS', 's3_folder')
         if s3_folder != self.CURRENT_EVAL_FOLDER:
-            print('Error: MCS Config file does not have ' +
+            logging.error('Error: MCS Config file does not have ' +
                   'the correct s3 folder specified.')
             valid = False
 
         metadata = self.mcs_config.get('MCS', 'metadata')
         if metadata not in self.METADATA_LVLS:
-            print('Error: MCS Config file does not include ' +
+            logging.error('Error: MCS Config file does not include ' +
                   'valid metadata level.')
             valid = False
 
         eval_name = self.mcs_config.get('MCS', 'evaluation_name')
         if eval_name not in self.EVAL_NAMES:
-            print('Error: MCS Config file does not ' +
+            logging.error('Error: MCS Config file does not ' +
                   'include valid evaluation_name.')
             valid = False
 
         team = self.mcs_config.get('MCS', 'team')
         if team not in self.TEAM_NAMES:
-            print('Error: MCS Config file does not ' +
+            logging.error('Error: MCS Config file does not ' +
                   'include valid team name.')
             valid = False
 
         logs_to_s3 = self.mcs_config.getboolean('MCS', 'logs_to_s3',
                                                 fallback=True)
         if not logs_to_s3:
-            print('Error: MCS Config does not have logs_to_s3 enabled.')
+            logging.error('Error: MCS Config does not have logs_to_s3 enabled.')
             valid = False
 
         if not valid:
