@@ -16,6 +16,7 @@ import glob
 import io
 import json
 import logging
+import os
 import pathlib
 import subprocess
 import time
@@ -127,13 +128,11 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
     video_enabled = mcs_config.getboolean("MCS", "video_enabled", fallback=False)
 
     if evaluation:
-        hist_file_timestamp = ''
-
         # find scene history file (should only be one file in directory)
         scene_hist_matches = glob.glob(eval_dir + '/SCENE_HISTORY/' + scene_name + '*.json')
 
         if(len(scene_hist_matches) > 0):
-            found_scene_hist = scene_hist_matches[0]
+            found_scene_hist = max(scene_hist_matches, key=os.path.getctime)
             scene_hist_dest = folder + "/" + '_'.join(
                 [eval_name, metadata,
                 team,
@@ -147,7 +146,6 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
             with open(scene_hist_file, "r") as history_file:
                 data = json.load(history_file)
 
-            hist_file_timestamp = data["info"]["timestamp"]
             data["info"]["team"] = team
             data["info"]["evaluation_name"] = eval_name
             data["info"]["evaluation"] = evaluation
@@ -158,13 +156,13 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
             # upload scene history
             push_to_s3(scene_hist_file, bucket, scene_hist_dest, "application/json")
         else:
-            logging.warn("History file not found for scene " + scene_name)
+            logging.warning("History file not found for scene " + scene_name)
 
         # find and upload videos (use timestamp)
-        find_video_files = glob.glob(eval_dir + '/' + scene_name + '/*' + hist_file_timestamp + '.mp4')
+        find_video_files = glob.glob(eval_dir + '/' + scene_name + '/*.mp4')
 
         if(len(find_video_files) == 0):
-            logging.warn("No video files found for scene " + scene_name)
+            logging.warning("No video files found for scene " + scene_name)
 
         for vid_file in find_video_files:
             # type of video (depth, segmentation, etc) should be at the
@@ -182,9 +180,6 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
             vid_file_path = pathlib.Path(vid_file)
 
             push_to_s3(vid_file_path, bucket, vid_file_dest, "video/mp4")
-
-            # Remove video files after upload
-            vid_file_path.unlink()
 
     logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if logs_to_s3:
