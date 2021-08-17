@@ -126,8 +126,8 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
     metadata = mcs_config.get("MCS", "metadata")
     video_enabled = mcs_config.getboolean("MCS", "video_enabled", fallback=False)
 
-    if video_enabled:
-        # find scene history file
+    if evaluation:
+        # find scene history file (should only be one file in directory)
         find_scene_hist = glob.glob(eval_dir + '/SCENE_HISTORY/' + scene_name + '*.json')[0]
         scene_hist_dest = folder + "/" + '_'.join(
             [eval_name, metadata,
@@ -137,6 +137,8 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
         scene_hist_file = pathlib.Path(find_scene_hist)
 
         # update history file with additional info needed for ingest
+        logging.info("Update history file with team and eval info...")
+
         with open(scene_hist_file, "r") as history_file:
             data = json.load(history_file)
 
@@ -145,7 +147,6 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
         data["info"]["evaluation"] = evaluation
 
         with open(scene_hist_file, "w") as history_file:
-            logging.info(json.dumps(data["info"]))
             json.dump(data, history_file)
 
         # upload scene history
