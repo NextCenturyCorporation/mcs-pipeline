@@ -38,9 +38,12 @@ and UI related functionality will work correctly (these can be turned off for te
 - **metadata** - has to be either `level1`, `level2`, or `oracle`
 - **evaluation_name** - has to be one of the following, in the exact format: `eval_3-75`, `eval_4`, `eval_5`, `eval_6`, `eval_7`, `eval_8`
 - **evaluation** - must be set to `true`
+- **history_enabled** - must be set to `true`
 - **team** - has to be either `mess`, `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
 - **s3_bucket** - should be `evaluation-images`
-- **s3_folder** - has to be the folder we store output for the current eval (right now, `eval-3.75`)
+- **s3_folder** - json output - has to be the folder we store output for the current eval (right now, `eval-3.75`)
+- **s3_movies_folder**: required (value should be `eval-resources-4` for eval 4) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well 
+- **video_enabled** - must be set to `true`
 
 If anything above changes, we will need to make sure those changes are incorporated into the ingest process/UI as needed. 
 
@@ -53,6 +56,7 @@ In order to test the pipeline and evaluations, the following is helpful:
 * Be sure to stop your cluster and/or terminate the AWS instances when you are done.
 
 * Know if/where your results will be uploaded to avoid conflicts:
+  * Videos are only saved when `videos_enabled=true`
   * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has `evalution=true`
   * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test 
   * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375

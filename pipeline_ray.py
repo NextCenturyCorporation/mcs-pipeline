@@ -133,6 +133,11 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
 
         if(len(scene_hist_matches) > 0):
             found_scene_hist = max(scene_hist_matches, key=os.path.getctime)
+            hist_filename_no_ext = os.path.splitext(found_scene_hist)[0]
+            timestamp = hist_filename_no_ext[-15:]
+
+            logging.info("History file timestamp: " + timestamp)
+
             scene_hist_dest = folder + "/" + '_'.join(
                 [eval_name, metadata,
                 team,
@@ -140,29 +145,17 @@ def run_scene(run_script, mcs_config: configparser.ConfigParser,
 
             scene_hist_file = pathlib.Path(found_scene_hist)
 
-            # update history file with additional info needed for ingest
-            logging.info("Update history file with team and eval info...")
-
-            with open(scene_hist_file, "r") as history_file:
-                data = json.load(history_file)
-
-            data["info"]["team"] = team
-            data["info"]["evaluation_name"] = eval_name
-            data["info"]["evaluation"] = evaluation
-
-            with open(scene_hist_file, "w") as history_file:
-                json.dump(data, history_file)
-
             # upload scene history
             push_to_s3(scene_hist_file, bucket, scene_hist_dest, "application/json")
         else:
             logging.warning("History file not found for scene " + scene_name)
 
         # find and upload videos
-        find_video_files = glob.glob(eval_dir + '/' + scene_name + '/*.mp4')
+        find_video_files = glob.glob(eval_dir + '/' + scene_name + '/*' + timestamp + '.mp4')
 
         if(len(find_video_files) == 0):
-            logging.warning("No video files found for scene " + scene_name)
+            logging.warning("No video files found for scene " + scene_name + 
+                            " and timestamp " + timestamp)
 
         for vid_file in find_video_files:
             # type of video (depth, segmentation, etc) should be at the
@@ -362,6 +355,12 @@ class SceneRunner:
         if s3_folder != self.CURRENT_EVAL_FOLDER:
             logging.error('Error: MCS Config file does not have ' +
                   'the correct s3 folder specified.')
+            valid = False
+
+        s3_movies_folder = self.mcs_config.get('MCS', 's3_movies_folder')
+        if s3_movies_folder is None:
+            logging.error('Error: MCS Config file does not have ' +
+                  'an s3 movies folder specified.')
             valid = False
 
         metadata = self.mcs_config.get('MCS', 'metadata')
