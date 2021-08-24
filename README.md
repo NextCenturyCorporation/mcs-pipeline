@@ -41,8 +41,8 @@ and UI related functionality will work correctly (these can be turned off for te
 - **history_enabled** - must be set to `true`
 - **team** - has to be either `mess`, `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
 - **s3_bucket** - should be `evaluation-images`
-- **s3_folder** - json output - has to be the folder we store output for the current eval (right now, `eval-3.75`)
-- **s3_movies_folder**: required (value should be `eval-resources-4` for eval 4) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well 
+- **s3_folder** - json output - has to be the folder we store output for the current eval (right now, `eval-3.75`, but should be updated to `eval-resources-4` for eval 4)
+- **s3_movies_folder**: required post-3.75 (value should be updated to `raw-eval-4` for eval 4) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well 
 - **video_enabled** - must be set to `true`
 
 If anything above changes, we will need to make sure those changes are incorporated into the ingest process/UI as needed. 
