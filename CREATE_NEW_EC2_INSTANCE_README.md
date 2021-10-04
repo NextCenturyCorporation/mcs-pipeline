@@ -44,10 +44,10 @@ Update the version tag as needed.
 
 ```
 mkdir unity_app; cd unity_app
-wget https://github.com/NextCenturyCorporation/MCS/releases/download/0.4.3/MCS-AI2-THOR-Unity-App-v0.4.3-linux.zip
-unzip MCS-AI2-THOR-Unity-App-v0.4.3-linux.zip
-tar -xzvf MCS-AI2-THOR-Unity-App-v0.4.3_Data.tar.gz
-chmod a+x MCS-AI2-THOR-Unity-App-v0.4.3.x86_64
+wget https://github.com/NextCenturyCorporation/MCS/releases/download/0.4.5/MCS-AI2-THOR-Unity-App-v0.4.5-linux.zip
+unzip MCS-AI2-THOR-Unity-App-v0.4.5-linux.zip
+tar -xzvf MCS-AI2-THOR-Unity-App-v0.4.5_Data.tar.gz
+chmod a+x MCS-AI2-THOR-Unity-App-v0.4.5.x86_64
 ```
 
 ### Install the MCS Python Library
@@ -85,17 +85,20 @@ You can use a scene file from the source code to test your installation. For exa
 ```
 cd ~
 source venv/bin/activate
-python MCS/scripts/run_last_action.py --mcs_unity_build_file /home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.3.x86_64 MCS/docs/source/scenes/gravity_support_ex_01.json --debug
+python MCS/scripts/run_last_action.py --mcs_unity_build_file /home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.5.x86_64 MCS/docs/source/scenes/gravity_support_ex_01.json --debug
 ls gravity_support_ex_01
 deactivate
 ```
 
+The `gravity_support_ex_01` folder should have all of the debug files for the run.
+
 ### Install Python and Pip
 
-You must install python and pip outside of the python virtual environment so that our pipeline code can install the ray module:
+You must install python and pip outside of the python virtual environment so our pipeline code can install the ray module, then use `update-alternatives` so ray can run the `python` command (and redirect it to `python3`).
 
 ```
 sudo apt install python3 python3-pip
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 ```
 
 ### Setup to Run an MCS Evaluation
@@ -121,3 +124,11 @@ You can git-clone other repositories, like maybe mcs-pipeline:
 cd ~
 git clone https://github.com/NextCenturyCorporation/mcs-pipeline.git
 ```
+
+## Create AMI
+
+In the AWS EC2 Dashboard, under Instances, right-click your instance, then click "Images and templates" => "Create image". Give it a useful name and description, and then click the "Create image" button.
+
+Leave your instance running while the image is being created! You can stop the instance after the AMI is created.
+
+You should see your pending AMI in the AMIs tab on the EC2 Dashboard. You can use it once it becomes available.
