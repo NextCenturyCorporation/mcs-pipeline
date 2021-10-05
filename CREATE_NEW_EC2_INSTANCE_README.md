@@ -107,7 +107,9 @@ Install the AWS CLI and update the corresponding pip library outside of your pyt
 
 ```
 sudo apt install awscli
-pip3 install --upgrade awscli
+pip install awscli==1.20.9
+pip install boto3==1.18.9
+pip install botocore==1.21.9
 ```
 
 Install ffmpeg to make output videos:
