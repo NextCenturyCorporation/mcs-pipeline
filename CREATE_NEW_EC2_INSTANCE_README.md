@@ -27,7 +27,7 @@ sudo reboot
 
 ### On Reboot
 
-Whenever you reboot your EC2 instance, you'll need to kill the Xorg process that starts automatically and restart it manually. Before you do this, you'll need to set the nvidia xconfig to use an incorrect BusID (I've used `PCI:0:31:0` here), so Xorg fails to restart when you kill its process (it tries to restart itself automatically). Then you'll kill the Xorg process, set the nvidia xconfig to use the correct BusID (currently `PCI:0:30:0`), and restart Xorg. (Yes, this is hacky -- feedback welcome.)
+Whenever you reboot your EC2 instance, you'll need to kill the Xorg process that starts automatically and restart it manually. Before you do this, you'll need to set the nvidia xconfig to use an incorrect BusID (I've used `PCI:0:31:0` here), so Xorg fails to restart when you kill its process (it tries to restart itself automatically). Then you'll kill the Xorg process, set the nvidia xconfig to use the correct BusID (currently `PCI:0:30:0`), and restart Xorg. (Yes, this is hacky -- feedback welcome.) Please note that sometimes `kill` prints a "usage" message because it doesn't have anything to kill -- that's OK.
 
 ```
 sudo nvidia-xconfig --use-display-device=None --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:31:0
@@ -44,10 +44,10 @@ Update the version tag as needed.
 
 ```
 mkdir unity_app; cd unity_app
-wget https://github.com/NextCenturyCorporation/MCS/releases/download/0.4.5/MCS-AI2-THOR-Unity-App-v0.4.5-linux.zip
-unzip MCS-AI2-THOR-Unity-App-v0.4.5-linux.zip
-tar -xzvf MCS-AI2-THOR-Unity-App-v0.4.5_Data.tar.gz
-chmod a+x MCS-AI2-THOR-Unity-App-v0.4.5.x86_64
+wget https://github.com/NextCenturyCorporation/MCS/releases/download/0.4.6/MCS-AI2-THOR-Unity-App-v0.4.6-linux.zip
+unzip MCS-AI2-THOR-Unity-App-v0.4.6-linux.zip
+tar -xzvf MCS-AI2-THOR-Unity-App-v0.4.6_Data.tar.gz
+chmod a+x MCS-AI2-THOR-Unity-App-v0.4.6.x86_64
 ```
 
 ### Install the MCS Python Library
@@ -85,7 +85,7 @@ You can use a scene file from the source code to test your installation. For exa
 ```
 cd ~
 source venv/bin/activate
-python MCS/scripts/run_last_action.py --mcs_unity_build_file /home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.5.x86_64 MCS/docs/source/scenes/gravity_support_ex_01.json --debug
+python MCS/machine_common_sense/scripts/run_last_action.py --mcs_unity_build_file /home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.6.x86_64 MCS/docs/source/scenes/gravity_support_ex_01.json --debug
 ls gravity_support_ex_01
 deactivate
 ```
@@ -99,9 +99,10 @@ You must install python and pip outside of the python virtual environment so our
 ```
 sudo apt install python3 python3-pip
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+python --version
 ```
 
-### Setup to Run an MCS Evaluation
+### Setup to Run an MCS Pipeline
 
 Install the AWS CLI and update the corresponding pip library outside of your python virtual environment:
 
@@ -110,6 +111,7 @@ sudo apt install awscli
 pip install awscli==1.20.9
 pip install boto3==1.18.9
 pip install botocore==1.21.9
+pip list | grep 'awscli\|boto3\|botocore'
 ```
 
 Install ffmpeg to make output videos:
