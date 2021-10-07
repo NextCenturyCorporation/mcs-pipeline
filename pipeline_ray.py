@@ -279,7 +279,7 @@ class SceneRunner:
     METADATA_LVLS = ["level1", "level2", "oracle"]
     EVAL_NAMES = ["eval_3-75", "eval_4", "eval_5",
                   "eval_6", "eval_7", "eval_8"]
-    TEAM_NAMES = ["mess", "mit", "opics", "baseline", "cora"]
+    TEAM_NAMES = ["mess1", "mess2", "mit", "opics", "baseline", "cora"]
     # TODO: MCS-754: Need to make the following properties
     #  more flexible for Eval 4+ and update folder structure
     CURRENT_EVAL_BUCKET = "evaluation-images"
@@ -380,6 +380,16 @@ class SceneRunner:
             logging.error('Error: MCS Config file does not ' +
                   'include valid team name.')
             valid = False
+
+        # Needed for multiple submissions from MESS
+        # TODO: make more generic post eval 4 and incorporate into
+        # Python API/ingest (MCS-928)
+        submission_id = self.mcs_config.get('MCS', 'submission_id', fallback=None)
+        if (team == 'mess1' and submission_id != '1' or
+            team == 'mess2' and submission_id != '2'):
+            logging.error('Error: For MESS submissions, need the ' +
+                  'submission_id to match the team name suffix (1 or 2).')
+            valid=False
 
         logs_to_s3 = self.mcs_config.getboolean('MCS', 'logs_to_s3',
                                                 fallback=True)
