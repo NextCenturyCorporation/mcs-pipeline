@@ -30,7 +30,7 @@ $ source venv/bin/activate
 
 ### Run Eval Script
 
-### MCS Config File 
+#### MCS Config File
 
 When running an eval, there are checks to ensure that the MCS config file used is using the correct naming conventions, so that all the ingest
 and UI related functionality will work correctly (these can be turned off for testing):
@@ -48,7 +48,7 @@ and UI related functionality will work correctly (these can be turned off for te
 
 If anything above changes, we will need to make sure those changes are incorporated into the ingest process/UI as needed. 
 
-#### Eval test Configuration
+#### Eval Test Configuration
 
 In order to test the pipeline and evaluations, the following is helpful:
 
@@ -279,6 +279,16 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
     * Make a file with the correct list of tasks and set the TASK_FILE_PATH to point to it
     * Run the tasks
 
+## Generating Videos
+
+1. Update the `s3_bucket`, `s3_folder`, `evaluation_name`, and/or `team_name` in [configs/mcs_config_videos_level1.ini](configs/mcs_config_videos_level1.ini), as needed.
+2. Update the `cluster_name` in [autoscaler/ray_videos_aws.yaml](autoscaler/ray_videos_aws.yaml), if needed.
+3. Run the command below.
+4. Terminate your AWS instances once finished.
+
+```bash
+./aws_scripts/run_eval.sh videos <json_data_folder> --metadata level1 --disable_validation
+```
 
 ## Linting
 
@@ -298,8 +308,6 @@ Both have settings so that they should run on save within Visual Studio Code [se
 
 The shell scripts do not currently have a linter, but it should be added and then 
 documented here.
-
-
 
 ## Acknowledgements
 

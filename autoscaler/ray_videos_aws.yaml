@@ -22,13 +22,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-09c84c2b05b015aa4 # ami 'dev_0_4_3_v3' - we will want to update the MCS version/AMI later
+      ImageId: ami-057d4f97fa2bc764f # ami 'dev_0_4_6' - we will want to update the MCS version/AMI later
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-09c84c2b05b015aa4 # ami 'dev_0_4_3_v3' - we will want to update the MCS version/AMI later
+      ImageId: ami-057d4f97fa2bc764f # ami 'dev_0_4_6' - we will want to update the MCS version/AMI later
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
@@ -48,6 +48,7 @@ setup_commands:
   - pip install -U "ray[default]"==1.3.0
   - chmod +x /home/ubuntu/ray_script.sh /home/ubuntu/check_passed_variables.sh /home/ubuntu/start_x_server.sh
   - rm -rf ~/.aws/
+  - pip install aioredis==1.3.1
 
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
