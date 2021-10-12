@@ -24,4 +24,4 @@ mv $TMP_CFG_FILE $eval_dir/mcs_config_local.ini
 cd $eval_dir
 echo Starting Evaluation:
 source venv/bin/activate
-python scripts/run_just_pass.py $scene_file --config_file $eval_dir/mcs_config_local.ini 
+python machine_common_sense/scripts/run_just_pass.py $scene_file --config_file $eval_dir/mcs_config_local.ini 

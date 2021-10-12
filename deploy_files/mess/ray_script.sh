@@ -41,10 +41,12 @@ conda activate myenv
 echo Starting Evaluation:
 echo
 scene_file_basename=$(basename $scene_file)
-# TODO: MCS-818: Changing this manually, but we need a way to handle 
-# arguments for different submissions (perhaps this is another MCS 
-# config file addition) 
 
-# run with '1' and '2' for both MESS submissions
-python3 script_mess.py scenes/$scene_file_basename 2
+# Read in which submission to run from MCS config file
+SUBMISSION_ID=$(awk -F '=' '/submission_id/ {print $2}' $mcs_configfile | xargs)
+
+echo Running script_mess.py submission $SUBMISSION_ID
+
+# run with SUBMISSION_ID set to '1' or '2' for both MESS submissions
+python3 script_mess.py scenes/$scene_file_basename $SUBMISSION_ID
 

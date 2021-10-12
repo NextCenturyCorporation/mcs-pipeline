@@ -39,7 +39,8 @@ and UI related functionality will work correctly (these can be turned off for te
 - **evaluation_name** - has to be one of the following, in the exact format: `eval_3-75`, `eval_4`, `eval_5`, `eval_6`, `eval_7`, `eval_8`
 - **evaluation** - must be set to `true`
 - **history_enabled** - must be set to `true`
-- **team** - has to be either `mess`, `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
+- **team** - has to be either `mess1`, `mess2`, `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
+- **submission_id** - currently, only needed for MESS submissions. Needs to match the team label (either `1` or `2`)
 - **s3_bucket** - should be `evaluation-images`
 - **s3_folder** - json output - has to be the folder we store output for the current eval (right now, `eval-3.75`, but should be updated to `eval-resources-4` for eval 4)
 - **s3_movies_folder**: required post-3.75 (value should be updated to `raw-eval-4` for eval 4) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well 
