@@ -5,7 +5,7 @@ The pipeline makes heavy use of Ray.  Getting familiar with Ray is beneficial.
 Ray:
 https://docs.ray.io/en/master/index.html
 
-Ray Book of Knowledge: 
+Ray Body of Knowledge: 
 https://nextcentury.atlassian.net/wiki/spaces/MCS/pages/2156757749/BoK
 
 ****
