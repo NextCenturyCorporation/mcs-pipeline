@@ -280,10 +280,10 @@ class SceneRunner:
     EVAL_NAMES = ["eval_3-75", "eval_4", "eval_5",
                   "eval_6", "eval_7", "eval_8"]
     TEAM_NAMES = ["mess1", "mess2", "mit", "opics", "baseline", "cora"]
-    # TODO: MCS-754: Need to make the following properties
     #  more flexible for Eval 4+ and update folder structure
     CURRENT_EVAL_BUCKET = "evaluation-images"
-    CURRENT_EVAL_FOLDER = "eval-3.75"
+    CURRENT_EVAL_FOLDER = "eval-resources-4"
+    CURRENT_MOVIE_FOLDER = "raw-eval-4"
 
     def __init__(self, args):
 
