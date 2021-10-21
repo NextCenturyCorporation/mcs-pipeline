@@ -315,10 +315,10 @@ class SceneRunner:
         "eval_8",
     ]
     TEAM_NAMES = ["mess1", "mess2", "mit", "opics", "baseline", "cora"]
-    # TODO: MCS-754: Need to make the following properties
     #  more flexible for Eval 4+ and update folder structure
     CURRENT_EVAL_BUCKET = "evaluation-images"
-    CURRENT_EVAL_FOLDER = "eval-3.75"
+    CURRENT_EVAL_FOLDER = "eval-resources-4"
+    CURRENT_MOVIE_FOLDER = "raw-eval-4"
 
     def __init__(self, args):
 
@@ -402,12 +402,12 @@ class SceneRunner:
             )
             valid = False
 
-        s3_movies_folder = self.mcs_config.get("MCS", "s3_movies_folder")
-        if s3_movies_folder is None:
-            logging.error(
-                "Error: MCS Config file does not have "
-                + "an s3 movies folder specified."
-            )
+
+        s3_movies_folder = self.mcs_config.get('MCS', 's3_movies_folder')
+        if s3_movies_folder != self.CURRENT_MOVIE_FOLDER:
+            logging.error('Error: MCS Config file does not have ' +
+                  'the correct s3 movies folder specified.')
+
             valid = False
 
         metadata = self.mcs_config.get("MCS", "metadata")
