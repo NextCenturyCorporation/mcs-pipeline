@@ -358,9 +358,9 @@ class SceneRunner:
             valid = False
 
         s3_movies_folder = self.mcs_config.get('MCS', 's3_movies_folder')
-        if s3_movies_folder is None:
+        if s3_movies_folder != self.CURRENT_MOVIE_FOLDER:
             logging.error('Error: MCS Config file does not have ' +
-                  'an s3 movies folder specified.')
+                  'the correct s3 movies folder specified.')
             valid = False
 
         metadata = self.mcs_config.get('MCS', 'metadata')
