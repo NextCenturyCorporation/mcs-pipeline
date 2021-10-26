@@ -33,7 +33,7 @@ $ source venv/bin/activate
 ### Quickstart Tips
 
 - Make sure you have AWS credentials for MCS set as default.
-- For testing, make the follow edits to the autoscaler/xxxx.yaml file you plan to user
+- For testing, make the follow edits to the autoscaler/xxxx.yaml file you plan to use.
 
   - Change the cluster name, this will prevent name collsion of EC2s and make finding yours easier.
   - If you want to test how a different library will work, you can add an install command in the setup_commands.
