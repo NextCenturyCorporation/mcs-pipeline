@@ -30,7 +30,7 @@ $ source venv/bin/activate
 
 ### Run Eval Script
 
-### Setup
+### Quickstart Tips
 
 - Make sure you have AWS credentials for MCS set as default.
 - For testing, make the follow edits to the autoscaler/xxxx.yaml file you plan to user
@@ -163,7 +163,7 @@ Retryable: False
 To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine. 
 
 "run_script" is currently MCS-pipeline/deploy_files/local/ray_script.sh
-"scene_location" is current MCS/docs/source/scenes/
+"scene_location" is currently MCS/docs/source/scenes/
 "scene_list" is a .txt file that you put one scene on each line to run.
 "eval_dir" is where the evaluations are written
 
