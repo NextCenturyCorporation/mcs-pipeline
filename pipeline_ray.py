@@ -502,6 +502,9 @@ class SceneRunner:
         run_script = self.exec_config["MCS"]["run_script"]
         eval_dir = self.exec_config["MCS"]["eval_dir"]
         for scene_ref in self.scene_files_list:
+            # skip directories
+            if os.path.isdir(str(scene_ref)):
+                continue
             with open(str(scene_ref)) as scene_file:
                 job_id = run_scene.remote(
                     run_script,
