@@ -1,8 +1,11 @@
 #!/bin/bash
 
 # Check passed mcs_config and scene file
+# LOCAL_DIR=$(dirname $0)
+# CHECK_PASSED_VAR_LOC="${LOCAL_DIR%/*}/check_passed_variables.sh"
+# source $CHECK_PASSED_VAR_LOC
 source /home/ubuntu/check_passed_variables.sh
-SCENE_DIR="$eval_dir/scenes/validation/"
+SCENE_DIR="$eval_dir/scenes/"
 
 echo "Running Baseline with config $mcs_configfile and scene $scene_file using eval dir $eval_dir"
 
@@ -26,8 +29,9 @@ export MCS_CONFIG_FILE_PATH=$mcs_configfile
 # Run the Performer code
 cd $eval_dir
 echo Starting Evaluation:
-echo
-source /home/ubuntu/venv/bin/activate
-python3 gravity_py.py
+echo $eval_dir
+
+# source venv/bin/activate
+venv/bin/python baseline_reori.py --scene_file $scene_file
 
 unset MCS_CONFIG_FILE_PATH
