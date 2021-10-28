@@ -31,7 +31,6 @@ cd $eval_dir
 echo Starting Evaluation:
 echo $eval_dir
 
-# source venv/bin/activate
 venv/bin/python baseline_reori.py --scene_file $scene_file
 
 unset MCS_CONFIG_FILE_PATH
