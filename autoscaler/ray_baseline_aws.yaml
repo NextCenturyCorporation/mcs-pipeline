@@ -4,7 +4,7 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: baseline
+cluster_name: baseline_reor
 max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
@@ -23,13 +23,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0e230ba090bb7ad02
+      ImageId: ami-039051cfc5f0e86e7
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0e230ba090bb7ad02
+      ImageId: ami-039051cfc5f0e86e7
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
@@ -48,9 +48,10 @@ file_mounts: {
 
 setup_commands:
   - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
+  - pip install --upgrade pip
   - pip install -U "ray[default]"==1.3.0
-  - rm -rf ~/.aws/
   - pip install aioredis==1.3.1
+  - rm -rf ~/.aws/
 
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
