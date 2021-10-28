@@ -4,7 +4,7 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: baseline_reor
+cluster_name: baseline_reor-kd
 max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
@@ -12,7 +12,7 @@ max_workers: 8                       # 2 is the default
 provider:
   type: aws
   region: us-east-1
-  availability_zone: us-east-1a,us-east-1b,us-east-1c,us-east-1d
+  availability_zone: us-east-1a,us-east-1b,us-east-1c,us-east-1d,us-east-1e,us-east-1f
   cache_stopped_nodes: True          # Default True means stopped, false means terminate.
 
 
