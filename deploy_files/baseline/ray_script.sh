@@ -9,6 +9,21 @@ SCENE_DIR="$eval_dir/scenes/"
 
 echo "Running Baseline with config $mcs_configfile and scene $scene_file using eval dir $eval_dir"
 
+# Set a bad config and kill the existing X Server before starting it again.
+# Seems to be needed on non-Deep Learning AMIs. See README.
+sudo nvidia-xconfig --use-display-device=None --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:31:0
+# Sleep here to ensure config file is written and X Server starts on boot
+sleep 5
+if pgrep -x Xorg > /dev/null
+then
+  echo "Killing existing X Server that started on boot"
+  sudo kill $(pgrep -x Xorg)
+  # Sleep here to ensure X Server is killed
+  sleep 5
+else
+  echo "X Server wasn't started on boot"
+fi
+
 # Start X
 source /home/ubuntu/start_x_server.sh
 
@@ -31,6 +46,6 @@ cd $eval_dir
 echo Starting Evaluation:
 echo $eval_dir
 
-venv/bin/python baseline_reori.py --scene_file $scene_file
+../venv/bin/python run_baselines.py $scene_file
 
 unset MCS_CONFIG_FILE_PATH
