@@ -26,6 +26,8 @@ export MCS_CONFIG_FILE_PATH=$mcs_configfile
 # Run the Performer code
 echo Starting Evaluation:
 echo 
-cd $eval_dir && source activate mcs_opics && python3 eval.py  --scenes $SCENE_DIR
+# eval3: cd $eval_dir && source activate mcs_opics && python3 eval.py  --scenes $SCENE_DIR
+# eval4:
+cd $eval_dir && bash -i opics.sh $SCENE_DIR
 
 unset MCS_CONFIG_FILE_PATH
