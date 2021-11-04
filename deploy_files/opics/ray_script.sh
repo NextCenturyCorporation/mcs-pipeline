@@ -28,6 +28,7 @@ echo Starting Evaluation:
 echo 
 # eval3: cd $eval_dir && source activate mcs_opics && python3 eval.py  --scenes $SCENE_DIR
 # eval4:
-cd $eval_dir && bash -i opics.sh $SCENE_DIR
+
+cd $eval_dir && cp $mcs_configfile ./mcs_config.ini && bash -i opics.sh $SCENE_DIR
 
 unset MCS_CONFIG_FILE_PATH
