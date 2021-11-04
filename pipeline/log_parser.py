@@ -3,55 +3,11 @@ import os
 import re
 import pathlib
 import shutil
+from typing import List
 
-
-def split_log(file='out.txt'):
-    sort_dir = 'test'
-    sort = pathlib.Path(sort_dir)
-    shutil.rmtree(sort, ignore_errors=True)
-    sort.mkdir(parents=True)
-
-    with open(file, "r") as f:
-        for line in f:
-            # print(line)
-            # ts = re.search("^(\\d{2}:\\d{2}:\\d{2})", line)
-
-            pid_group = re.search("\\(pid=(\\d+)", line)
-            pid = pid_group.groups()[0] if pid_group is not None else None
-
-            if pid is not None:
-                ip_group = re.search("ip=(\\d+\\.\\d+\\.\\d+\\.\\d+)", line)
-                ip = ip_group.groups()[0] if ip_group is not None else 'head'
-                out_file = sort / f"{ip}.txt"
-                with open(out_file, 'a') as out:
-                    out.write(pid_group.string)
-                    out.flush()
-                    out.close()
-
-    runs = []
-    for (base, folders, files) in os.walk(sort):
-        for file in files:
-            my_runs = parse_single_server_file(sort/file)
-            runs = runs + my_runs
-
-    total = ExecutionStats(0)
-    for run in runs:
-        for key in run.times:
-            val = run.times[key]
-            total.add_time(val, key)
-            total.last_time = 0
-    print("-------TOTAL-------")
-    total.print()
-
-    ave = ExecutionStats(0)
-    for key in total.times:
-        val = total.times[key] / len(runs)
-        val = int(val)
-        ave.add_time(val, key)
-    print("-------AVERAGE-------")
-    ave.print()
-
-    print(f"runs: {len(runs)}")
+IP_REGEX = "ip=(\\d+\\.\\d+\\.\\d+\\.\\d+)"
+PID_REGEX = "\\(pid=(\\d+)"
+TIMESTAMP_REGEX = "^(\\d{2}:\\d{2}:\\d{2})"
 
 
 class ExecutionStats():
@@ -66,87 +22,164 @@ class ExecutionStats():
 
     def add_time(self, ts: int, name: str):
         last = ts
-        ts = ts - self.last_time
+        ts -= self.last_time
         val = self.times.get(name, 0)
         val += ts
         self.times[name] = val
         self.last_time = last
 
+    def set_time(self, ts: int, name: str):
+        self.times[name] = ts
+
     def end_exe(self, ts: int):
         self.end = ts
 
-    def pretty_print(self, ts: int):
-        result = ""
-        while True:
-            rem = str(ts % 60)
-            rem = f"0{rem}" if len(rem) == 1 else rem
-            ts = int(ts / 60)
-            delim = ":" if ts > 0 else ""
-            result = f"{delim}{rem}{result}"
-            if ts < 1:
-                return result
+    def get_pretty_print_time(self, ts: int):
+        """take an integer value of seconds and convert to
+        'days:hours:minutes:seconds' format.  hours/minutes/seconds will be 2
+        digit with leading 0 when necessary. """
+        seconds = ts % 60
+        minutes = int(ts / 60) % 60
+        hours = int(ts / 3600) % 60
+        days = int(ts / (3600 * 60) % 24)
+        return f"{days}:{hours:02d}:{minutes:02d}:{seconds:02d}"
 
-    def print(self):
+    def pretty_print(self):
         for key in self.times:
             val = self.times[key]
-            print(f"{key}:  {self.pretty_print(val)}")
+            print(f"{key:<20}:  {self.get_pretty_print_time(val)}")
 
 
-def parse_single_server_file(file: pathlib.Path):
-    mcs_found = "Found path: /home/ubuntu/"
-    mcs_started = "Initialize return: {'cameraNearPlane'"
-    elements = [
-        ("start", "copying files to subsystem-specific scene directories..."),
-        ("setup", "running pvoe scenes"),
-        ("pre-work", mcs_found),
-        ("init", mcs_started),
-        ("run-pvoe", "pvoe scenes complete"),
-        ("setup", "running avoe scenes"),
-        ("pre-work", mcs_found),
-        ("init", mcs_started),
-        ("run-avoe", "avoe scenes complete"),
-        ("setup", "running interactive scenes"),
-        ("pre-work", mcs_found),
-        ("init", mcs_started),
-        ("run-interactive", "interactive scenes complete")]
+class LogMatcher():
+    def __init__(self, name, regex) -> None:
+        self.name = name
+        self.regex = regex
 
-    # start_eval = "In run scene.  Running"
-    # end_eval = "History file timestamp:"
+    def is_matched(self, line):
+        result = self.get_match_group(line)
+        return result is not None
 
-    start = None
-    exe_stat = None
-    element_index = 0
-
-    runs = []
-
-    with open(file, "r") as f:
-        for line in f:
-            if elements[0][1] in line:
-                start = get_timestamp(line)
-                start = process_time(start)
-                exe_stat = ExecutionStats(start)
-                element_index = 1
-            elif exe_stat is not None and elements[element_index][1] in line:
-                timestamp = get_timestamp(line)
-                ts = process_time(timestamp)
-                exe_stat.add_time(ts, elements[element_index][0])
-                element_index += 1
-                if element_index == len(elements):
-                    element_index = 0
-                    exe_stat.end_exe(ts)
-                    exe_stat.print()
-                    runs.append(exe_stat)
-
-    return runs
+    def get_match_group(self, line):
+        return re.search(self.regex, line)
 
 
-def process_time(start_time: str):
+class RayLogProcessor():
+
+    @staticmethod
+    def split_and_process_log(file: str, output_dir: pathlib.Path, matchers: List[LogMatcher]):
+        RayLogProcessor._split_log(file, output_dir)
+        return RayLogProcessor._process_files_in_directory(output_dir, matchers)
+
+    @staticmethod
+    def _split_log(file, output_dir: pathlib.Path):
+        """Takes a long file from ray and splits into separate files for each
+        server based on IP from log."""
+        # TODO open files only once?  leave open and cache
+        shutil.rmtree(output_dir, ignore_errors=True)
+        output_dir.mkdir(parents=True)
+
+        with open(file, "r") as f:
+            for line in f:
+                # print(line)
+                # ts = re.search("^(\\d{2}:\\d{2}:\\d{2})", line)
+
+                pid_group = re.search(PID_REGEX, line)
+                pid = pid_group.groups()[0] if pid_group is not None else None
+
+                if pid is not None:
+                    ip_group = re.search(IP_REGEX, line)
+                    ip = (ip_group.groups()[0]
+                          if ip_group is not None else 'head')
+                    out_file = output_dir / f"{ip}.txt"
+                    with open(out_file, 'a') as out:
+                        out.write(pid_group.string)
+                        out.flush()
+                        out.close()
+
+    @staticmethod
+    def _parse_single_server_file(file: pathlib.Path, matchers: List[LogMatcher]):
+        start = None
+        exe_stat = None
+        index = 0
+
+        runs = []
+
+        with open(file, "r") as f:
+            for line in f:
+                if matchers[0].is_matched(line):
+                    start = get_timestamp(line)
+                    start = convert_timestamp_to_int(start)
+                    exe_stat = ExecutionStats(start)
+                    index = 1
+                elif exe_stat is not None and matchers[index].is_matched(line):
+                    timestamp = get_timestamp(line)
+                    ts = convert_timestamp_to_int(timestamp)
+                    exe_stat.add_time(ts, matchers[index].name)
+                    index += 1
+                    if index == len(matchers):
+                        index = 0
+                        exe_stat.end_exe(ts)
+                        exe_stat.pretty_print()
+                        runs.append(exe_stat)
+
+        return runs
+
+    @staticmethod
+    def _process_files_in_directory(output_dir: pathlib.Path, matchers):
+        """Takes a directory and a bunch of matchers and processes each file to
+        get timing for each found execution."""
+        runs = []
+        for (base, folders, files) in os.walk(output_dir):
+            for file in files:
+                my_runs = RayLogProcessor._parse_single_server_file(
+                    output_dir/file,
+                    matchers)
+                runs += my_runs
+        return runs
+
+    @staticmethod
+    def debug_print_runs(runs):
+        """Print results of runs for debugging"""
+        total = ExecutionStats(0)
+        for run in runs:
+            for key in run.times:
+                val = run.times[key]
+                total.add_time(val, key)
+                total.last_time = 0
+        print("-------TOTAL-------")
+        total.pretty_print()
+
+        ave = ExecutionStats(0)
+        for key in total.times:
+            val = total.times[key] / len(runs)
+            val = int(val)
+            ave.set_time(val, key)
+        print("-------AVERAGE-------")
+        ave.pretty_print()
+
+        print(f"runs: {len(runs)}")
+
+
+def get_opics_matchers():
+    return [
+        LogMatcher(
+            'start', "copying files to subsystem-specific scene directories..."),
+        LogMatcher('split-overhead',
+                   "(running pvoe scenes)|(running avoe scenes)|(running interactive scenes)"),
+        LogMatcher('found-ai2thor', "Found path: /home/ubuntu/"),
+        LogMatcher('setup', "Initialize return: {'cameraNearPlane'"),
+        LogMatcher(
+            'Run', "(pvoe scenes complete)|(avoe scenes complete)|(interactive scenes complete)"),
+    ]
+
+
+def convert_timestamp_to_int(start_time: str):
     split = start_time.split(":")
     return int(split[0]) * 3600 + int(split[1]) * 60 + int(split[2])
 
 
 def get_timestamp(line):
-    ts = re.search("^(\\d{2}:\\d{2}:\\d{2})", line)
+    ts = re.search(TIMESTAMP_REGEX, line)
     return ts.groups()[0]
 
 
@@ -155,13 +188,18 @@ def main(args):
     for the Ideal Learning Environment (ILE)."""
     logger = logging.getLogger()
     logger.debug("starting")
-    split_log('tmp2.txt')
+    log_file = "tmp2.txt"
+    output_dir = pathlib.Path('./test')
+    matchers = get_opics_matchers()
+    runs = RayLogProcessor.split_and_process_log(
+        log_file, output_dir, matchers)
+    RayLogProcessor.debug_print_runs(runs)
 
 
 if __name__ == '__main__':
     # parser = argparse.ArgumentParser(
     #    description='Parse log files.'
     # )
-    
+
     # args = parser.parse_args()
     main(None)
