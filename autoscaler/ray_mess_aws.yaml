@@ -4,8 +4,8 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: mess-test-eval4-ra
-max_workers: 2                       # 2 is the default
+cluster_name: mess-eval4
+max_workers: 8                       # 2 is the default
 
 idle_timeout_minutes: 10
 

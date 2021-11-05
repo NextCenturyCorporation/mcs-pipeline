@@ -23,11 +23,11 @@ cp $scene_file $SCENE_DIR/
 
 export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
-# Go to the mess_eval375/, which is where we will be running things
+# Go to the mess_eval4/, which is where we will be running things
 cd $eval_dir
 
 # Activate conda environment
-#source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
+source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
 conda activate af_mess4
 
 # Run the Performer code
