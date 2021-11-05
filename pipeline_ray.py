@@ -207,7 +207,10 @@ def run_scene(
     logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if logs_to_s3:
         # This seems a little dirty, but its mostly copied from MCS project.
-        log_s3_filename = (
+
+        # Upload timestamped version, and write/overwrite a 
+        # seperate "latest" log file
+        log_s3_filename_timestamp = (
             folder
             + "/"
             + "_".join(
@@ -216,8 +219,18 @@ def run_scene(
             + ".txt"
         )
 
+        log_s3_filename_latest = (
+            folder
+            + "/"
+            + "_".join(
+                [eval_name, metadata, team, scene_name, "latest", "log"]
+            )
+            + ".txt"
+        )
+
         # Might need to find way to flush logs and/or stop logging.
-        push_to_s3(log_file, bucket, log_s3_filename)
+        push_to_s3(log_file, bucket, log_s3_filename_timestamp)
+        push_to_s3(log_file, bucket, log_s3_filename_latest)
 
     logging.shutdown()
     log_file.unlink()
