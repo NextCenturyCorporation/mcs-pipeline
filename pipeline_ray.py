@@ -82,7 +82,7 @@ def run_scene(
     :rtype (int, str)"""
 
     scene_name = scene_config.get("name", "")
-
+    success = False
     # replace slashes in filenames with dashes
     scene_name = scene_name.replace("/", "-")
 
@@ -141,7 +141,7 @@ def run_scene(
     metadata = mcs_config.get("MCS", "metadata")
     # video_enabled =
     # mcs_config.getboolean("MCS", "video_enabled", fallback=False)
-
+    success = True
     if evaluation:
         # find scene history file (should only be one file in directory)
         scene_hist_matches = glob.glob(
@@ -170,6 +170,7 @@ def run_scene(
             )
         else:
             logging.warning("History file not found for scene " + scene_name)
+            success = False
 
         # find and upload videos
         find_video_files = glob.glob(
@@ -222,7 +223,7 @@ def run_scene(
     logging.shutdown()
     log_file.unlink()
 
-    return result, output
+    return result, output, success
 
 
 def setup_logging(log_file):
@@ -402,11 +403,10 @@ class SceneRunner:
             )
             valid = False
 
-
         s3_movies_folder = self.mcs_config.get('MCS', 's3_movies_folder')
         if s3_movies_folder != self.CURRENT_MOVIE_FOLDER:
             logging.error('Error: MCS Config file does not have ' +
-                  'the correct s3 movies folder specified.')
+                          'the correct s3 movies folder specified.')
 
             valid = False
 
@@ -519,10 +519,10 @@ class SceneRunner:
         while self.not_done_jobs:
             done_jobs, self.not_done_jobs = ray.wait(self.not_done_jobs)
             for done_ref in done_jobs:
-                result, output = ray.get(done_ref)
+                result, output, success = ray.get(done_ref)
                 scene_status = self.scene_statuses.get(done_ref)
                 run_status = self.get_run_status(
-                    result, output, scene_status.scene_file
+                    result, output, success, scene_status.scene_file
                 )
                 scene_status.run_statuses.append(run_status)
 
@@ -603,7 +603,7 @@ class SceneRunner:
         logging.info(f"{prefix}Retryable: {run.retry}")
 
     def get_run_status(
-        self, result: int, output: str, scene_file_path: str
+        self, result: int, output: str, reported_success: bool, scene_file_path: str
     ) -> RunStatus:
         status = RunStatus(result, output, StatusEnum.SUCCESS, False)
         if result != 0:
@@ -613,6 +613,11 @@ class SceneRunner:
             logging.info(f"Timeout occured for file={scene_file_path}")
             status.retry |= True
             status.status = StatusEnum.ERROR_TIMEOUT
+        if not reported_success:
+            logging.info(
+                f"Pipeline reported failure for file ={scene_file_path}")
+            status.retry |= True
+            status.status = StatusEnum.ERROR
         # Add more conditions to retry here
         return status
 
