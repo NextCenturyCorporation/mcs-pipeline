@@ -81,20 +81,22 @@ To include timestamps on the output, you can use the linux ts command.  ts may n
 Timestamps:
 
 ```
-|& ts 
+2>&1 | ts 
 ```
 
 Time since start:
 
 ```
-|& ts -s
+2>&1 | ts -s
 ```
 
 To capture the output in a log file, add the following after the command.  Tee will allow the output to be sent both to stdout as well as the file.  
 
 ```
-|& tee <log_filename>
+2>&1 | tee <log_filename>
 ```
+
+Piping logs to these programs can sometimes lose data and/or color.  To avoid this, use the 'unbuffer' command.
 
 You can also use linux pipes to only push to a file.
 
@@ -102,8 +104,7 @@ Here are examples:
 ```
 ./aws_scripts/run_eval.sh baseline scenes/subset/
 
-
-./aws_scripts/run_eval.sh baseline scenes/subset/ |& ts -s |& tee out.txt
+unbuffer time ./aws_scripts/run_eval.sh opics folder --metadata level2  2>&1 | ts -s 2>&1 | tee test.out
 ```
 
 Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster.
