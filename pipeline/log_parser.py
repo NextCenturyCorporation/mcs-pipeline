@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import re
@@ -173,6 +174,15 @@ def get_opics_matchers():
     ]
 
 
+def get_default_matchers():
+    return [
+        LogMatcher(
+            'Start', "In run scene."),
+        LogMatcher('Initialization', "Found path:"),
+        LogMatcher('Finish scene', "History file timestamp")
+    ]
+
+
 def convert_timestamp_to_int(start_time: str):
     split = start_time.split(":")
     return int(split[0]) * 3600 + int(split[1]) * 60 + int(split[2])
@@ -188,18 +198,28 @@ def main(args):
     for the Ideal Learning Environment (ILE)."""
     logger = logging.getLogger()
     logger.debug("starting")
-    log_file = "tmp2.txt"
-    output_dir = pathlib.Path('./test')
-    matchers = get_opics_matchers()
+    log_file = args.log_file
+    output_dir = pathlib.Path(args.output_dir)
+    matchers = None
+    if args.matchers == 'OPICS':
+        matchers = get_opics_matchers()
+    else:
+        logger.error(
+            f"Warning: Matchers not defined for {args.matchers}.  Using Defaults")
+        matchers = get_default_matchers()
     runs = RayLogProcessor.split_and_process_log(
         log_file, output_dir, matchers)
     RayLogProcessor.debug_print_runs(runs)
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(
-    #    description='Parse log files.'
-    # )
+    parser = argparse.ArgumentParser(
+        description='Parse log files.'
+    )
+    parser.add_argument('--output-dir', '-o', default='./split_logs/')
+    parser.add_argument('log_file')
+    parser.add_argument(
+        '--matchers', '-m', choices=['OPICS', 'MESS', 'CORA', 'BASELINE'], default='OPICS')
 
-    # args = parser.parse_args()
-    main(None)
+    args = parser.parse_args()
+    main(args)

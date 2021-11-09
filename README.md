@@ -104,7 +104,7 @@ Here are examples:
 ```
 ./aws_scripts/run_eval.sh baseline scenes/subset/
 
-unbuffer time ./aws_scripts/run_eval.sh opics folder --metadata level2  2>&1 | ts -s 2>&1 | tee test.out
+time unbuffer ./aws_scripts/run_eval.sh opics folder --metadata level2  2>&1 | ts -s 2>&1 | tee test.out
 ```
 
 Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster.
