@@ -15,6 +15,8 @@ class ExecutionStats():
     start = -1
     end = -1
     last_time = -1
+    name = ""
+    group = ""
 
     def __init__(self, start_time) -> None:
         self.start = start_time
@@ -46,6 +48,7 @@ class ExecutionStats():
         return f"{days}:{hours:02d}:{minutes:02d}:{seconds:02d}"
 
     def pretty_print(self):
+        print(f"----\nName:{self.name}\nGroup:{self.group}")
         for key in self.times:
             val = self.times[key]
             print(f"{key:<20}:  {self.get_pretty_print_time(val)}")
@@ -104,9 +107,11 @@ class RayLogProcessor():
         index = 0
 
         runs = []
+        name_matcher = "Pushing .* to .*/.*_([A-Za-z]+_[0-9]{4}_[0-9]{2}.json)"
 
         with open(file, "r") as f:
             for line in f:
+
                 if matchers[0].is_matched(line):
                     start = get_timestamp(line)
                     start = convert_timestamp_to_int(start)
@@ -122,6 +127,12 @@ class RayLogProcessor():
                         exe_stat.end_exe(ts)
                         exe_stat.pretty_print()
                         runs.append(exe_stat)
+                if exe_stat is not None:
+                    result = re.search(name_matcher, line)
+                    if result is not None:
+                        exe_stat.name = result.groups()[0]
+                        exe_stat.group = exe_stat.name.split('_')[0]
+                        print(exe_stat.name)
 
         return runs
 
@@ -139,7 +150,7 @@ class RayLogProcessor():
         return runs
 
     @staticmethod
-    def debug_print_runs(runs):
+    def debug_print_runs(runs, print_total=False):
         """Print results of runs for debugging"""
         total = ExecutionStats(0)
         for run in runs:
@@ -147,8 +158,9 @@ class RayLogProcessor():
                 val = run.times[key]
                 total.add_time(val, key)
                 total.last_time = 0
-        print("-------TOTAL-------")
-        total.pretty_print()
+        if print_total:
+            print("-------TOTAL-------")
+            total.pretty_print()
 
         ave = ExecutionStats(0)
         for key in total.times:
@@ -171,6 +183,8 @@ def get_opics_matchers():
         LogMatcher('setup', "Initialize return: {'cameraNearPlane'"),
         LogMatcher(
             'Run', "(pvoe scenes complete)|(avoe scenes complete)|(interactive scenes complete)"),
+        LogMatcher(
+            'Upload', "Pushing .*\\.log"),
     ]
 
 
@@ -209,10 +223,23 @@ def main(args):
         matchers = get_default_matchers()
     runs = RayLogProcessor.split_and_process_log(
         log_file, output_dir, matchers)
-    RayLogProcessor.debug_print_runs(runs)
+
+    groups = {}
+    for run in runs:
+        groups[run.group] = []
+    for run in runs:
+        groups[run.group].append(run)
+
+    for key in groups:
+        val = groups[key]
+        print(f"--{key}--")
+        RayLogProcessor.debug_print_runs(val, False)
+
+    RayLogProcessor.debug_print_runs(runs, True)
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
         description='Parse log files.'
     )
