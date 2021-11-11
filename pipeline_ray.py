@@ -98,6 +98,8 @@ def run_scene(
     # happens when testing often.
     log_file = log_dir.joinpath(f"{scene_name}-{scene_try}-{timestamp}.log")
     setup_logging(log_file)
+    logging.info(
+        f"Started scene:{scene_name} try:{scene_try} timestamp:{timestamp}")
 
     identifier = uuid.uuid4()
     run_script = run_script
@@ -219,6 +221,9 @@ def run_scene(
 
         # Might need to find way to flush logs and/or stop logging.
         push_to_s3(log_file, bucket, log_s3_filename)
+
+    logging.info(
+        f"Finished scene:{scene_name} try:{scene_try} timestamp:{timestamp}")
 
     logging.shutdown()
     log_file.unlink()

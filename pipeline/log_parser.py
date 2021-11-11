@@ -48,7 +48,7 @@ class ExecutionStats():
         return f"{days}:{hours:02d}:{minutes:02d}:{seconds:02d}"
 
     def pretty_print(self):
-        print(f"----\nName:{self.name}\nGroup:{self.group}")
+        print(f"Name:{self.name}\nGroup:{self.group}")
         for key in self.times:
             val = self.times[key]
             print(f"{key:<20}:  {self.get_pretty_print_time(val)}")
@@ -159,7 +159,7 @@ class RayLogProcessor():
                 total.add_time(val, key)
                 total.last_time = 0
         if print_total:
-            print("-------TOTAL-------")
+            print("  -total-")
             total.pretty_print()
 
         ave = ExecutionStats(0)
@@ -167,7 +167,7 @@ class RayLogProcessor():
             val = total.times[key] / len(runs)
             val = int(val)
             ave.set_time(val, key)
-        print("-------AVERAGE-------")
+        print("  -average-")
         ave.pretty_print()
 
         print(f"runs: {len(runs)}")
@@ -232,7 +232,7 @@ def main(args):
 
     for key in groups:
         val = groups[key]
-        print(f"--{key}--")
+        print(f"\n----**{key}**----")
         RayLogProcessor.debug_print_runs(val, False)
 
     RayLogProcessor.debug_print_runs(runs, True)
