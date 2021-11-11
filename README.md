@@ -279,7 +279,9 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
     * Make a file with the correct list of tasks and set the TASK_FILE_PATH to point to it
     * Run the tasks
 
-## Generating Videos
+## Generating RGB Videos
+
+This pipline runs the `run_last_action.py` script (from the `machine_common_sense/scripts/` folder in the MCS repository) to generate videos from the RGB output frames using FFMPEG (with the correct video codecs so the videos are usable on Macs and in web browsers) and upload them to a specific S3 bucket.
 
 1. Update the `s3_bucket`, `s3_folder`, `evaluation_name`, and/or `team_name` in [configs/mcs_config_videos_level1.ini](configs/mcs_config_videos_level1.ini), as needed.
 2. Update the `cluster_name` in [autoscaler/ray_videos_aws.yaml](autoscaler/ray_videos_aws.yaml), if needed.
@@ -288,6 +290,19 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
 
 ```bash
 ./aws_scripts/run_eval.sh videos <json_data_folder> --metadata level1 --disable_validation
+```
+
+## Generating Topdown Videos
+
+This pipline runs the `run_last_action.py` script (from the `machine_common_sense/scripts/` folder in the MCS repository) to generate topdown videos using the plotter inside the machine_common_sense python library and upload them to a specific S3 bucket.
+
+1. Update the `s3_bucket`, `s3_folder`, `evaluation_name`, and/or `team_name` in [configs/mcs_config_topdown_level1.ini](configs/mcs_config_topdown_level1.ini), as needed.
+2. Update the `cluster_name` in [autoscaler/ray_topdown_aws.yaml](autoscaler/ray_topdown_aws.yaml), if needed.
+3. Run the command below.
+4. Terminate your AWS instances once finished.
+
+```bash
+./aws_scripts/run_eval.sh topdown <json_data_folder> --metadata level1 --disable_validation
 ```
 
 ## Linting

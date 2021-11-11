@@ -48,7 +48,7 @@ mv $TMP_CFG_FILE $eval_dir/mcs_config.ini
 # Run the Performer code
 cd $eval_dir
 SCENE_NAME=$(sed -nE 's/.*"name": "(\w+)".*/\1/pi' $scene_file)
-echo "GENERATING RGB VIDEO: $scene_file ($SCENE_NAME)"
+echo "GENERATING TOPDOWN VIDEO: $scene_file ($SCENE_NAME)"
 echo
 source /home/ubuntu/venv/bin/activate
 
@@ -66,16 +66,16 @@ TEAM_NAME=$(awk -F '=' '/team/ {print $2}' $mcs_configfile | xargs)
 # Run the scene and create an mp4 video
 if [ -z $OUTPUT_PREFIX ]
 then
-  python3 MCS/machine_common_sense/scripts/run_last_action.py --mcs_unity_build_file $UNITY_APP --config_file $mcs_configfile --save-videos $scene_file
+  python3 MCS/machine_common_sense/scripts/run_last_action.py --mcs_unity_build_file $UNITY_APP --config_file $mcs_configfile $scene_file
 else
-  python3 MCS/machine_common_sense/scripts/run_last_action.py --mcs_unity_build_file $UNITY_APP --config_file $mcs_configfile --prefix $OUTPUT_PREFIX --save-videos $scene_file
+  python3 MCS/machine_common_sense/scripts/run_last_action.py --mcs_unity_build_file $UNITY_APP --config_file $mcs_configfile --prefix $OUTPUT_PREFIX $scene_file
 fi
 
 # Upload the mp4 video to S3 with credentials from the worker's AWS IAM role
-OUTPUT_FOLDER=/home/ubuntu/output/
-mkdir -p $OUTPUT_FOLDER
-cp ${OUTPUT_PREFIX}*.mp4 $OUTPUT_FOLDER
-aws s3 sync $OUTPUT_FOLDER s3://${S3_BUCKET}/${S3_FOLDER}/ --acl public-read
+OUTPUT_FOLDER=/home/ubuntu/${SCENE_NAME}/
+OUTPUT_FILENAME=${SCENE_NAME}_topdown.mp4
+mv ${OUTPUT_FOLDER}/*topdown*.mp4 ${OUTPUT_FOLDER}/${OUTPUT_FILENAME}
+aws s3 cp ${OUTPUT_FOLDER}/${OUTPUT_FILENAME} s3://${S3_BUCKET}/${S3_FOLDER}/ --acl public-read
 
 # Cleanup the worker for future use
-rm ${OUTPUT_FOLDER}${OUTPUT_PREFIX}*.mp4
+rm -rf ${OUTPUT_FOLDER}
