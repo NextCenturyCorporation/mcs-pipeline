@@ -1,3 +1,13 @@
+"""
+This script is used to parse the output of a run_eval.sh script.  
+It will split the logs into one log per worker machine and then 
+parse through the machine logs to find logs corresponding to a 
+single scene run.  
+
+The file assumes that ts or ts -s has been run on the output as
+well providing a timestamp.
+"""
+
 import argparse
 import logging
 import os
@@ -241,7 +251,7 @@ def main(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
-        description='Parse log files.'
+        description='Parse log files from run_eval.sh.  Logs must include timestamps from the ts command.'
     )
     parser.add_argument('--output-dir', '-o', default='./split_logs/')
     parser.add_argument('log_file')

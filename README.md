@@ -109,6 +109,10 @@ time unbuffer ./aws_scripts/run_eval.sh opics folder --metadata level2  2>&1 | t
 
 Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster.
 
+#### Log Parsing
+
+If run_eval.sh is run with 'ts -s', the output logs can be parsed by the pipeline/log_parser.py.  This command will split the logs into logs per working node and then use some regex to report some metrics on how long different portions of a run took.  At the moment, the script output is somewhat rough and it only has good support for tracking opics logging.
+
 #### Script Overview
 
 This script performs the following actions:

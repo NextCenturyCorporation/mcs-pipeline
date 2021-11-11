@@ -5,6 +5,23 @@
 #  2. Upload the appropriate scenes
 #  3. Upload the config files
 #  4. Start the eval
+
+#
+# Usage: run_eval <module> <scene_folder> [--metadata <metadata_level>] [--resume] 
+#    [--cluster_suffix] [--disable_validation]
+#  module: the module to use to know where to look for files in the configs and 
+#    deploy_files folders.  Typical modules are opics, baseline, cora, mess
+#  scene_folder: folder containing the files exist to run through the pipeline.  
+#    Typically these are scene files, but they don't need to be.
+#  metadata_level: metadata level to run MCS at
+#  resume: Signals the head node to attempt to resume its last run.  This just removes
+#    files that the head node recorded as completed in its last run.  
+#  cluster_suffix: Adds a suffix to the cluster name already in the ray configuration
+#    yaml file.  A new copy of the configuration will be put in .ray_configs/.  This 
+#    is useful to run multiple clusters using the same yaml file.  For example, running
+#    a bunch of clusters for different sets of files and/or metadata levels.
+#  disable_validation: Disables the validation on the MCS configuration.  Useful when
+#    testing or running against the development infrastructure.
 {
 MODULE=$1
 TMP_DIR=.tmp_pipeline_ray
@@ -49,13 +66,17 @@ while [ $# -gt 0 ]; do
    shift
 done
 
+# If the user assigns a cluster suffix, the code below will create a copy of 
+# the config file and append this suffix to the existing cluster_name:  The 
+# script will put that file in .ray_configs/ in case the user needs it later 
+# for shutdown, attach, etc.
+
 if [ -n "$CLUSTER_SUFFIX" ] ; then
     mkdir -p .ray-configs
     # Copy config and add suffix
     CFG_FILE="$(basename "${RAY_CONFIG}")"
     CFG_DIR="$(dirname "${RAY_CONFIG}")"
     NEW_CFG=".ray-configs/${CFG_FILE%.yaml}-$CLUSTER_SUFFIX.yaml"
-    # cp "$RAY_CONFIG" "$NEW_CFG"
     CL=`grep cluster_name: $RAY_CONFIG`
     NEW_CLUSTER_LINE="$CL-$CLUSTER_SUFFIX"
     sed "s/cluster_name:\s*\S*/$NEW_CLUSTER_LINE/g" $RAY_CONFIG > $NEW_CFG
