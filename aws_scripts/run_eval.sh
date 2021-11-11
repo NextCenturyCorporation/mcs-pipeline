@@ -19,14 +19,6 @@ cp -R deploy_files/${MODULE}/* $TMP_DIR/
 
 RAY_CONFIG="autoscaler/ray_${MODULE}_aws.yaml"
 
-ray up -y $RAY_CONFIG
-wait
-
-# We should copy all the pipeline code, but at least opics needs it in a special folder.  Should ray_script handle that?  
-# Should we run
-ray rsync_up -v $RAY_CONFIG pipeline '~'
-ray rsync_up -v $RAY_CONFIG deploy_files/${MODULE}/ '~'
-ray rsync_up -v $RAY_CONFIG configs/ '~/configs/'
 
 ####### STARTING EVAL SPECIFIC CODE ########
 
@@ -47,13 +39,41 @@ while [ $# -gt 0 ]; do
         elif [ $1 == "--resume" ] ; then
             SUBMIT_PARAMS="$SUBMIT_PARAMS $1"
         else
+            # this takes care of any flags with parameters such as metadata
             uppercase_param=$(echo "$1" | tr '[:lower:]' '[:upper:]')
             param="${uppercase_param/--/}"
             declare $param="$2"
+            shift
         fi
    fi
    shift
 done
+
+if [ -n "$CLUSTER_SUFFIX" ] ; then
+    mkdir -p .ray-configs
+    # Copy config and add suffix
+    CFG_FILE="$(basename "${RAY_CONFIG}")"
+    CFG_DIR="$(dirname "${RAY_CONFIG}")"
+    NEW_CFG=".ray-configs/${CFG_FILE%.yaml}-$CLUSTER_SUFFIX.yaml"
+    # cp "$RAY_CONFIG" "$NEW_CFG"
+    CL=`grep cluster_name: $RAY_CONFIG`
+    NEW_CLUSTER_LINE="$CL-$CLUSTER_SUFFIX"
+    sed "s/cluster_name:\s*\S*/$NEW_CLUSTER_LINE/g" $RAY_CONFIG > $NEW_CFG
+    RAY_CONFIG=$NEW_CFG
+
+    echo "Replaced cluster name line with:"
+    echo "  `grep cluster_name: $NEW_CFG`"
+fi
+    
+ray up -y $RAY_CONFIG
+wait
+
+# We should copy all the pipeline code, but at least opics needs it in a special folder.  Should ray_script handle that?  
+# Should we run
+ray rsync_up -v $RAY_CONFIG pipeline '~'
+ray rsync_up -v $RAY_CONFIG deploy_files/${MODULE}/ '~'
+ray rsync_up -v $RAY_CONFIG configs/ '~/configs/'
+
 
 MCS_CONFIG=configs/mcs_config_${MODULE}_${METADATA}.ini
 
@@ -91,4 +111,4 @@ ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG $SUBMIT
 
 # Remove to cleanup?  or keep for debugging?
 # rm -rf $TMP_DIR
-} 
+}
