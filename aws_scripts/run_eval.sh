@@ -47,6 +47,7 @@ LOCAL_SCENE_DIR=$2
 LOCAL_SCENE_DIR=$(echo $LOCAL_SCENE_DIR | sed 's:/*$::')
 METADATA=${METADATA:-$DEFAULT_METADATA}
 SUBMIT_PARAMS=''
+WORKERS=""
 
 # Parse optional --parameters
 while [ $# -gt 0 ]; do
@@ -71,19 +72,34 @@ done
 # script will put that file in .ray_configs/ in case the user needs it later 
 # for shutdown, attach, etc.
 
-if [ -n "$CLUSTER_SUFFIX" ] ; then
+if [ -n "$CLUSTER_SUFFIX" ] || [ -n :"$WORKERS" ]; then
     mkdir -p .ray-configs
     # Copy config and add suffix
+    CFG_SUFFIX=$CLUSTER_SUFFIX-$WORKERS
     CFG_FILE="$(basename "${RAY_CONFIG}")"
     CFG_DIR="$(dirname "${RAY_CONFIG}")"
-    NEW_CFG=".ray-configs/${CFG_FILE%.yaml}-$CLUSTER_SUFFIX.yaml"
-    CL=`grep cluster_name: $RAY_CONFIG`
-    NEW_CLUSTER_LINE="$CL-$CLUSTER_SUFFIX"
-    sed "s/cluster_name:\s*\S*/$NEW_CLUSTER_LINE/g" $RAY_CONFIG > $NEW_CFG
-    RAY_CONFIG=$NEW_CFG
+    NEW_CFG=".ray-configs/${CFG_FILE%.yaml}-$CFG_SUFFIX.yaml"
+    cat $RAY_CONFIG > $NEW_CFG
 
-    echo "Replaced cluster name line with:"
-    echo "  `grep cluster_name: $NEW_CFG`"
+    if [ -n "$CLUSTER_SUFFIX" ]; then
+        CL=`grep cluster_name: $NEW_CFG`
+        NEW_CLUSTER_LINE="$CL-$CLUSTER_SUFFIX"
+        sed -i "s/cluster_name:\s*\S*/$NEW_CLUSTER_LINE/g" $NEW_CFG
+        RAY_CONFIG=$NEW_CFG
+
+        echo "Replaced cluster name line with:"
+        echo "  `grep cluster_name: $NEW_CFG`"
+    fi
+
+    if [ -n :"$WORKERS" ]; then
+        MW=`grep -m 1 max_workers: $NEW_CFG`
+        NEW_WORKERS_LINE="max_workers: $WORKERS"
+        sed -i "s/$MW/$NEW_WORKERS_LINE/g" $NEW_CFG
+        RAY_CONFIG=$NEW_CFG
+
+        echo "Replaced max workers name line with:"
+        echo "  `grep -m 1 max_workers: $NEW_CFG`"
+    fi
 fi
     
 ray up -y $RAY_CONFIG
