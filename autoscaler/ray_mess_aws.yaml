@@ -4,7 +4,7 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: mess-eval4
+cluster_name: mess-v6-small-test
 max_workers: 8                       # 2 is the default
 
 idle_timeout_minutes: 10
@@ -12,11 +12,10 @@ idle_timeout_minutes: 10
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
 # one, just need to put a different one first.
 
-# TODO: update region for actual eval 4 run
 provider:
   type: aws
-  region: us-east-1
-  availability_zone: us-east-1b,us-east-1c,us-east-1d,us-east-1a,us-east-1e,us-east-1f
+  region: us-east-2
+  availability_zone: us-east-2b,us-east-2c,us-east-2d,us-east-2a,us-east-2e,us-east-2f
   cache_stopped_nodes: True          # Default True means stopped, false means terminate.
 
 
@@ -27,13 +26,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0aa97dd4f87f482b3 # AMI 'MESS-4-v2'
+      ImageId: ami-05d619d21479ef670 # AMI 'MESS-4-v6'
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0aa97dd4f87f482b3 # AMI 'MESS-4-v2'
+      ImageId: ami-05d619d21479ef670 # AMI 'MESS-4-v6'
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
