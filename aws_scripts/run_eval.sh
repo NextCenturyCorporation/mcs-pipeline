@@ -91,7 +91,7 @@ if [ -n "$CLUSTER_SUFFIX" ] || [ -n :"$WORKERS" ]; then
         echo "  `grep cluster_name: $NEW_CFG`"
     fi
 
-    if [ -n :"$WORKERS" ]; then
+    if [ -n "$WORKERS" ]; then
         MW=`grep -m 1 max_workers: $NEW_CFG`
         NEW_WORKERS_LINE="max_workers: $WORKERS"
         sed -i "s/$MW/$NEW_WORKERS_LINE/g" $NEW_CFG
@@ -101,7 +101,7 @@ if [ -n "$CLUSTER_SUFFIX" ] || [ -n :"$WORKERS" ]; then
         echo "  `grep -m 1 max_workers: $NEW_CFG`"
     fi
 fi
-    
+
 ray up -y $RAY_CONFIG
 wait
 
