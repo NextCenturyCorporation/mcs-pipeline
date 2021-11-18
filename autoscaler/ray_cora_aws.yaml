@@ -5,7 +5,7 @@
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
 cluster_name: cora-ced
-max_workers: 7                       # 2 is the default
+max_workers: 20                      # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
 # one, just need to put a different one first.
@@ -23,13 +23,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId:  ami-05d4e031b1416405a
+      ImageId: ami-0c44151bcb9366225
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId:  ami-05d4e031b1416405a
+      ImageId: ami-0c44151bcb9366225
       IamInstanceProfile:
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
