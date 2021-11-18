@@ -391,6 +391,7 @@ class SceneRunner:
             logging.error(
                 "Error: MCS Config file does not have "
                 + "the correct s3 bucket specified."
+                + f"{bucket} vs {self.CURRENT_EVAL_BUCKET}"
             )
             valid = False
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # Check passed mcs_config and scene file
 source /home/ubuntu/check_passed_variables.sh
 
@@ -18,6 +20,4 @@ export MCS_CONFIG_FILE_PATH=$mcs_configfile
 echo Starting Evaluation:
 
 cd $eval_dir
-source /home/ubuntu/genpram_venv/bin/activate && julia run_julia_argument.jl $scene_file 2>&1 | tee /output/testrun_log_$(date +%s)"
-
-unset MCS_CONFIG_FILE_PATH
+source /home/ubuntu/genpram_venv/bin/activate && julia run_julia_argument.jl $scene_file
