@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 # Check passed mcs_config and scene file
 source /home/ubuntu/check_passed_variables.sh
 

@@ -4,16 +4,16 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: cora-ced
-max_workers: 20                      # 2 is the default
+cluster_name: cora-level2-papa
+max_workers: 100                      # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
 # one, just need to put a different one first.
 provider:
   type: aws
   region: us-east-1                             # us-west-2
-  availability_zone: us-east-1b,us-east-1c,us-east-1d,us-east-1a
-  cache_stopped_nodes: True          # Default True means stopped, false means terminate.
+  availability_zone: us-east-1d,us-east-1b,us-east-1c,us-east-1a
+  cache_stopped_nodes: False          # Default True means stopped, false means terminate.
 
 
 available_node_types:

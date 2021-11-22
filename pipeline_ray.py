@@ -694,7 +694,7 @@ if __name__ == "__main__":
     if args.local_only:
         ray.init(local_mode=True)
     else:
-        ray.init(address="auto")
+        ray.init(address="auto", log_to_driver=False, include_dashboard=False)
 
     try:
         scene_runner = SceneRunner(args)
