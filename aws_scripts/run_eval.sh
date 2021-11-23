@@ -20,6 +20,7 @@
 #    yaml file.  A new copy of the configuration will be put in .ray_configs/.  This 
 #    is useful to run multiple clusters using the same yaml file.  For example, running
 #    a bunch of clusters for different sets of files and/or metadata levels.
+#  workers: override number of workers
 #  disable_validation: Disables the validation on the MCS configuration.  Useful when
 #    testing or running against the development infrastructure.
 {
