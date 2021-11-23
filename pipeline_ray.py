@@ -323,6 +323,7 @@ class SceneRunner:
     TEAM_NAMES = ["mess1", "mess2", "mit", "opics", "baseline", "cora"]
     #  more flexible for Eval 4+ and update folder structure
     CURRENT_EVAL_BUCKET = "evaluation-images"
+    CURRENT_DEV_EVAL_BUCKET = "dev-evaluation-images"
     CURRENT_EVAL_FOLDER = "eval-resources-4"
     CURRENT_MOVIE_FOLDER = "raw-eval-4"
 
@@ -333,6 +334,7 @@ class SceneRunner:
         self.exec_config = configparser.ConfigParser()
         self.exec_config.read(args.execution_config_file)
         self.disable_validation = args.disable_validation
+        self.dev_validation = args.dev_validation
         self.resume = args.resume
 
         # Get MCS configuration, which has information about how to
@@ -393,7 +395,13 @@ class SceneRunner:
             valid = False
 
         bucket = self.mcs_config.get("MCS", "s3_bucket")
-        if bucket != self.CURRENT_EVAL_BUCKET:
+        if bucket != self.CURRENT_EVAL_BUCKET and not self.dev_validation:
+            logging.error(
+                "Error: MCS Config file does not have "
+                + "the correct s3 bucket specified."
+            )
+            valid = False
+        if bucket != self.CURRENT_DEV_EVAL_BUCKET and self.dev_validation:
             logging.error(
                 "Error: MCS Config file does not have "
                 + "the correct s3 bucket specified."
@@ -677,6 +685,8 @@ def parse_args():
         help="Whether or not one is running on a local machine "
         + "or on a remote cluster",
     )
+    parser.add_argument("--dev_validation", default=False,
+                        action="store_true", help="Whether to validate against development")
 
     return parser.parse_args()
 

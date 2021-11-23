@@ -57,6 +57,8 @@ while [ $# -gt 0 ]; do
             SUBMIT_PARAMS="$SUBMIT_PARAMS $1"
         elif [ $1 == "--resume" ] ; then
             SUBMIT_PARAMS="$SUBMIT_PARAMS $1"
+        elif [ $1 == "--dev_validation" ] ; then
+            SUBMIT_PARAMS="$SUBMIT_PARAMS $1"
         else
             # this takes care of any flags with parameters such as metadata
             uppercase_param=$(echo "$1" | tr '[:lower:]' '[:upper:]')
