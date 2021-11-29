@@ -352,6 +352,7 @@ class SceneRunner:
 
     def read_mcs_config(self, mcs_config_filename: str):
         mcs_config = configparser.ConfigParser()
+        logging.debug(f'Reading MCS config file {mcs_config_filename}')
         with open(mcs_config_filename, "r") as mcs_config_file:
             mcs_config.read_file(mcs_config_file)
         return mcs_config
