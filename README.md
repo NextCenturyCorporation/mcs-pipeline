@@ -30,6 +30,17 @@ $ source venv/bin/activate
 
 ### Run Eval Script
 
+### Quickstart Tips
+
+- Make sure you have AWS credentials for MCS set as default.
+- For testing, make the follow edits to the autoscaler/xxxx.yaml file you plan to use.
+
+  - Change the cluster name, this will prevent name collsion of EC2s and make finding yours easier.
+  - If you want to test how a different library will work, you can add an install command in the setup_commands.
+- For testing, find which config/xxxx.ini file that you are using by changing the "evaluation_name" so you can
+find the results easier
+- If you are going to run "run_eval.sh" you need to be in the python virtal environment first. ```source venv/bin/activate```
+
 #### MCS Config File
 
 When running an eval, there are checks to ensure that the MCS config file used is using the correct naming conventions, so that all the ingest
@@ -107,7 +118,9 @@ Here are examples:
 time unbuffer ./aws_scripts/run_eval.sh opics folder --metadata level2  2>&1 | ts -s 2>&1 | tee test.out
 ```
 
-Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster.
+Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster. 
+When you run "run_eval.sh" it will run all scenes in the directory. Make
+a folder somewhere and add the scenes you want to test there.
 
 #### Log Parsing
 
@@ -166,8 +179,19 @@ Retryable: False
 
 ## Run Pipeline Locally
 
-To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine. If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in 
-configs/mcs_config_local_level2.ini. Then run the following:
+To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine. 
+
+"run_script" is currently MCS-pipeline/deploy_files/local/ray_script.sh
+"scene_location" is currently MCS/docs/source/scenes/
+"scene_list" is a .txt file that you put one scene on each line to run.
+"eval_dir" is where the evaluations are written
+
+If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in 
+configs/mcs_config_local_level2.ini. 
+
+Next you will need to create a "local.yaml" in the "autoscaler" directory. Examples can be found at https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
+
+Then run the following:
 
 ```
 python pipeline_ray.py configs/test_local.ini configs/mcs_config_local_level2.ini --disable_validation --local_only
