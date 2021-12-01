@@ -1,0 +1,2 @@
+ami: ami-0e52dc0cee6777e12 # AMI 'mess-3.75-submission'
+idle_timeout_minutes: 10

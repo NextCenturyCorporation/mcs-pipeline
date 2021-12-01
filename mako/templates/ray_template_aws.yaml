@@ -7,6 +7,8 @@
 cluster_name: ${cluster}${clusterUser}${clusterSuffix}
 max_workers: ${workers}                       # 2 is the default
 
+idle_timeout_minutes: {idle_timeout_minutes}
+
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
 # one, just need to put a different one first.
 provider:
@@ -44,6 +46,7 @@ file_mounts: {
   "/home/ubuntu/check_passed_variables.sh": "deploy_files/check_passed_variables.sh",
   "/home/ubuntu/start_x_server.sh": "deploy_files/start_x_server.sh",
   "/home/ubuntu/asound.conf": "deploy_files/asound.conf"
+  ${additional_file_mounts}
 }
 
 setup_commands:
@@ -53,6 +56,7 @@ setup_commands:
   - pip install aioredis==1.3.1
   - pip install aiohttp==3.7.4.post0
   - rm -rf ~/.aws/
+  ${additional_setup_commands}
 
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
