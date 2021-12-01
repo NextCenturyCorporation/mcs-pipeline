@@ -1,0 +1,4 @@
+workers: 8
+region: us-east-1
+clusterUser: ""
+clusterSuffix: ""

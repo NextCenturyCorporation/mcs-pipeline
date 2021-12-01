@@ -1,0 +1,4 @@
+cluster: "opics"
+team: "opics"
+workers: 1
+ami: ami-08b3c4d663c483fd0
