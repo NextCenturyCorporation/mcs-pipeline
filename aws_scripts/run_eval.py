@@ -1,8 +1,15 @@
 from datetime import datetime
+from dataclasses import dataclass, field
+
 import pathlib
+from typing import Dict, List
 
 import yaml
 import os
+import threading
+import queue
+import time
+import random
 
 from configparser import ConfigParser
 
@@ -36,6 +43,9 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     # Get Variables
     vars = add_variable_sets(varset)
     vars = {**vars, **override_params}
+
+    ray_cfg_template = Template(
+        filename='mako/templates/ray_template_aws.yaml')
 
     # Setup working directory
     now = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -117,11 +127,63 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
         f"{ray_locations_config} {mcs_config} {submit_params}")
 
 
-if __name__ == "__main__":
-    # args = parse_args()
+@dataclass
+class EvalParams:
+    varset: List[str]
+    scene_dir: str
+    metadata: str = "level2"
+    override: dict = field(default_factory=dict)
 
-    ray_cfg_template = Template(
-        filename='mako/templates/ray_template_aws.yaml')
+
+def create_eval_set_from_folder(varset: List[str], base_dir: str, metadata: str = "level2", override: dict = {}):
+    eval_set = []
+    dirs = os.listdir(base_dir)
+    for dir in dirs:
+        scene_dir = os.path.join(base_dir, dir)
+        if os.path.isdir(scene_dir):
+            override["log_name"] = f"{dir}-{metadata}.log"
+            eval_set.append(EvalParams(varset, scene_dir,
+                            metadata=metadata, override=override))
+    return eval_set
+
+
+def run_evals(eval_set: List[EvalParams], num_clusters=3):
+    q = queue.Queue()
+    for eval in eval_set:
+        q.put(eval)
+
+    def run_eval_from_queue(num):
+        while(not q.empty()):
+            eval = q.get()
+            override = eval.override
+            override["clusterSuffix"] = f"-{num}"
+            # run_eval(eval.varset, eval.scene_dir, eval.metadata,
+            #         override_params=eval.override)
+            print(f"Starting eval from {eval.scene_dir} in cluster {num}")
+            time.sleep(random.randint(4, 20))
+            print(f"Finished eval from {eval.scene_dir} in cluster {num}")
+        print(f"Finished with cluster {num}")
+
+    threads = []
+    for i in range(num_clusters):
+        t = threading.Thread(target=run_eval_from_queue, args=((i+1),))
+        t.start()
+        threads.append(t)
+
+    for t in threads:
+        t.join()
+
+
+def multi_test():
+    varset = ['opics', 'kdrumm']
+    metadata = 'level2'
+    base_dir = 'eval4/split'
+    test_set = create_eval_set_from_folder(varset, base_dir, metadata)
+
+    run_evals(test_set)
+
+
+def single_test():
 
     varset = ['opics', 'kdrumm']
     metadata = 'level2'
@@ -129,3 +191,8 @@ if __name__ == "__main__":
 
     run_eval(varset, local_scene_dir,
              metadata=metadata, disable_validation=True)
+
+
+if __name__ == "__main__":
+    # args = parse_args()
+    multi_test()
