@@ -350,6 +350,8 @@ class SceneRunner:
         self.on_finish_scenes()
         self.print_results()
 
+        self.init_time = time.time()
+
     def read_mcs_config(self, mcs_config_filename: str):
         mcs_config = configparser.ConfigParser()
         with open(mcs_config_filename, "r") as mcs_config_file:
@@ -548,7 +550,6 @@ class SceneRunner:
     def print_status(self):
         """During the run, print out the number of completed jobs,
         number current running, number to go, number failed, etc"""
-        logging.info(f"Status for {len(self.scene_statuses)} scenes: ")
         current_statuses = [
             scene_status.status
             for scene_status in self.scene_statuses.values()
@@ -558,8 +559,24 @@ class SceneRunner:
             for scene_status in current_statuses
         }
 
+        stat_string = f"Status for {len(self.scene_statuses)} scenes: "
+        num_done = 0
         for key, value in frequency.items():
-            logging.info(f"    {key.name} -> {value}")
+            num_done += value
+            stat_string += f"    {key.name} -> {value}"
+
+        elapsed = self.init_time - time.time()
+        percent_done = float(num_done)/float(len(self.scene_statuses))
+        if percent_done > 0.01:
+            total_expected = elapsed / percent_done
+        else:
+            total_expected = 1.0
+        remaining = total_expected - elapsed
+        remain_min = remaining / 60.
+        remain_hr = remain_min / 60.
+        stat_string += f" Remain: {remaining} sec (or {remain_min} min or {remain_hr} hr)"
+
+        logging.info(stat_string)
 
     def retry_job(self, scene_status: SceneStatus):
         scene_ref = scene_status.scene_file
