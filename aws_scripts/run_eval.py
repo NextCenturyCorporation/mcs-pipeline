@@ -18,12 +18,10 @@ import random
 # TODO:
 # Add params
 # Add more docs?
-# Add tee or tail of logs
 # use properties for mcs config file?  (will this work for videos)
 # update after all teams eval4 is merged
 # make sure parameters get pass through (disable_validation, dev, resume, etc)
 #   update dev
-# add ray down
 
 from configparser import ConfigParser
 
@@ -87,7 +85,7 @@ def execute_shell(cmd, log_file=None):
     # By passing all the commands into this function, the method of
     # executing the shell can easily be changed later.  This could be useful
     # if we want to capture the logging.
-    cmd = f"{cmd} 2>&1 | ts -S"
+    cmd = f"unbuffer {cmd} 2>&1 | ts -S"
     if (log_file):
         with open(log_file, "a") as f:
             subprocess.run([cmd, "|", "ts"], stdout=f,
@@ -110,7 +108,7 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
 
     # Setup Tail
     if log_file:
-        lt = LogTailer(log_file, f"c{cluster}")
+        lt = LogTailer(log_file, f"c{cluster}: ")
         lt.tail_non_blocking()
 
     # Setup working directory
