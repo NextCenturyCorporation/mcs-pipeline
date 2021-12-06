@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import copy
 import pathlib
 import subprocess
+import sys
 from typing import Dict, List
 
 import pathlib
@@ -14,6 +15,16 @@ import queue
 import time
 import random
 
+# TODO:
+# Add params
+# Add more docs?
+# Add tee or tail of logs
+# use properties for mcs config file?  (will this work for videos)
+# update after all teams eval4 is merged
+# make sure parameters get pass through (disable_validation, dev, resume, etc)
+#   update dev
+# add ray down
+
 from configparser import ConfigParser
 
 from mako.template import Template
@@ -21,6 +32,44 @@ from mako.template import Template
 DEFAULT_VARSET = 'default'
 RAY_WORKING_DIR = pathlib.Path('./.tmp_pipeline_ray/')
 SCENE_LIST_FILENAME = "scenes_single_scene.txt"
+
+
+class LogTailer():
+    # based off code and comments from
+    # https://stackoverflow.com/questions/12523044/how-can-i-tail-a-log-file-in-python
+    file = None
+    _terminate = False
+
+    def __init__(self, file, log_prefix=""):
+        self.file = file
+        self.log_prefix = log_prefix
+
+    def stop(self):
+        self._terminate = True
+        if self.thread:
+            self.thread.join()
+
+    def tail_non_blocking(self):
+        self._terminate = False
+        self.thread = threading.Thread(
+            target=self.tail_blocking, daemon=True, name=f"tail-{self.file}-{self.log_prefix}")
+        self.thread.start()
+
+    def tail_blocking(self):
+        for line in self._get_tail_lines(self.file):
+            # sys.stdout.write works better with new lines
+            sys.stdout.write(f"{self.log_prefix}{line}")
+
+    def _get_tail_lines(self, file):
+        with open(file, 'r') as f:
+            while True:
+                line = f.readline()
+                if line:
+                    yield line
+                elif self._terminate:
+                    break
+                else:
+                    time.sleep(0.1)
 
 
 def add_variable_sets(varsets):
@@ -50,13 +99,19 @@ def execute_shell(cmd, log_file=None):
 
 
 def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=False,
-             dev_validation=False, resume=False, override_params={}, log_file=None, cluster=""):
+             dev_validation=False, resume=False, override_params={}, log_file=None, cluster="") -> pathlib.Path:
+    """Runs an eval and returns the ray config file as a pathlib.Path object."""
     # Get Variables
     vars = add_variable_sets(varset)
     vars = {**vars, **override_params}
 
     ray_cfg_template = Template(
         filename='mako/templates/ray_template_aws.yaml')
+
+    # Setup Tail
+    if log_file:
+        lt = LogTailer(log_file, f"c{cluster}")
+        lt.tail_non_blocking()
 
     # Setup working directory
     now = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -139,6 +194,11 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
         f"ray submit {ray_cfg_file.as_posix()} pipeline_ray.py "
         f"{ray_locations_config} {mcs_config} {submit_params}", log_file)
 
+    if log_file:
+        lt.stop()
+
+    return ray_cfg_file
+
 
 @dataclass
 class EvalParams:
@@ -170,6 +230,7 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False):
         log_dir_path = "logs-test"
         log_dir = pathlib.Path(log_dir_path)
         log_dir.mkdir(parents=True, exist_ok=True)
+        last_config_file = None
         while(not q.empty()):
             eval = q.get()
             override = eval.override
@@ -181,12 +242,13 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False):
                 log_file = log_dir / pathlib.Path(log_file_name)
                 log_file.unlink(missing_ok=True)
             execute_shell("echo Starting `date`", log_file)
-            #TODO need to change dev flag to dev validation once dev validation is merged in
-            run_eval(eval.varset, eval.scene_dir, eval.metadata,
-                     override_params=eval.override, log_file=log_file, cluster=num, disable_validation = dev)
+            # TODO need to change dev flag to dev validation once dev validation is merged in
+            last_config_file = run_eval(eval.varset, eval.scene_dir, eval.metadata,
+                                        override_params=eval.override, log_file=log_file, cluster=num, disable_validation=dev)
             execute_shell("echo Finishing `date`", log_file)
             print(f"Finished eval from {eval.scene_dir} in cluster {num}")
         print(f"Finished with cluster {num}")
+        execute_shell(f"ray down -y {last_config_file.as_posix()}", log_file)
 
     threads = []
     for i in range(num_clusters):
@@ -240,7 +302,7 @@ def file_test():
     cfg_file = "mako/eval.yaml"
     test_set = create_eval_set_from_file(cfg_file)
 
-    run_evals(test_set, dev=True)
+    run_evals(test_set, dev=True, num_clusters=3)
 
 
 def multi_test():
