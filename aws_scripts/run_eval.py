@@ -1,3 +1,4 @@
+import argparse
 from datetime import datetime
 from dataclasses import dataclass, field
 
@@ -33,27 +34,33 @@ SCENE_LIST_FILENAME = "scenes_single_scene.txt"
 
 
 class LogTailer():
+    """Reads a log file as it is written"""
     # based off code and comments from
     # https://stackoverflow.com/questions/12523044/how-can-i-tail-a-log-file-in-python
     file = None
     _terminate = False
+    thread = None
 
     def __init__(self, file, log_prefix=""):
         self.file = file
         self.log_prefix = log_prefix
 
     def stop(self):
+        """Will stop the tailing and end the thread if non-blocking"""
         self._terminate = True
         if self.thread:
             self.thread.join()
 
     def tail_non_blocking(self):
-        self._terminate = False
-        self.thread = threading.Thread(
-            target=self.tail_blocking, daemon=True, name=f"tail-{self.file}-{self.log_prefix}")
-        self.thread.start()
+        """Tails a file without blocking by using a thread.  Can only be called one per instance."""
+        if not self.thread:
+            self._terminate = False
+            self.thread = threading.Thread(
+                target=self.tail_blocking, daemon=True, name=f"tail-{self.file}-{self.log_prefix}")
+            self.thread.start()
 
     def tail_blocking(self):
+        """Tails a file by blocking the calling thread."""
         for line in self._get_tail_lines(self.file):
             # sys.stdout.write works better with new lines
             sys.stdout.write(f"{self.log_prefix}{line}")
@@ -219,7 +226,7 @@ def create_eval_set_from_folder(varset: List[str], base_dir: str, metadata: str 
     return eval_set
 
 
-def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False):
+def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False, disable_validation=False):
     q = queue.Queue()
     for eval in eval_set:
         q.put(eval)
@@ -242,7 +249,9 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False):
             execute_shell("echo Starting `date`", log_file)
             # TODO need to change dev flag to dev validation once dev validation is merged in
             last_config_file = run_eval(eval.varset, eval.scene_dir, eval.metadata,
-                                        override_params=eval.override, log_file=log_file, cluster=num, disable_validation=dev)
+                                        override_params=eval.override, log_file=log_file,
+                                        cluster=num, disable_validation=disable_validation,
+                                        dev_validation=dev)
             execute_shell("echo Finishing `date`", log_file)
             print(f"Finished eval from {eval.scene_dir} in cluster {num}")
         print(f"Finished with cluster {num}")
@@ -259,10 +268,18 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False):
 
 
 def force_array(val):
+    """Returns val if it is an array, otherwise a one element array containing val"""
     return val if isinstance(val, list) else [val]
 
 
 def get_array(group, base, field):
+    """
+    Returns the value of the field with 'group' values taking precedence 
+    over 'base' values
+
+    All returns are forced to an array if not already an array.  
+    Returns the field from group. If it doesn't exist, returns the 
+    field from base.  If it still doesn't exist, return an empty array."""
     return force_array(group.get(field, base.get(field, [])))
 
 
@@ -296,11 +313,11 @@ def create_eval_set_from_file(cfg_file: str):
     return evals
 
 
-def file_test():
-    cfg_file = "mako/eval.yaml"
-    test_set = create_eval_set_from_file(cfg_file)
-
-    run_evals(test_set, dev=True, num_clusters=3)
+def run_from_config_file(args):
+    test_set = create_eval_set_from_file(args.config_file)
+    run_evals(test_set, dev=args.dev_validation,
+              disable_validation=args.disable_validation,
+              num_clusters=args.num_clusters)
 
 
 def multi_test():
@@ -308,7 +325,6 @@ def multi_test():
     metadata = 'level2'
     base_dir = 'eval4/split'
     test_set = create_eval_set_from_folder(varset, base_dir, metadata)
-    # TODO allow test_sets be created in files
 
     run_evals(test_set)
 
@@ -323,6 +339,72 @@ def single_test():
              metadata=metadata, disable_validation=True)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Run multiple eval sets containing scenes using ray")
+    parser.add_argument(
+        "config-file",
+        help="Path to config file which contains details "
+        + "for the eval files to run.",
+    )
+    parser.add_argument(
+        "--dev-validation",
+        default=False,
+        action="store_true",
+        help="Whether or not to validate for development instead of production",
+    )
+    parser.add_argument(
+        "--disable_validation",
+        default=False,
+        action="store_true",
+        help="Whether or not to skip validatation of MCS config file",
+    )
+    parser.add_argument(
+        "--num-clusters",
+        default=1,
+        help="How many simultanous clusters should be used",
+    )
+    return parser.parse_args()
+
+    """
+    Config File API (yaml):
+    
+    Two high level objects:
+    base - an 'eval-group' object that contains default values for any listed 'eval-groups'.  
+    eval-groups - contains a list of 'eval-group' objects.  Each grouping will create a number of sets as described below.
+    
+    An eval-group is a group of values used to create all permutations of eval sets.  
+    Eval sets are parameters and scenes to run a single task in ray for an eval.
+    
+    values for an eval-group:
+      varset - list of variable files that are used for template generation.  Earlier 
+        files are override by later values if they contain the same variable.  This is 
+        the only array where all values are used for each eval-set instead of each 
+        value creating more permutations.  Varset in the 'eval-groups' will override, not 
+        concatentate, those in the 'base' variable.
+      metadata - single or list of metadata levels.  Each metadata level will create more 
+        permutations of the eval-sets
+      parent-dir - Must be used mutually exclusively with 'dirs'.   This points to a directory
+        where each subdirectory should contain scenes and will be used to create permutations
+        of eval-sets
+      dirs - Must be used mutually exclusively with 'parent-dir'.  Single or list of directories 
+        which each should contain scenes to be used to create permutations of eval-sets.
+    
+    
+    Example:
+    base:
+        varset: ['opics', 'kdrumm']
+    eval-groups:
+        - metadata: ['level1', 'level2']
+          parent-dir: 'mako-test/parent'
+        - metadata: ['level2', 'oracle']
+          dirs: ['mako-test/dirs/dir1', 'mako-test/dirs/dir2']
+          
+    This example will use the 'opics.yaml' and 'kdrumm.yaml' files in the 'variables' directory to fill the templates.
+    It will level1 and level2 test using
+    """
+
+
 if __name__ == "__main__":
-    # args = parse_args()
-    file_test()
+    args = parse_args()
+    run_from_config_file(args)
