@@ -23,13 +23,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0e97bd0e9542be37d
+      ImageId: ami-0828f7cadf39e9d1f
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0e97bd0e9542be37d
+      ImageId: ami-0828f7cadf39e9d1f
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
