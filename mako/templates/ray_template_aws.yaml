@@ -7,7 +7,7 @@
 cluster_name: ${cluster}${clusterUser}${clusterSuffix}
 max_workers: ${workers}                       # 2 is the default
 
-idle_timeout_minutes: {idle_timeout_minutes}
+idle_timeout_minutes: ${idle_timeout_minutes}
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
 # one, just need to put a different one first.

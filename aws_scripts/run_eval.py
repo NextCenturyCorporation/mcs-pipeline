@@ -50,7 +50,7 @@ def execute_shell(cmd, log_file=None):
 
 
 def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=False,
-             dev_validation=False, resume=False, override_params={}, log_file=None):
+             dev_validation=False, resume=False, override_params={}, log_file=None, cluster=""):
     # Get Variables
     vars = add_variable_sets(varset)
     vars = {**vars, **override_params}
@@ -61,7 +61,8 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     # Setup working directory
     now = datetime.now().strftime('%Y%m%d-%H%M%S')
     team = vars['team']
-    working_name = f"{now}-{team}"
+    suffix = f"-{cluster}" if cluster else ""
+    working_name = f"{now}-{team}{suffix}"
     RAY_WORKING_DIR.mkdir(exist_ok=True, parents=True)
     working = (RAY_WORKING_DIR / working_name)
     working.mkdir()
@@ -160,12 +161,12 @@ def create_eval_set_from_folder(varset: List[str], base_dir: str, metadata: str 
     return eval_set
 
 
-def run_evals(eval_set: List[EvalParams], num_clusters=3):
+def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False):
     q = queue.Queue()
     for eval in eval_set:
         q.put(eval)
 
-    def run_eval_from_queue(num):
+    def run_eval_from_queue(num, dev=False):
         log_dir_path = "logs-test"
         log_dir = pathlib.Path(log_dir_path)
         log_dir.mkdir(parents=True, exist_ok=True)
@@ -179,18 +180,17 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3):
             if log_file_name:
                 log_file = log_dir / pathlib.Path(log_file_name)
                 log_file.unlink(missing_ok=True)
-            # run_eval(eval.varset, eval.scene_dir, eval.metadata,
-            #         override_params=eval.override, log_file=log_file)
-            execute_shell("echo Starting", log_file)
-            execute_shell(
-                f"sleep {random.randint(1, 5)}; echo sleeping", log_file)
-            execute_shell("echo Finishing", log_file)
+            execute_shell("echo Starting `date`", log_file)
+            #TODO need to change dev flag to dev validation once dev validation is merged in
+            run_eval(eval.varset, eval.scene_dir, eval.metadata,
+                     override_params=eval.override, log_file=log_file, cluster=num, disable_validation = dev)
+            execute_shell("echo Finishing `date`", log_file)
             print(f"Finished eval from {eval.scene_dir} in cluster {num}")
         print(f"Finished with cluster {num}")
 
     threads = []
     for i in range(num_clusters):
-        t = threading.Thread(target=run_eval_from_queue, args=((i+1),))
+        t = threading.Thread(target=run_eval_from_queue, args=((i+1), dev))
         t.start()
         threads.append(t)
 
@@ -240,7 +240,7 @@ def file_test():
     cfg_file = "mako/eval.yaml"
     test_set = create_eval_set_from_file(cfg_file)
 
-    run_evals(test_set)
+    run_evals(test_set, dev=True)
 
 
 def multi_test():
