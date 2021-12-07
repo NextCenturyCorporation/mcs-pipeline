@@ -1,9 +1,9 @@
 #
-#   Configuration file for generating passive scene RGB videos
+#   Configuration file for generating passive scene topdown videos
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: videos
+cluster_name: topdown
 max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
@@ -39,7 +39,7 @@ head_node_type: ray.head.default
 
 # Copy script files to ALL nodes
 file_mounts: {
-  "/home/ubuntu/ray_script.sh": "deploy_files/videos/ray_script.sh",
+  "/home/ubuntu/ray_script.sh": "deploy_files/topdown/ray_script.sh",
   "/home/ubuntu/check_passed_variables.sh": "deploy_files/check_passed_variables.sh",
   "/home/ubuntu/start_x_server.sh": "deploy_files/start_x_server.sh"
 }
