@@ -23,6 +23,7 @@ import random
 # update after all teams eval4 is merged
 # make sure parameters get pass through (disable_validation, dev, resume, etc)
 #   update dev
+# Add status
 
 from configparser import ConfigParser
 
@@ -103,8 +104,13 @@ def execute_shell(cmd, log_file=None):
     # os.system(cmd)
 
 
+class RayJobRunner():
+    ...
+
+
 def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=False,
-             dev_validation=False, resume=False, override_params={}, log_file=None, cluster="") -> pathlib.Path:
+             dev_validation=False, resume=False, override_params={},
+             log_file=None, cluster="", output_logs=False) -> pathlib.Path:
     """Runs an eval and returns the ray config file as a pathlib.Path object."""
     # Get Variables
     vars = add_variable_sets(varset)
@@ -114,7 +120,7 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
         filename='mako/templates/ray_template_aws.yaml')
 
     # Setup Tail
-    if log_file:
+    if log_file and output_logs:
         lt = LogTailer(log_file, f"c{cluster}: ")
         lt.tail_non_blocking()
 
@@ -199,7 +205,7 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
         f"ray submit {ray_cfg_file.as_posix()} pipeline_ray.py "
         f"{ray_locations_config} {mcs_config} {submit_params}", log_file)
 
-    if log_file:
+    if log_file and output_logs:
         lt.stop()
 
     return ray_cfg_file
@@ -226,7 +232,8 @@ def create_eval_set_from_folder(varset: List[str], base_dir: str, metadata: str 
     return eval_set
 
 
-def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False, disable_validation=False):
+def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
+              disable_validation=False, output_logs=False):
     q = queue.Queue()
     for eval in eval_set:
         q.put(eval)
@@ -247,11 +254,10 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False, disable_val
                 log_file = log_dir / pathlib.Path(log_file_name)
                 log_file.unlink(missing_ok=True)
             execute_shell("echo Starting `date`", log_file)
-            # TODO need to change dev flag to dev validation once dev validation is merged in
             last_config_file = run_eval(eval.varset, eval.scene_dir, eval.metadata,
                                         override_params=eval.override, log_file=log_file,
                                         cluster=num, disable_validation=disable_validation,
-                                        dev_validation=dev)
+                                        dev_validation=dev, output_logs=output_logs)
             execute_shell("echo Finishing `date`", log_file)
             print(f"Finished eval from {eval.scene_dir} in cluster {num}")
         print(f"Finished with cluster {num}")
@@ -317,7 +323,7 @@ def run_from_config_file(args):
     test_set = create_eval_set_from_file(args.config_file)
     run_evals(test_set, dev=args.dev_validation,
               disable_validation=args.disable_validation,
-              num_clusters=args.num_clusters)
+              num_clusters=args.num_clusters, output_logs=args.output_logs)
 
 
 def multi_test():
@@ -343,12 +349,12 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Run multiple eval sets containing scenes using ray")
     parser.add_argument(
-        "config-file",
+        "config_file",
         help="Path to config file which contains details "
         + "for the eval files to run.",
     )
     parser.add_argument(
-        "--dev-validation",
+        "--dev_validation",
         default=False,
         action="store_true",
         help="Whether or not to validate for development instead of production",
@@ -360,7 +366,14 @@ def parse_args():
         help="Whether or not to skip validatation of MCS config file",
     )
     parser.add_argument(
-        "--num-clusters",
+        "--output_logs",
+        default=False,
+        action="store_true",
+        help="Whether or not to copy output logs to stdout",
+    )
+    parser.add_argument(
+        "--num_clusters",
+        type=int,
         default=1,
         help="How many simultanous clusters should be used",
     )
