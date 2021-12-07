@@ -6,7 +6,7 @@ import copy
 import pathlib
 import subprocess
 import sys
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import pathlib
 import yaml
@@ -38,33 +38,33 @@ class LogTailer():
     """Reads a log file as it is written"""
     # based off code and comments from
     # https://stackoverflow.com/questions/12523044/how-can-i-tail-a-log-file-in-python
-    file = None
+    _file = None
     _terminate = False
-    thread = None
+    _thread = None
 
     def __init__(self, file, log_prefix=""):
-        self.file = file
-        self.log_prefix = log_prefix
+        self._file = file
+        self._log_prefix = log_prefix
 
     def stop(self):
         """Will stop the tailing and end the thread if non-blocking"""
         self._terminate = True
-        if self.thread:
-            self.thread.join()
+        if self._thread:
+            self._thread.join()
 
     def tail_non_blocking(self):
         """Tails a file without blocking by using a thread.  Can only be called one per instance."""
-        if not self.thread:
+        if not self._thread:
             self._terminate = False
-            self.thread = threading.Thread(
-                target=self.tail_blocking, daemon=True, name=f"tail-{self.file}-{self.log_prefix}")
-            self.thread.start()
+            self._thread = threading.Thread(
+                target=self.tail_blocking, daemon=True, name=f"tail-{self._file}-{self._log_prefix}")
+            self._thread.start()
 
     def tail_blocking(self):
         """Tails a file by blocking the calling thread."""
-        for line in self._get_tail_lines(self.file):
+        for line in self._get_tail_lines(self._file):
             # sys.stdout.write works better with new lines
-            sys.stdout.write(f"{self.log_prefix}{line}")
+            sys.stdout.write(f"{self._log_prefix}{line}")
 
     def _get_tail_lines(self, file):
         with open(file, 'r') as f:
@@ -105,7 +105,33 @@ def execute_shell(cmd, log_file=None):
 
 
 class RayJobRunner():
-    ...
+    _config_file = None
+    _log_file = None
+
+    def __init__(self, config_file: pathlib.Path, log_file=None) -> None:
+        self._log_file = log_file
+        if not isinstance(config_file, pathlib.Path):
+            self._config_file = pathlib.Path(config_file)
+        else:
+            self._config_file = config_file
+
+    def up(self):
+        cmd = f'ray up -y {self._config_file.as_posix()}'
+        execute_shell(cmd, self._log_file)
+
+    def rsync_up(self, source, dest):
+        execute_shell(
+            f"ray rsync_up -v {self._config_file.as_posix()} {source} '{dest}'", self._log_file)
+
+    def exec(self, cmd):
+        execute_shell(
+            f'ray exec {self._config_file.as_posix()} "{cmd}"', self._log_file)
+
+    def submit(self, file, *args):
+        params = " ".join(args)
+        execute_shell(
+            f"ray submit {self._config_file.as_posix()} {file} {params}",
+            self._log_file)
 
 
 def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=False,
@@ -141,27 +167,6 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     ray_cfg_file = working / f"ray_{team}_aws.yaml"
     ray_cfg_file.write_text(ray_cfg)
 
-    # Create config file
-    # metadata level
-    cmd = f'ray up -y {ray_cfg_file.as_posix()}'
-    execute_shell(cmd, log_file)
-
-    # Ray Start
-    # ray up -y $RAY_CONFIG
-    # wait
-
-    # We should copy all the pipeline code, but at least opics needs it in a special folder.  Should ray_script handle that?
-    # Should we run
-    # ray rsync_up -v $RAY_CONFIG pipeline '~'
-    # ray rsync_up -v $RAY_CONFIG deploy_files/${MODULE}/ '~'
-    # ray rsync_up -v $RAY_CONFIG configs/ '~/configs/'
-    execute_shell(
-        f"ray rsync_up -v {ray_cfg_file.as_posix()} pipeline '~'", log_file)
-    execute_shell(
-        f"ray rsync_up -v {ray_cfg_file.as_posix()} deploy_files/{team}/ '~'", log_file)
-    execute_shell(
-        f"ray rsync_up -v {ray_cfg_file.as_posix()} configs/ '~/configs/'", log_file)
-
     # Find and read Ray locations config file
     # source aws_scripts/load_ini.sh $RAY_LOCATIONS_CONFIG
     parser = ConfigParser()
@@ -180,30 +185,27 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
                 scene_list_writer.write('\n')
         scene_list_writer.close()
 
-    # ray exec $RAY_CONFIG "mkdir -p $MCS_scene_location"
-    execute_shell(
-        f'ray exec {ray_cfg_file.as_posix()} "mkdir -p {remote_scene_location}"', log_file)
+    # Start Ray and run ray commands
+    ray = RayJobRunner(ray_cfg_file, log_file=log_file)
+    # Create config file
+    # metadata level
+    ray.up()
 
-    # this may cause re-used machines to have more scenes than necessary in the follow location.
-    # I believe this is ok since we use the txt file to control exactly which files are run.
+    ray.rsync_up("pipeline", '~')
+    ray.rsync_up(f"deploy_files/{team}/", '~')
+    ray.rsync_up("configs/", '~/configs/')
 
-    # ray rsync_up -v $RAY_CONFIG $LOCAL_SCENE_DIR/ "$MCS_scene_location"
-    # ray rsync_up -v $RAY_CONFIG $TMP_DIR/scenes_single_scene.txt "$MCS_scene_list"
-    execute_shell(
-        f'ray rsync_up -v {ray_cfg_file.as_posix()} '
-        f'{local_scene_dir}/ "{remote_scene_location}"', log_file)
-    execute_shell(
-        f'ray rsync_up -v {ray_cfg_file.as_posix()} '
-        f'{scene_list_file.as_posix()} "{remote_scene_list}"', log_file)
+    ray.exec(f"mkdir -p {remote_scene_location}")
+
+    ray.rsync_up(f"{local_scene_dir}/", remote_scene_location)
+    ray.rsync_up(scene_list_file.as_posix(), remote_scene_list)
 
     submit_params = "--disable_validation" if disable_validation else ""
     submit_params += " --resume" if resume else ""
     submit_params += " --dev" if dev_validation else ""
 
-    # ray submit $RAY_CONFIG pipeline_ray.py $RAY_LOCATIONS_CONFIG $MCS_CONFIG $SUBMIT_PARAMS
-    execute_shell(
-        f"ray submit {ray_cfg_file.as_posix()} pipeline_ray.py "
-        f"{ray_locations_config} {mcs_config} {submit_params}", log_file)
+    ray.submit("pipeline_ray.py", ray_locations_config,
+               mcs_config, submit_params)
 
     if log_file and output_logs:
         lt.stop()
@@ -323,7 +325,7 @@ def run_from_config_file(args):
     test_set = create_eval_set_from_file(args.config_file)
     run_evals(test_set, dev=args.dev_validation,
               disable_validation=args.disable_validation,
-              num_clusters=args.num_clusters, output_logs=args.output_logs)
+              num_clusters=args.num_clusters, output_logs=args.redirect_logs)
 
 
 def multi_test():
@@ -366,7 +368,7 @@ def parse_args():
         help="Whether or not to skip validatation of MCS config file",
     )
     parser.add_argument(
-        "--output_logs",
+        "--redirect_logs",
         default=False,
         action="store_true",
         help="Whether or not to copy output logs to stdout",
@@ -381,8 +383,14 @@ def parse_args():
 
     """
     Config File API (yaml):
+    The job of this script is to create a list of 'eval-group' parameters which is a set of parameters
+    to run a single ray job for an eval.  The parameters for an eval group are below, but in general it is
+    used to generate set of files, at a certain metadata level, with some other run parameters.
+    To do this, we use a config file to generate these eval groups, where most values are lists where each entry
+    is a single option.  The script will create eval-groups using each combination of options to create many 
+    permutation of these values.
     
-    Two high level objects:
+    The config file has two high level objects:
     base - an 'eval-group' object that contains default values for any listed 'eval-groups'.  
     eval-groups - contains a list of 'eval-group' objects.  Each grouping will create a number of sets as described below.
     
