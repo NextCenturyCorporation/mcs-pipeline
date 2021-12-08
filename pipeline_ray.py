@@ -395,13 +395,8 @@ class SceneRunner:
             valid = False
 
         bucket = self.mcs_config.get("MCS", "s3_bucket")
-        if bucket != self.CURRENT_EVAL_BUCKET and not self.dev_validation:
-            logging.error(
-                "Error: MCS Config file does not have "
-                + "the correct s3 bucket specified."
-            )
-            valid = False
-        if bucket != self.CURRENT_DEV_EVAL_BUCKET and self.dev_validation:
+        if ((bucket != self.CURRENT_EVAL_BUCKET and not self.dev_validation) or
+                (bucket != self.CURRENT_DEV_EVAL_BUCKET and self.dev_validation)):
             logging.error(
                 "Error: MCS Config file does not have "
                 + "the correct s3 bucket specified."
