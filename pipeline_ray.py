@@ -353,6 +353,7 @@ class SceneRunner:
 
     def read_mcs_config(self, mcs_config_filename: str):
         mcs_config = configparser.ConfigParser()
+        logging.debug(f'Reading MCS config file {mcs_config_filename}')
         with open(mcs_config_filename, "r") as mcs_config_file:
             mcs_config.read_file(mcs_config_file)
         return mcs_config
@@ -503,6 +504,9 @@ class SceneRunner:
         run_script = self.exec_config["MCS"]["run_script"]
         eval_dir = self.exec_config["MCS"]["eval_dir"]
         for scene_ref in self.scene_files_list:
+            # skip directories
+            if os.path.isdir(str(scene_ref)):
+                continue
             with open(str(scene_ref)) as scene_file:
                 job_id = run_scene.remote(
                     run_script,
