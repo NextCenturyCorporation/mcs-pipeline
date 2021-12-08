@@ -1,8 +1,8 @@
 """
-This script is used to parse the output of a run_eval.sh script.  
-It will split the logs into one log per worker machine and then 
-parse through the machine logs to find logs corresponding to a 
-single scene run.  
+This script is used to parse the output of a run_eval.sh script.
+It will split the logs into one log per worker machine and then
+parse through the machine logs to find logs corresponding to a
+single scene run.
 
 The file assumes that ts or ts -s has been run on the output as
 well providing a timestamp.
@@ -253,10 +253,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Parse log files from run_eval.sh.  Logs must include timestamps from the ts command.'
     )
-    parser.add_argument('--output-dir', '-o', default='./split_logs/')
-    parser.add_argument('log_file')
+    parser.add_argument('--output-dir', '-o', default='./split_logs/',
+                        help="Folder where logs will be placed once split up")
     parser.add_argument(
-        '--matchers', '-m', choices=['OPICS', 'MESS', 'CORA', 'BASELINE'], default='OPICS')
+        'log_file', help="Log file that is to be split and parsed.")
+    parser.add_argument(
+        '--matchers', '-m', choices=['OPICS', 'MESS', 'CORA', 'BASELINE'],
+        required=True,
+        help="Group of matchers to determine where logs should be split up")
 
     args = parser.parse_args()
     main(args)
