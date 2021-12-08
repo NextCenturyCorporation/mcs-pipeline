@@ -23,24 +23,29 @@ cp $scene_file $SCENE_DIR/
 
 export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
-# Go to the mess_eval375/, which is where we will be running things
+# Go to the mess_eval4/, which is where we will be running things
 cd $eval_dir
 
 # Activate conda environment
 source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
-conda activate myenv
+conda activate af_mess4
 
 # Run the Performer code
 echo Starting Evaluation:
 echo
 scene_file_basename=$(basename $scene_file)
 
-# Read in which submission to run from MCS config file
-SUBMISSION_ID=$(awk -F '=' '/submission_id/ {print $2}' $mcs_configfile | xargs)
+# For eval 4, MESS only gave one submission -- commenting out multi
+# submission bits from eval 3.75...
 
-echo Running script_mess.py submission $SUBMISSION_ID
+# Read in which submission to run from MCS config file
+#SUBMISSION_ID=$(awk -F '=' '/submission_id/ {print $2}' $mcs_configfile | xargs)
+
+# echo Running script_mess.py submission $SUBMISSION_ID
 
 # run with SUBMISSION_ID set to '1' or '2' for both MESS submissions
-python3 script_mess.py scenes/$scene_file_basename $SUBMISSION_ID
+#python3 script_mess.py scenes/$scene_file_basename $SUBMISSION_ID
+
+python script_mess_eval4_ms.py scenes/$scene_file_basename
 
 unset MCS_CONFIG_FILE_PATH

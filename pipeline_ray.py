@@ -207,6 +207,7 @@ def run_scene(
     logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if logs_to_s3:
         # This seems a little dirty, but its mostly copied from MCS project.
+
         log_s3_filename = (
             folder
             + "/"
@@ -314,7 +315,7 @@ class SceneRunner:
         "eval_7",
         "eval_8",
     ]
-    TEAM_NAMES = ["mess1", "mess2", "mit", "opics", "baseline", "cora"]
+    TEAM_NAMES = ["mess", "mess1", "mess2", "mit", "opics", "baseline", "cora"]
     #  more flexible for Eval 4+ and update folder structure
     CURRENT_EVAL_BUCKET = "evaluation-images"
     CURRENT_EVAL_FOLDER = "eval-resources-4"
