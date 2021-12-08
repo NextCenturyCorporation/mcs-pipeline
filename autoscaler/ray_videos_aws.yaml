@@ -1,5 +1,5 @@
 #
-#   Configuration file for generating passive scene videos
+#   Configuration file for generating passive scene RGB videos
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
