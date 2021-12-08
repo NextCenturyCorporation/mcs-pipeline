@@ -17,9 +17,6 @@ import time
 import random
 
 # TODO:
-# Add params
-# Add more docs?
-# use properties for mcs config file?  (will this work for videos)
 # update after all teams eval4 is merged
 # make sure parameters get pass through (disable_validation, dev, resume, etc)
 #   update dev
