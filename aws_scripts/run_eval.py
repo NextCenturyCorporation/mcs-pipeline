@@ -1,5 +1,5 @@
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 
 import copy
@@ -32,6 +32,53 @@ from mako.template import Template
 DEFAULT_VARSET = 'default'
 RAY_WORKING_DIR = pathlib.Path('./.tmp_pipeline_ray/')
 SCENE_LIST_FILENAME = "scenes_single_scene.txt"
+
+
+@dataclass
+class EvalGroupsStatus():
+    total_groups: int
+    total_scenes: int
+    finished_groups: int = 0
+    finished_scenes: int = 0
+
+    def __post_init__(self):
+        self._start = datetime.now()
+
+    def status_string(self):
+        fg = self.finished_groups
+        fs = self.finished_scenes
+        tg = self.total_groups
+        ts = self.total_scenes
+        gp = '{:.1%}'.format(fg/tg)
+        sp = '{:.1%}'.format(fs/ts)
+        return f"Groups: {fg}/{tg} ({gp}%) - scenes: {fs}/{ts} ({sp}%)"
+
+    def time_string(self):
+        elapsed = datetime.now() - self._start
+        scenes_left = self.total_scenes - self.finished_scenes
+        if self.finished_scenes == 0:
+            sec_per_scene = "unknown"
+            time_left = "unknown"
+        else:
+            sec_per_scene = elapsed / self.finished_scenes
+            time_left = scenes_left * sec_per_scene
+        return f"Elapsed: {elapsed} seconds per scene: {sec_per_scene} time left: {time_left}"
+
+
+@dataclass
+class EvalRunStatus():
+    total_scenes: int
+    success_scenes: int = 0
+    failed_scenes: int = 0
+
+
+@dataclass
+class EvalParams:
+    varset: List[str]
+    scene_dir: str
+    metadata: str = "level2"
+    override: dict = field(default_factory=dict)
+    stats: EvalRunStatus = None
 
 
 class LogTailer():
@@ -141,9 +188,7 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     # Get Variables
     vars = add_variable_sets(varset)
     vars = {**vars, **override_params}
-
-    ray_cfg_template = Template(
-        filename='mako/templates/ray_template_aws.yaml')
+    vars['metadata'] = metadata
 
     # Setup Tail
     if log_file and output_logs:
@@ -163,9 +208,21 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     ray_locations_config = f"configs/{team}_aws.ini"
 
     # Generate Ray Config
+    ray_cfg_template = Template(
+        filename='mako/templates/ray_template_aws.yaml')
+
     ray_cfg = ray_cfg_template.render(**vars)
     ray_cfg_file = working / f"ray_{team}_aws.yaml"
     ray_cfg_file.write_text(ray_cfg)
+
+    # Generate MCS config
+    mcs_cfg_template = Template(
+        filename='mako/templates/mcs_config_template.ini')
+    mcs_cfg = mcs_cfg_template.render(**vars)
+    mcs_cfg_file = working / f"mcs_config_{team}_{metadata}.ini"
+    mcs_cfg_file.write_text(mcs_cfg)
+
+    # mcs_cfg_file = f"configs/mcs_config_{team}_{metadata}.ini"
 
     # Find and read Ray locations config file
     # source aws_scripts/load_ini.sh $RAY_LOCATIONS_CONFIG
@@ -173,8 +230,6 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     parser.read(ray_locations_config)
     remote_scene_location = parser.get("MCS", "scene_location")
     remote_scene_list = parser.get("MCS", "scene_list")
-
-    mcs_config = f"configs/mcs_config_{team}_{metadata}.ini"
 
     # Create list of scene files
     files = os.listdir(local_scene_dir)
@@ -194,6 +249,7 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     ray.rsync_up("pipeline", '~')
     ray.rsync_up(f"deploy_files/{team}/", '~')
     ray.rsync_up("configs/", '~/configs/')
+    ray.rsync_up(mcs_cfg_file.as_posix(), '~/configs/')
 
     ray.exec(f"mkdir -p {remote_scene_location}")
 
@@ -204,21 +260,14 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     submit_params += " --resume" if resume else ""
     submit_params += " --dev" if dev_validation else ""
 
+    remote_cfg_path = f"configs/{mcs_cfg_file.name}"
     ray.submit("pipeline_ray.py", ray_locations_config,
-               mcs_config, submit_params)
+               remote_cfg_path, submit_params)
 
     if log_file and output_logs:
         lt.stop()
 
     return ray_cfg_file
-
-
-@dataclass
-class EvalParams:
-    varset: List[str]
-    scene_dir: str
-    metadata: str = "level2"
-    override: dict = field(default_factory=dict)
 
 
 def create_eval_set_from_folder(varset: List[str], base_dir: str, metadata: str = "level2", override: dict = {}):
@@ -234,11 +283,24 @@ def create_eval_set_from_folder(varset: List[str], base_dir: str, metadata: str 
     return eval_set
 
 
+def set_status_for_set(eval_set):
+    num_scenes = 0
+    for eval_run in eval_set:
+        dir = eval_run.scene_dir
+        run_scenes = len([name for name in os.listdir(dir)
+                          if name.endswith('.json') and os.path.isfile(os.path.join(dir, name))])
+        num_scenes += run_scenes
+        eval_run.stats = EvalRunStatus(run_scenes)
+    return EvalGroupsStatus(len(eval_set), num_scenes)
+
+
 def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
               disable_validation=False, output_logs=False):
     q = queue.Queue()
     for eval in eval_set:
         q.put(eval)
+
+    all_status = set_status_for_set(eval_set)
 
     def run_eval_from_queue(num, dev=False):
         log_dir_path = "logs-test"
@@ -249,8 +311,8 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
             eval = q.get()
             override = eval.override
             override["clusterSuffix"] = f"-{num}"
-            print(f"Starting eval from {eval.scene_dir} in cluster {num}")
-
+            print(
+                f"Starting eval from {eval.scene_dir} at {eval.metadata} in cluster {num}")
             log_file_name = override.get("log_name")
             if log_file_name:
                 log_file = log_dir / pathlib.Path(log_file_name)
@@ -260,8 +322,12 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
                                         override_params=eval.override, log_file=log_file,
                                         cluster=num, disable_validation=disable_validation,
                                         dev_validation=dev, output_logs=output_logs)
+            all_status.finished_groups += 1
+            all_status.finished_scenes += eval.stats.total_scenes
             execute_shell("echo Finishing `date`", log_file)
-            print(f"Finished eval from {eval.scene_dir} in cluster {num}")
+            print(
+                f"Finished eval from {eval.scene_dir} at {eval.metadata} in cluster {num} - {all_status.status_string()}")
+            print(all_status.time_string())
         print(f"Finished with cluster {num}")
         execute_shell(f"ray down -y {last_config_file.as_posix()}", log_file)
 
@@ -349,10 +415,11 @@ def single_test():
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Run multiple eval sets containing scenes using ray")
+        description="Run multiple eval sets containing scenes using ray.  There are two modes.  " +
+        "One uses the '--config_file' option.  The other uses the '--local_scene_dir' option.")
     parser.add_argument(
-        "config_file",
-        help="Path to config file which contains details "
+        "--config_file",
+        help="Path to config file which contains details on how exactly to run a series of eval runs."
         + "for the eval files to run.",
     )
     parser.add_argument(
@@ -377,7 +444,21 @@ def parse_args():
         "--num_clusters",
         type=int,
         default=1,
-        help="How many simultanous clusters should be used",
+        help="How many simultanous clusters should be used.  Only used with the '--config_file' option.",
+    )
+    parser.add_argument(
+        "--local_scene_dir",
+        default=None,
+        help="Local scene directory to be used for a single run.  Cannot be used with the '--config_file' option.",
+    )
+    parser.add_argument(
+        "--metadata",
+        default='level2',
+        help="Sets the metadata level for a single run.  Only used with the '--local_scene_dir' option.",
+    )
+    parser.add_argument(
+        "--varset",
+        help="Sets list of variable set files that should be read.  Only used with the '--local_scene_dir' option.",
     )
     return parser.parse_args()
 
@@ -428,4 +509,13 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    run_from_config_file(args)
+    if args.config_file:
+        run_from_config_file(args)
+    elif args.local_scene_dir and args.varset:
+        now = datetime.now().strftime('%Y%m%d-%H%M%S')
+        vars = "-".join(args.varset)
+        log_file = f"logs/{now}-{vars}-{args.metadata}.log"
+        run_eval(args.varset, args.local_scene_dir,
+                 metadata=args.metadata, disable_validation=args.disable_validation,
+                 dev_validation=args.dev_validation,
+                 resume=args.resume, log_file=log_file, output_logs=args.redirect_logs)

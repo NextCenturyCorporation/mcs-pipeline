@@ -1,4 +1,5 @@
 cluster: "opics"
 team: "opics"
 workers: 1
-ami: ami-08b3c4d663c483fd0
+ami: ami-0fe230513e0bbe618
+additional_setup_commands: "- pip install shapely==1.7.1\n  # test"
