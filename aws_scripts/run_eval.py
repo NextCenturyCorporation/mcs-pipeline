@@ -180,7 +180,7 @@ class RayJobRunner():
 
 def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=False,
              dev_validation=False, resume=False, override_params={},
-             log_file=None, cluster="", output_logs=False) -> pathlib.Path:
+             log_file=None, cluster="", output_logs=False, dry_run=False) -> pathlib.Path:
     """Runs an eval and returns the ray config file as a pathlib.Path object."""
     # Get Variables
     vars = add_variable_sets(varset)
@@ -219,8 +219,6 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     mcs_cfg_file = working / f"mcs_config_{team}_{metadata}.ini"
     mcs_cfg_file.write_text(mcs_cfg)
 
-    # mcs_cfg_file = f"configs/mcs_config_{team}_{metadata}.ini"
-
     # Find and read Ray locations config file
     # source aws_scripts/load_ini.sh $RAY_LOCATIONS_CONFIG
     parser = ConfigParser()
@@ -237,29 +235,34 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
                 scene_list_writer.write('\n')
         scene_list_writer.close()
 
-    # Start Ray and run ray commands
-    ray = RayJobRunner(ray_cfg_file, log_file=log_file)
-    # Create config file
-    # metadata level
-    ray.up()
+    if dry_run:
+        # currently we need to sleep just so the timestamp isn't the same
+        execute_shell("sleep 2", log_file=log_file)
+    else:
 
-    ray.rsync_up("pipeline", '~')
-    ray.rsync_up(f"deploy_files/{team}/", '~')
-    ray.rsync_up("configs/", '~/configs/')
-    ray.rsync_up(mcs_cfg_file.as_posix(), '~/configs/')
+        # Start Ray and run ray commands
+        ray = RayJobRunner(ray_cfg_file, log_file=log_file)
+        # Create config file
+        # metadata level
+        ray.up()
 
-    ray.exec(f"mkdir -p {remote_scene_location}")
+        ray.rsync_up("pipeline", '~')
+        ray.rsync_up(f"deploy_files/{team}/", '~')
+        ray.rsync_up("configs/", '~/configs/')
+        ray.rsync_up(mcs_cfg_file.as_posix(), '~/configs/')
 
-    ray.rsync_up(f"{local_scene_dir}/", remote_scene_location)
-    ray.rsync_up(scene_list_file.as_posix(), remote_scene_list)
+        ray.exec(f"mkdir -p {remote_scene_location}")
 
-    submit_params = "--disable_validation" if disable_validation else ""
-    submit_params += " --resume" if resume else ""
-    submit_params += " --dev" if dev_validation else ""
+        ray.rsync_up(f"{local_scene_dir}/", remote_scene_location)
+        ray.rsync_up(scene_list_file.as_posix(), remote_scene_list)
 
-    remote_cfg_path = f"configs/{mcs_cfg_file.name}"
-    ray.submit("pipeline_ray.py", ray_locations_config,
-               remote_cfg_path, submit_params)
+        submit_params = "--disable_validation" if disable_validation else ""
+        submit_params += " --resume" if resume else ""
+        submit_params += " --dev" if dev_validation else ""
+
+        remote_cfg_path = f"configs/{mcs_cfg_file.name}"
+        ray.submit("pipeline_ray.py", ray_locations_config,
+                   remote_cfg_path, submit_params)
 
     if log_file and output_logs:
         lt.stop()
@@ -292,7 +295,7 @@ def set_status_for_set(eval_set):
 
 
 def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
-              disable_validation=False, output_logs=False):
+              disable_validation=False, output_logs=False, dry_run=False):
     q = queue.Queue()
     for eval in eval_set:
         q.put(eval)
@@ -318,7 +321,7 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
             last_config_file = run_eval(eval.varset, eval.scene_dir, eval.metadata,
                                         override_params=eval.override, log_file=log_file,
                                         cluster=num, disable_validation=disable_validation,
-                                        dev_validation=dev, output_logs=output_logs)
+                                        dev_validation=dev, output_logs=output_logs, dry_run=dry_run)
             all_status.finished_groups += 1
             all_status.finished_scenes += eval.stats.total_scenes
             execute_shell("echo Finishing `date`", log_file)
@@ -388,7 +391,8 @@ def run_from_config_file(args):
     test_set = create_eval_set_from_file(args.config_file)
     run_evals(test_set, dev=args.dev_validation,
               disable_validation=args.disable_validation,
-              num_clusters=args.num_clusters, output_logs=args.redirect_logs)
+              num_clusters=args.num_clusters, output_logs=args.redirect_logs,
+              dry_run=args.dry_run)
 
 
 def multi_test():
@@ -430,6 +434,12 @@ def parse_args():
         default=False,
         action="store_true",
         help="Whether or not to skip validatation of MCS config file",
+    )
+    parser.add_argument(
+        "--dry_run",
+        default=False,
+        action="store_true",
+        help="If set, do not actually run anything in ray.  Just creates and parses config files.",
     )
     parser.add_argument(
         "--redirect_logs",
