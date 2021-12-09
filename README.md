@@ -87,11 +87,27 @@ There is an optional flag to disable config file validation checks if you are ju
 aws_scripts/run_eval MODULE path/to/scene/directory --metadata [metadata_level] --disable_validation
 ```
 
+To include timestamps on the output, you can use the linux ts command.  ts may need to be installed via `sudo apt install moreutils`. Append one of the following to your script:
+
+Timestamps:
+
+```
+2>&1 | ts 
+```
+
+Time since start:
+
+```
+2>&1 | ts -s
+```
+
 To capture the output in a log file, add the following after the command.  Tee will allow the output to be sent both to stdout as well as the file.  
 
 ```
-|& tee <log_filename>
+2>&1 | tee <log_filename>
 ```
+
+Piping logs to these programs can sometimes lose data and/or color.  To avoid this, use the 'unbuffer' command.
 
 You can also use linux pipes to only push to a file.
 
@@ -99,13 +115,16 @@ Here are examples:
 ```
 ./aws_scripts/run_eval.sh baseline scenes/subset/
 
-
-./aws_scripts/run_eval.sh baseline scenes/subset/ |& tee out.txt
+time unbuffer ./aws_scripts/run_eval.sh opics folder --metadata level2  2>&1 | ts -s 2>&1 | tee test.out
 ```
 
 Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster. 
 When you run "run_eval.sh" it will run all scenes in the directory. Make
 a folder somewhere and add the scenes you want to test there.
+
+#### Log Parsing
+
+If run_eval.sh is run with 'ts -s', the output logs can be parsed by the pipeline/log_parser.py.  This command will split the logs into logs per working node and then use some regex to report some metrics on how long different portions of a run took.  At the moment, the script output is somewhat rough and it only has good support for tracking opics logging.
 
 #### Script Overview
 

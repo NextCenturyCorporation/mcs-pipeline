@@ -2,6 +2,7 @@ __pycache__/
 
 # temp files
 .tmp_pipeline_ray/
+.ray-configs/
 
 # Environments
 .env
@@ -13,3 +14,5 @@ venv/
 .idea/
 .logs/
 .vscode/
+logs
+split_logs/
