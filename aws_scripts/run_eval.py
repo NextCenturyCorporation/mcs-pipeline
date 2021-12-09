@@ -20,7 +20,8 @@ import random
 # update after all teams eval4 is merged
 # make sure parameters get pass through (disable_validation, dev, resume, etc)
 #   update dev
-# Add status
+# make template location configurable
+
 
 from configparser import ConfigParser
 
@@ -29,6 +30,7 @@ from mako.template import Template
 DEFAULT_VARSET = 'default'
 RAY_WORKING_DIR = pathlib.Path('./.tmp_pipeline_ray/')
 SCENE_LIST_FILENAME = "scenes_single_scene.txt"
+DATE_FORMAT = '%Y%m%d-%H%M%S'
 
 
 @dataclass
@@ -41,7 +43,7 @@ class EvalGroupsStatus():
     def __post_init__(self):
         self._start = datetime.now()
 
-    def status_string(self):
+    def get_progress_string(self):
         fg = self.finished_groups
         fs = self.finished_scenes
         tg = self.total_groups
@@ -50,7 +52,7 @@ class EvalGroupsStatus():
         sp = '{:.1%}'.format(fs/ts)
         return f"Groups: {fg}/{tg} ({gp}%) - scenes: {fs}/{ts} ({sp}%)"
 
-    def time_string(self):
+    def get_timing_string(self):
         elapsed = datetime.now() - self._start
         scenes_left = self.total_scenes - self.finished_scenes
         if self.finished_scenes == 0:
@@ -122,6 +124,11 @@ class LogTailer():
                     time.sleep(0.1)
 
 
+def get_now_str() -> str:
+    """Returns a date as a string in a sortable format."""
+    return datetime.now().strftime(DATE_FORMAT)
+
+
 def add_variable_sets(varsets):
     if DEFAULT_VARSET not in varsets:
         varsets.insert(0, DEFAULT_VARSET)
@@ -144,8 +151,6 @@ def execute_shell(cmd, log_file=None):
                            stderr=subprocess.STDOUT, shell=True)
     else:
         subprocess.run(cmd, shell=True)
-
-    # os.system(cmd)
 
 
 class RayJobRunner():
@@ -193,7 +198,7 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
         lt.tail_non_blocking()
 
     # Setup working directory
-    now = datetime.now().strftime('%Y%m%d-%H%M%S')
+    now = get_now_str()
     team = vars['team']
     suffix = f"-{cluster}" if cluster else ""
     working_name = f"{now}-{team}{suffix}"
@@ -326,8 +331,9 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
             all_status.finished_scenes += eval.stats.total_scenes
             execute_shell("echo Finishing `date`", log_file)
             print(
-                f"Finished eval from {eval.scene_dir} at {eval.metadata} in cluster {num} - {all_status.status_string()}")
-            print(all_status.time_string())
+                f"Finished eval from {eval.scene_dir} at {eval.metadata} in cluster {num}")
+            print(f"  {all_status.get_progress_string()}")
+            print(f"  {all_status.get_timing_string()}")
         print(f"Finished with cluster {num}")
         execute_shell(f"ray down -y {last_config_file.as_posix()}", log_file)
 
@@ -375,8 +381,8 @@ def create_eval_set_from_file(cfg_file: str):
             parents = get_array(group, my_base, 'parent-dir')
             dirs = get_array(group, my_base, 'dirs')
             for dir in dirs:
-                my_override = {}
                 log_dir = dir.split("/")[-1]
+                my_override = {}
                 my_override["log_name"] = f"{log_dir}-{metadata}.log"
                 evals.append(EvalParams(
                     varset, dir, metadata, override=my_override))
@@ -419,12 +425,12 @@ def parse_args():
         description="Run multiple eval sets containing scenes using ray.  There are two modes.  " +
         "One uses the '--config_file' option.  The other uses the '--local_scene_dir' option.")
     parser.add_argument(
-        "--config_file",
+        "--config_file", "-c",
         help="Path to config file which contains details on how exactly to run a series of eval runs."
         + "for the eval files to run.",
     )
     parser.add_argument(
-        "--dev_validation",
+        "--dev_validation", "-d",
         default=False,
         action="store_true",
         help="Whether or not to validate for development instead of production",
@@ -442,29 +448,29 @@ def parse_args():
         help="If set, do not actually run anything in ray.  Just creates and parses config files.",
     )
     parser.add_argument(
-        "--redirect_logs",
+        "--redirect_logs", "-r",
         default=False,
         action="store_true",
         help="Whether or not to copy output logs to stdout",
     )
     parser.add_argument(
-        "--num_clusters",
+        "--num_clusters", "-n",
         type=int,
         default=1,
         help="How many simultanous clusters should be used.  Only used with the '--config_file' option.",
     )
     parser.add_argument(
-        "--local_scene_dir",
+        "--local_scene_dir", "-s",
         default=None,
         help="Local scene directory to be used for a single run.  Cannot be used with the '--config_file' option.",
     )
     parser.add_argument(
-        "--metadata",
+        "--metadata", "-m",
         default='level2',
         help="Sets the metadata level for a single run.  Only used with the '--local_scene_dir' option.",
     )
     parser.add_argument(
-        "--varset",
+        "--varset", "-v",
         help="Sets list of variable set files that should be read.  Only used with the '--local_scene_dir' option.",
     )
     return parser.parse_args()
@@ -519,7 +525,7 @@ if __name__ == "__main__":
     if args.config_file:
         run_from_config_file(args)
     elif args.local_scene_dir and args.varset:
-        now = datetime.now().strftime('%Y%m%d-%H%M%S')
+        now = get_now_str()
         vars = "-".join(args.varset)
         log_file = f"logs/{now}-{vars}-{args.metadata}.log"
         run_eval(args.varset, args.local_scene_dir,
