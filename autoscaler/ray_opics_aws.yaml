@@ -5,7 +5,7 @@
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
 cluster_name: opics
-max_workers: 8                       # 2 is the default
+max_workers: 8                         # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
 # one, just need to put a different one first.
@@ -23,13 +23,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-08b3c4d663c483fd0
+      ImageId: ami-0fe230513e0bbe618
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-08b3c4d663c483fd0
+      ImageId: ami-0fe230513e0bbe618
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
@@ -51,6 +51,9 @@ setup_commands:
   - pip install --upgrade pip
   - pip install -U "ray[default]"==1.3.0
   - pip install aioredis==1.3.1
+  # Shapely got automatically updated to 1.8 which caused some significant performance problems in eval 4.
+  # We are unsure as to exactly what automatic process caused this, but this reverts it.
+  - pip install shapely==1.7.1
   - rm -rf ~/.aws/
 
 # Command to start ray on the head node. You don't need to change this.
