@@ -1,12 +1,12 @@
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass, field
 
 import copy
 import pathlib
 import subprocess
 import sys
-from typing import Dict, List, Union
+from typing import List
 
 import pathlib
 import yaml
@@ -14,13 +14,10 @@ import os
 import threading
 import queue
 import time
-import random
 
 # TODO:
-# update after all teams eval4 is merged
-# make sure parameters get pass through (disable_validation, dev, resume, etc)
-#   update dev
-# make template location configurable
+# update after CORA eval4 is merged
+# if a head node fails, system assumes it just completes successfully.  (probably fix in more granular status ticket)
 
 
 from configparser import ConfigParser
@@ -129,12 +126,12 @@ def get_now_str() -> str:
     return datetime.now().strftime(DATE_FORMAT)
 
 
-def add_variable_sets(varsets):
+def add_variable_sets(varsets, varset_directory):
     if DEFAULT_VARSET not in varsets:
         varsets.insert(0, DEFAULT_VARSET)
     vars = {}
     for varset in varsets:
-        with open(f'mako/variables/{varset}.yaml') as def_file:
+        with open(f'{varset_directory}{varset}.yaml') as def_file:
             new_vars = yaml.safe_load(def_file)
             vars = {**vars, **new_vars}
     return vars
@@ -185,10 +182,11 @@ class RayJobRunner():
 
 def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=False,
              dev_validation=False, resume=False, override_params={},
-             log_file=None, cluster="", output_logs=False, dry_run=False) -> pathlib.Path:
+             log_file=None, cluster="", output_logs=False, dry_run=False, base_dir="mako") -> pathlib.Path:
     """Runs an eval and returns the ray config file as a pathlib.Path object."""
     # Get Variables
-    vars = add_variable_sets(varset)
+    varset_directory = f'{base_dir}/variables/'
+    vars = add_variable_sets(varset, varset_directory=varset_directory)
     vars = {**vars, **override_params}
     vars['metadata'] = metadata
 
@@ -211,7 +209,7 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
 
     # Generate Ray Config
     ray_cfg_template = Template(
-        filename='mako/templates/ray_template_aws.yaml')
+        filename=f'{base_dir}/templates/ray_template_aws.yaml')
 
     ray_cfg = ray_cfg_template.render(**vars)
     ray_cfg_file = working / f"ray_{team}_aws.yaml"
@@ -219,7 +217,7 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
 
     # Generate MCS config
     mcs_cfg_template = Template(
-        filename='mako/templates/mcs_config_template.ini')
+        filename=f'{base_dir}/templates/mcs_config_template.ini')
     mcs_cfg = mcs_cfg_template.render(**vars)
     mcs_cfg_file = working / f"mcs_config_{team}_{metadata}.ini"
     mcs_cfg_file.write_text(mcs_cfg)
@@ -300,7 +298,7 @@ def set_status_for_set(eval_set):
 
 
 def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
-              disable_validation=False, output_logs=False, dry_run=False):
+              disable_validation=False, output_logs=False, dry_run=False, base_dir="mako"):
     q = queue.Queue()
     for eval in eval_set:
         q.put(eval)
@@ -326,7 +324,8 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
             last_config_file = run_eval(eval.varset, eval.scene_dir, eval.metadata,
                                         override_params=eval.override, log_file=log_file,
                                         cluster=num, disable_validation=disable_validation,
-                                        dev_validation=dev, output_logs=output_logs, dry_run=dry_run)
+                                        dev_validation=dev, output_logs=output_logs, dry_run=dry_run,
+                                        base_dir=base_dir)
             all_status.finished_groups += 1
             all_status.finished_scenes += eval.stats.total_scenes
             execute_shell("echo Finishing `date`", log_file)
@@ -398,26 +397,7 @@ def run_from_config_file(args):
     run_evals(test_set, dev=args.dev_validation,
               disable_validation=args.disable_validation,
               num_clusters=args.num_clusters, output_logs=args.redirect_logs,
-              dry_run=args.dry_run)
-
-
-def multi_test():
-    varset = ['opics', 'kdrumm']
-    metadata = 'level2'
-    base_dir = 'eval4/split'
-    test_set = create_eval_set_from_folder(varset, base_dir, metadata)
-
-    run_evals(test_set)
-
-
-def single_test():
-
-    varset = ['opics', 'kdrumm']
-    metadata = 'level2'
-    local_scene_dir = 'eval4/single'
-
-    run_eval(varset, local_scene_dir,
-             metadata=metadata, disable_validation=True)
+              dry_run=args.dry_run, base_dir=args.base_dir)
 
 
 def parse_args():
@@ -428,6 +408,11 @@ def parse_args():
         "--config_file", "-c",
         help="Path to config file which contains details on how exactly to run a series of eval runs."
         + "for the eval files to run.",
+    )
+    parser.add_argument(
+        "--base_dir", "-b",
+        default="mako",
+        help="Base directory that should contain a templates directory and variables directory.",
     )
     parser.add_argument(
         "--dev_validation", "-d",
@@ -508,17 +493,17 @@ def parse_args():
     
     Example:
     base:
-        varset: ['opics', 'kdrumm']
+        varset: ['opics', 'personal']
     eval-groups:
         - metadata: ['level1', 'level2']
           parent-dir: 'mako-test/parent'
         - metadata: ['level2', 'oracle']
           dirs: ['mako-test/dirs/dir1', 'mako-test/dirs/dir2']
           
-    This example will use the 'opics.yaml' and 'kdrumm.yaml' files in the 'variables' directory to fill the templates.
-    It will level1 and level2 test using
+    This example will use the 'opics.yaml' and 'personal.yaml' files in the 'variables' directory to fill the templates.
+    It expects to have a directory 'mako-test/parent/' which has one or more subdirectories filled with scenes.  It also
+    expects the following directories with scene files: 'mako-test/dirs/dir1', 'mako-test/dirs/dir2'.
     """
-
 
 if __name__ == "__main__":
     args = parse_args()
