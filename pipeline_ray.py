@@ -685,6 +685,11 @@ def parse_args():
         help="Whether or not one is running on a local machine "
         + "or on a remote cluster",
     )
+    parser.add_argument(
+        "--output_dir",
+        default=None,
+        help="Directory where output and status files should be written",
+    )
     parser.add_argument("--dev_validation", default=False,
                         action="store_true", help="Whether to validate against development")
 

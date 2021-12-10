@@ -182,7 +182,8 @@ class RayJobRunner():
 
 def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=False,
              dev_validation=False, resume=False, override_params={},
-             log_file=None, cluster="", output_logs=False, dry_run=False, base_dir="mako") -> pathlib.Path:
+             log_file=None, cluster="", output_logs=False, dry_run=False, base_dir="mako",
+             group_working_dir=RAY_WORKING_DIR) -> pathlib.Path:
     """Runs an eval and returns the ray config file as a pathlib.Path object."""
     # Get Variables
     varset_directory = f'{base_dir}/variables/'
@@ -200,8 +201,8 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
     team = vars['team']
     suffix = f"-{cluster}" if cluster else ""
     working_name = f"{now}-{team}{suffix}"
-    RAY_WORKING_DIR.mkdir(exist_ok=True, parents=True)
-    working = (RAY_WORKING_DIR / working_name)
+    group_working_dir.mkdir(exist_ok=True, parents=True)
+    working = (group_working_dir / working_name)
     working.mkdir()
     scene_list_file = working/SCENE_LIST_FILENAME
 
@@ -262,6 +263,7 @@ def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=Fals
         submit_params = "--disable_validation" if disable_validation else ""
         submit_params += " --resume" if resume else ""
         submit_params += " --dev" if dev_validation else ""
+        submit_params += " --output_dir" if group_working_dir else ""
 
         remote_cfg_path = f"configs/{mcs_cfg_file.name}"
         ray.submit("pipeline_ray.py", ray_locations_config,
@@ -303,6 +305,8 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
     for eval in eval_set:
         q.put(eval)
 
+    group_working_dir = RAY_WORKING_DIR / get_now_str()
+
     all_status = set_status_for_set(eval_set)
 
     def run_eval_from_queue(num, dev=False):
@@ -325,7 +329,7 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
                                         override_params=eval.override, log_file=log_file,
                                         cluster=num, disable_validation=disable_validation,
                                         dev_validation=dev, output_logs=output_logs, dry_run=dry_run,
-                                        base_dir=base_dir)
+                                        base_dir=base_dir, group_working_dir=group_working_dir)
             all_status.finished_groups += 1
             all_status.finished_scenes += eval.stats.total_scenes
             execute_shell("echo Finishing `date`", log_file)
@@ -504,6 +508,7 @@ def parse_args():
     It expects to have a directory 'mako-test/parent/' which has one or more subdirectories filled with scenes.  It also
     expects the following directories with scene files: 'mako-test/dirs/dir1', 'mako-test/dirs/dir2'.
     """
+
 
 if __name__ == "__main__":
     args = parse_args()
