@@ -50,11 +50,11 @@ and UI related functionality will work correctly (these can be turned off for te
 - **evaluation_name** - has to be one of the following, in the exact format: `eval_3-75`, `eval_4`, `eval_5`, `eval_6`, `eval_7`, `eval_8`
 - **evaluation** - must be set to `true`
 - **history_enabled** - must be set to `true`
-- **team** - has to be either `mess1`, `mess2`, `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
-- **submission_id** - currently, only needed for MESS submissions. Needs to match the team label (either `1` or `2`)
+- **team** - has to be either `mess` (for multiple submissions, `mess1` or `mess2`), `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
+- **submission_id** - currently, only needed for MESS submissions (if multiple given). Needs to match the team label (either `1` or `2`)
 - **s3_bucket** - should be `evaluation-images`
-- **s3_folder** - json output - has to be the folder we store output for the current eval (right now, `eval-3.75`, but should be updated to `eval-resources-4` for eval 4)
-- **s3_movies_folder**: required post-3.75 (value should be updated to `raw-eval-4` for eval 4) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well 
+- **s3_folder** - json output - has to be the folder we store output for the current eval (right now, set to `eval-resources-4` for eval 4)
+- **s3_movies_folder**: required post-3.75 (value should be `raw-eval-4` for eval 4) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well 
 - **video_enabled** - must be set to `true`
 
 If anything above changes, we will need to make sure those changes are incorporated into the ingest process/UI as needed. 
@@ -87,11 +87,27 @@ There is an optional flag to disable config file validation checks if you are ju
 aws_scripts/run_eval MODULE path/to/scene/directory --metadata [metadata_level] --disable_validation
 ```
 
+To include timestamps on the output, you can use the linux ts command.  ts may need to be installed via `sudo apt install moreutils`. Append one of the following to your script:
+
+Timestamps:
+
+```
+2>&1 | ts 
+```
+
+Time since start:
+
+```
+2>&1 | ts -s
+```
+
 To capture the output in a log file, add the following after the command.  Tee will allow the output to be sent both to stdout as well as the file.  
 
 ```
-|& tee <log_filename>
+2>&1 | tee <log_filename>
 ```
+
+Piping logs to these programs can sometimes lose data and/or color.  To avoid this, use the 'unbuffer' command.
 
 You can also use linux pipes to only push to a file.
 
@@ -99,13 +115,16 @@ Here are examples:
 ```
 ./aws_scripts/run_eval.sh baseline scenes/subset/
 
-
-./aws_scripts/run_eval.sh baseline scenes/subset/ |& tee out.txt
+time unbuffer ./aws_scripts/run_eval.sh opics folder --metadata level2  2>&1 | ts -s 2>&1 | tee test.out
 ```
 
 Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster. 
 When you run "run_eval.sh" it will run all scenes in the directory. Make
 a folder somewhere and add the scenes you want to test there.
+
+#### Log Parsing
+
+If run_eval.sh is run with 'ts -s', the output logs can be parsed by the pipeline/log_parser.py.  This command will split the logs into logs per working node and then use some regex to report some metrics on how long different portions of a run took.  At the moment, the script output is somewhat rough and it only has good support for tracking opics logging.
 
 #### Script Overview
 
@@ -303,7 +322,9 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
     * Make a file with the correct list of tasks and set the TASK_FILE_PATH to point to it
     * Run the tasks
 
-## Generating Videos
+## Generating RGB Videos
+
+This pipline runs the `run_last_action.py` script (from the `machine_common_sense/scripts/` folder in the MCS repository) to generate videos from the RGB output frames using FFMPEG (with the correct video codecs so the videos are usable on Macs and in web browsers) and upload them to a specific S3 bucket.
 
 1. Update the `s3_bucket`, `s3_folder`, `evaluation_name`, and/or `team_name` in [configs/mcs_config_videos_level1.ini](configs/mcs_config_videos_level1.ini), as needed.
 2. Update the `cluster_name` in [autoscaler/ray_videos_aws.yaml](autoscaler/ray_videos_aws.yaml), if needed.
@@ -312,6 +333,19 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
 
 ```bash
 ./aws_scripts/run_eval.sh videos <json_data_folder> --metadata level1 --disable_validation
+```
+
+## Generating Topdown Videos
+
+This pipline runs the `run_last_action.py` script (from the `machine_common_sense/scripts/` folder in the MCS repository) to generate topdown videos using the plotter inside the machine_common_sense python library and upload them to a specific S3 bucket.
+
+1. Update the `s3_bucket`, `s3_folder`, `evaluation_name`, and/or `team_name` in [configs/mcs_config_topdown_level1.ini](configs/mcs_config_topdown_level1.ini), as needed.
+2. Update the `cluster_name` in [autoscaler/ray_topdown_aws.yaml](autoscaler/ray_topdown_aws.yaml), if needed.
+3. Run the command below.
+4. Terminate your AWS instances once finished.
+
+```bash
+./aws_scripts/run_eval.sh topdown <json_data_folder> --metadata level1 --disable_validation
 ```
 
 ## Linting

@@ -4,16 +4,16 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: cora-level2-papa
-max_workers: 100                      # 2 is the default
+cluster_name: cora
+max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
 # one, just need to put a different one first.
 provider:
   type: aws
-  region: us-east-1                             # us-west-2
-  availability_zone: us-east-1d,us-east-1b,us-east-1c,us-east-1a
-  cache_stopped_nodes: False          # Default True means stopped, false means terminate.
+  region: us-east-1
+  availability_zone: us-east-1a,us-east-1b,us-east-1c,us-east-1d,us-east-1e,us-east-1f
+  cache_stopped_nodes: True          # Default True means stopped, false means terminate.
 
 
 available_node_types:
@@ -23,14 +23,14 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0c44151bcb9366225
+      ImageId: ami-00da8aa4b07be3e9a
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0c44151bcb9366225
-      IamInstanceProfile:
+      ImageId: ami-00da8aa4b07be3e9a
+      IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
 auth:
@@ -48,9 +48,10 @@ file_mounts: {
 
 setup_commands:
   - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
+  - pip install --upgrade pip
   - pip install -U "ray[default]"==1.3.0
-  - rm -rf ~/.aws/
   - pip install aioredis==1.3.1
+  - rm -rf ~/.aws/
 
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:

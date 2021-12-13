@@ -82,7 +82,7 @@ def run_scene(
     :rtype (int, str)"""
 
     scene_name = scene_config.get("name", "")
-
+    success = False
     # replace slashes in filenames with dashes
     scene_name = scene_name.replace("/", "-")
 
@@ -98,6 +98,8 @@ def run_scene(
     # happens when testing often.
     log_file = log_dir.joinpath(f"{scene_name}-{scene_try}-{timestamp}.log")
     setup_logging(log_file)
+    logging.info(
+        f"Started scene:{scene_name} try:{scene_try} timestamp:{timestamp}")
 
     identifier = uuid.uuid4()
     run_script = run_script
@@ -141,7 +143,7 @@ def run_scene(
     metadata = mcs_config.get("MCS", "metadata")
     # video_enabled =
     # mcs_config.getboolean("MCS", "video_enabled", fallback=False)
-
+    success = True
     if evaluation:
         # find scene history file (should only be one file in directory)
         scene_hist_matches = glob.glob(
@@ -170,6 +172,7 @@ def run_scene(
             )
         else:
             logging.warning("History file not found for scene " + scene_name)
+            success = False
 
         # find and upload videos
         find_video_files = glob.glob(
@@ -207,6 +210,7 @@ def run_scene(
     logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if logs_to_s3:
         # This seems a little dirty, but its mostly copied from MCS project.
+
         log_s3_filename = (
             folder
             + "/"
@@ -219,10 +223,13 @@ def run_scene(
         # Might need to find way to flush logs and/or stop logging.
         push_to_s3(log_file, bucket, log_s3_filename)
 
+    logging.info(
+        f"Finished scene:{scene_name} try:{scene_try} timestamp:{timestamp}")
+
     logging.shutdown()
     log_file.unlink()
 
-    return result, output
+    return result, output, success
 
 
 def setup_logging(log_file):
@@ -314,9 +321,10 @@ class SceneRunner:
         "eval_7",
         "eval_8",
     ]
-    TEAM_NAMES = ["mess1", "mess2", "mit", "opics", "baseline", "cora"]
+    TEAM_NAMES = ["mess", "mess1", "mess2", "mit", "opics", "baseline", "cora"]
     #  more flexible for Eval 4+ and update folder structure
     CURRENT_EVAL_BUCKET = "evaluation-images"
+    CURRENT_DEV_EVAL_BUCKET = "dev-evaluation-images"
     CURRENT_EVAL_FOLDER = "eval-resources-4"
     CURRENT_MOVIE_FOLDER = "raw-eval-4"
 
@@ -327,6 +335,7 @@ class SceneRunner:
         self.exec_config = configparser.ConfigParser()
         self.exec_config.read(args.execution_config_file)
         self.disable_validation = args.disable_validation
+        self.dev_validation = args.dev_validation
         self.resume = args.resume
 
         # Get MCS configuration, which has information about how to
@@ -354,6 +363,7 @@ class SceneRunner:
 
     def read_mcs_config(self, mcs_config_filename: str):
         mcs_config = configparser.ConfigParser()
+        logging.debug(f'Reading MCS config file {mcs_config_filename}')
         with open(mcs_config_filename, "r") as mcs_config_file:
             mcs_config.read_file(mcs_config_file)
         return mcs_config
@@ -389,7 +399,8 @@ class SceneRunner:
             valid = False
 
         bucket = self.mcs_config.get("MCS", "s3_bucket")
-        if bucket != self.CURRENT_EVAL_BUCKET:
+        if ((bucket != self.CURRENT_EVAL_BUCKET and not self.dev_validation) or
+                (bucket != self.CURRENT_DEV_EVAL_BUCKET and self.dev_validation)):
             logging.error(
                 "Error: MCS Config file does not have "
                 + "the correct s3 bucket specified."
@@ -405,11 +416,10 @@ class SceneRunner:
             )
             valid = False
 
-
         s3_movies_folder = self.mcs_config.get('MCS', 's3_movies_folder')
         if s3_movies_folder != self.CURRENT_MOVIE_FOLDER:
             logging.error('Error: MCS Config file does not have ' +
-                  'the correct s3 movies folder specified.')
+                          'the correct s3 movies folder specified.')
 
             valid = False
 
@@ -505,6 +515,9 @@ class SceneRunner:
         run_script = self.exec_config["MCS"]["run_script"]
         eval_dir = self.exec_config["MCS"]["eval_dir"]
         for scene_ref in self.scene_files_list:
+            # skip directories
+            if os.path.isdir(str(scene_ref)):
+                continue
             with open(str(scene_ref)) as scene_file:
                 job_id = run_scene.remote(
                     run_script,
@@ -522,10 +535,10 @@ class SceneRunner:
         while self.not_done_jobs:
             done_jobs, self.not_done_jobs = ray.wait(self.not_done_jobs)
             for done_ref in done_jobs:
-                result, output = ray.get(done_ref)
+                result, output, success = ray.get(done_ref)
                 scene_status = self.scene_statuses.get(done_ref)
                 run_status = self.get_run_status(
-                    result, output, scene_status.scene_file
+                    result, output, success, scene_status.scene_file
                 )
                 scene_status.run_statuses.append(run_status)
 
@@ -621,7 +634,7 @@ class SceneRunner:
         logging.info(f"{prefix}Retryable: {run.retry}")
 
     def get_run_status(
-        self, result: int, output: str, scene_file_path: str
+        self, result: int, output: str, reported_success: bool, scene_file_path: str
     ) -> RunStatus:
         status = RunStatus(result, output, StatusEnum.SUCCESS, False)
         if result != 0:
@@ -631,6 +644,11 @@ class SceneRunner:
             logging.info(f"Timeout occured for file={scene_file_path}")
             status.retry |= True
             status.status = StatusEnum.ERROR_TIMEOUT
+        if not reported_success:
+            logging.info(
+                f"Pipeline reported failure for file ={scene_file_path}")
+            status.retry |= True
+            status.status = StatusEnum.ERROR
         # Add more conditions to retry here
         return status
 
@@ -685,6 +703,8 @@ def parse_args():
         help="Whether or not one is running on a local machine "
         + "or on a remote cluster",
     )
+    parser.add_argument("--dev_validation", default=False,
+                        action="store_true", help="Whether to validate against development")
 
     return parser.parse_args()
 

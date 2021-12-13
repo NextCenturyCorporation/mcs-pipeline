@@ -1,10 +1,9 @@
 #
-#   Configuration file for:
-#         Team:   Baseline
+#   Configuration file for generating passive scene topdown videos
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: baseline
+cluster_name: topdown
 max_workers: 8                       # 2 is the default
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
@@ -23,13 +22,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0828f7cadf39e9d1f
+      ImageId: ami-057d4f97fa2bc764f # ami 'dev_0_4_6' - we will want to update the MCS version/AMI later
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0828f7cadf39e9d1f
+      ImageId: ami-057d4f97fa2bc764f # ami 'dev_0_4_6' - we will want to update the MCS version/AMI later
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
@@ -40,14 +39,13 @@ head_node_type: ray.head.default
 
 # Copy script files to ALL nodes
 file_mounts: {
-  "/home/ubuntu/ray_script.sh": "deploy_files/baseline/ray_script.sh",
+  "/home/ubuntu/ray_script.sh": "deploy_files/topdown/ray_script.sh",
   "/home/ubuntu/check_passed_variables.sh": "deploy_files/check_passed_variables.sh",
-  "/home/ubuntu/start_x_server.sh": "deploy_files/start_x_server.sh",
-  "/home/ubuntu/asound.conf": "deploy_files/asound.conf"
+  "/home/ubuntu/start_x_server.sh": "deploy_files/start_x_server.sh"
 }
 
 setup_commands:
-  - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
+  - chmod +x /home/ubuntu/ray_script.sh /home/ubuntu/check_passed_variables.sh /home/ubuntu/start_x_server.sh
   - pip install --upgrade pip
   - pip install -U "ray[default]"==1.3.0
   - pip install aioredis==1.3.1
