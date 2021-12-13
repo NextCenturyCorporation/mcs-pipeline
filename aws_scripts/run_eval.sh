@@ -24,7 +24,6 @@
 #  disable_validation: Disables the validation on the MCS configuration.  Useful when
 #    testing or running against the development infrastructure.
 {
-set -x
 if [ -z $1 ] || [ -z $2 ]; then
     echo "Need baseline/cora/mess/opics as first parameter, scene dir as second"
     exit 1
@@ -44,7 +43,6 @@ RAY_LOCATIONS_CONFIG=configs/${MODULE}_aws.ini
 
 TMP_DIR=/tmp/tmp_pipeline_ray_$(date +%s)
 mkdir -p $TMP_DIR
-# rm -rf $TMP_DIR/*
 
 cp -R deploy_files/${MODULE}/* $TMP_DIR/
 
