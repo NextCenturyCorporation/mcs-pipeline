@@ -8,12 +8,14 @@ import subprocess
 import sys
 from typing import List
 
+import json
 import pathlib
 import yaml
 import os
 import threading
 import queue
 import time
+import traceback
 
 # TODO:
 # update after CORA eval4 is merged
@@ -30,51 +32,74 @@ SCENE_LIST_FILENAME = "scenes_single_scene.txt"
 DATE_FORMAT = '%Y%m%d-%H%M%S'
 
 
-@dataclass
-class EvalGroupsStatus():
-    total_groups: int
-    total_scenes: int
-    finished_groups: int = 0
-    finished_scenes: int = 0
-
-    def __post_init__(self):
-        self._start = datetime.now()
-
-    def get_progress_string(self):
-        fg = self.finished_groups
-        fs = self.finished_scenes
-        tg = self.total_groups
-        ts = self.total_scenes
-        gp = '{:.1%}'.format(fg/tg)
-        sp = '{:.1%}'.format(fs/ts)
-        return f"Groups: {fg}/{tg} ({gp}%) - scenes: {fs}/{ts} ({sp}%)"
-
-    def get_timing_string(self):
-        elapsed = datetime.now() - self._start
-        scenes_left = self.total_scenes - self.finished_scenes
-        if self.finished_scenes == 0:
-            sec_per_scene = "unknown"
-            time_left = "unknown"
-        else:
-            sec_per_scene = elapsed / self.finished_scenes
-            time_left = scenes_left * sec_per_scene
-        return f"Elapsed: {elapsed} seconds per scene: {sec_per_scene} time left: {time_left}"
-
-
-@dataclass
+@ dataclass
 class EvalRunStatus():
     total_scenes: int
     success_scenes: int = 0
     failed_scenes: int = 0
 
 
-@dataclass
+@ dataclass
 class EvalParams:
     varset: List[str]
     scene_dir: str
     metadata: str = "level2"
     override: dict = field(default_factory=dict)
-    stats: EvalRunStatus = None
+    status: EvalRunStatus = None
+
+    def get_key(self):
+        varset_str = "-".join(self.varset)
+        return f"{self.scene_dir}-{varset_str}-{self.metadata}"
+
+
+@dataclass
+class EvalGroupsStatus():
+    total_groups: int
+    finished_groups: int = 0
+    run_statuses = {}
+
+    def __post_init__(self):
+        self._start = datetime.now()
+
+    def update_run_status(self, key: str, run_status: EvalRunStatus):
+        self.run_statuses[key] = run_status
+
+    def get_progress_string(self):
+        success = 0
+        failed = 0
+        total = 0
+        for key in self.run_statuses:
+            s = self.run_statuses[key]
+            success += s.success_scenes
+            failed += s.failed_scenes
+            total += s.total_scenes
+
+        fg = self.finished_groups
+        fs = success + failed
+        tg = self.total_groups
+        ts = total
+        gp = '{:.1%}'.format(fg/tg)
+        sp = '{:.1%}'.format(fs/ts)
+        return f"Groups: {fg}/{tg} ({gp}%) - scenes: {fs}/{ts} ({sp}%)"
+
+    def get_timing_string(self):
+        finished = 0
+        total = 0
+        for key in self.run_statuses:
+            s = self.run_statuses[key]
+            finished += s.success_scenes
+            finished += s.failed_scenes
+            total += s.total_scenes
+        finished
+        elapsed = datetime.now() - self._start
+        scenes_left = total - finished
+        if finished == 0:
+            sec_per_scene = "unknown"
+            time_left = "unknown"
+        else:
+            sec_per_scene = elapsed / finished
+            time_left = scenes_left * sec_per_scene
+        return f"Elapsed: {elapsed} seconds per scene: {sec_per_scene} time left: {time_left}"
 
 
 class LogTailer():
@@ -84,10 +109,27 @@ class LogTailer():
     _file = None
     _terminate = False
     _thread = None
+    _triggers = []
 
-    def __init__(self, file, log_prefix=""):
+    def __init__(self, file, log_prefix="", print_logs=False):
+        self._triggers = []
         self._file = file
         self._log_prefix = log_prefix
+        self._print_logs = print_logs
+
+    def add_trigger(self, trigger_str, callback):
+        self._triggers.append((trigger_str, callback))
+
+    def _check_triggers(self, line):
+        if not isinstance(line, str):
+            return
+        for trigger in self._triggers:
+            try:
+                if trigger[0] in line:
+                    trigger[1](line)
+            except:
+                print(f"Failed to run trigger: {trigger}")
+                traceback.print_exc()
 
     def stop(self):
         """Will stop the tailing and end the thread if non-blocking"""
@@ -107,7 +149,9 @@ class LogTailer():
         """Tails a file by blocking the calling thread."""
         for line in self._get_tail_lines(self._file):
             # sys.stdout.write works better with new lines
-            sys.stdout.write(f"{self._log_prefix}{line}")
+            self._check_triggers(line)
+            if self._print_logs:
+                sys.stdout.write(f"{self._log_prefix}{line}")
 
     def _get_tail_lines(self, file):
         with open(file, 'r') as f:
@@ -180,99 +224,158 @@ class RayJobRunner():
             self._log_file)
 
 
-def run_eval(varset, local_scene_dir, metadata="level2", disable_validation=False,
-             dev_validation=False, resume=False, override_params={},
-             log_file=None, cluster="", output_logs=False, dry_run=False, base_dir="mako",
-             group_working_dir=RAY_WORKING_DIR) -> pathlib.Path:
-    """Runs an eval and returns the ray config file as a pathlib.Path object."""
-    # Get Variables
-    varset_directory = f'{base_dir}/variables/'
-    vars = add_variable_sets(varset, varset_directory=varset_directory)
-    vars = {**vars, **override_params}
-    vars['metadata'] = metadata
+class EvalRun():
+    dry_run = False
+    ray_cfg_file = None
+    mcs_cfg_file = None
+    submit_params = ""
+    remote_scene_location = None
+    remote_scene_list = None
+    scene_list_file = None
+    ray_locations_config = None
+    team = None
+    metadata = "level2"
+    local_scene_dir = None
+    set_status_holder = None
 
-    # Setup Tail
-    if log_file and output_logs:
-        lt = LogTailer(log_file, f"c{cluster}: ")
-        lt.tail_non_blocking()
+    def __init__(self, eval, disable_validation=False,
+                 dev_validation=False, resume=False,
+                 log_file=None, cluster="", output_logs=False, dry_run=False, base_dir="mako",
+                 group_working_dir=RAY_WORKING_DIR) -> pathlib.Path:
+        self.eval = eval
+        self.status = self.eval.status
+        override_params = eval.override
+        self.dry_run = dry_run
+        self.metadata = eval.metadata
+        self.log_file = log_file
+        self.local_scene_dir = eval.scene_dir
+        varset = eval.varset
+        self.key = eval.get_key()
 
-    # Setup working directory
-    now = get_now_str()
-    team = vars['team']
-    suffix = f"-{cluster}" if cluster else ""
-    working_name = f"{now}-{team}{suffix}"
-    group_working_dir.mkdir(exist_ok=True, parents=True)
-    working = (group_working_dir / working_name)
-    working.mkdir()
-    scene_list_file = working/SCENE_LIST_FILENAME
+        # Get Variables
+        varset_directory = f'{base_dir}/variables/'
+        vars = add_variable_sets(varset, varset_directory=varset_directory)
+        vars = {**vars, **override_params}
+        vars['metadata'] = self.metadata
 
-    ray_locations_config = f"configs/{team}_aws.ini"
+        # Setup Tail
+        if log_file:
+            self.log_trailer = LogTailer(
+                log_file, f"c{cluster}: ", print_logs=output_logs)
+            self.log_trailer.add_trigger("JSONSTATUS:", self.parse_status)
+            self.log_trailer.tail_non_blocking()
 
-    # Generate Ray Config
-    ray_cfg_template = Template(
-        filename=f'{base_dir}/templates/ray_template_aws.yaml')
+        # Setup working directory
+        now = get_now_str()
+        team = vars['team']
+        self.team = team
 
-    ray_cfg = ray_cfg_template.render(**vars)
-    ray_cfg_file = working / f"ray_{team}_aws.yaml"
-    ray_cfg_file.write_text(ray_cfg)
+        suffix = f"-{cluster}" if cluster else ""
+        working_name = f"{now}-{team}{suffix}"
+        group_working_dir.mkdir(exist_ok=True, parents=True)
+        working = (group_working_dir / working_name)
+        working.mkdir()
+        self.scene_list_file = working/SCENE_LIST_FILENAME
+        self.working_dir = working
 
-    # Generate MCS config
-    mcs_cfg_template = Template(
-        filename=f'{base_dir}/templates/mcs_config_template.ini')
-    mcs_cfg = mcs_cfg_template.render(**vars)
-    mcs_cfg_file = working / f"mcs_config_{team}_{metadata}.ini"
-    mcs_cfg_file.write_text(mcs_cfg)
+        self.ray_locations_config = f"configs/{team}_aws.ini"
 
-    # Find and read Ray locations config file
-    # source aws_scripts/load_ini.sh $RAY_LOCATIONS_CONFIG
-    parser = ConfigParser()
-    parser.read(ray_locations_config)
-    remote_scene_location = parser.get("MCS", "scene_location")
-    remote_scene_list = parser.get("MCS", "scene_list")
+        # Generate Ray Config
+        ray_cfg_template = Template(
+            filename=f'{base_dir}/templates/ray_template_aws.yaml')
 
-    # Create list of scene files
-    files = os.listdir(local_scene_dir)
-    with open(scene_list_file, 'w') as scene_list_writer:
-        for file in files:
-            if os.path.isfile(os.path.join(local_scene_dir, file)):
-                scene_list_writer.write(file)
-                scene_list_writer.write('\n')
-        scene_list_writer.close()
+        ray_cfg = ray_cfg_template.render(**vars)
+        ray_cfg_file = working / f"ray_{team}_aws.yaml"
+        ray_cfg_file.write_text(ray_cfg)
+        self.ray_cfg_file = ray_cfg_file
 
-    if dry_run:
-        # currently we need to sleep just so the timestamp isn't the same
-        execute_shell("sleep 2", log_file=log_file)
-    else:
+        # Generate MCS config
+        mcs_cfg_template = Template(
+            filename=f'{base_dir}/templates/mcs_config_template.ini')
+        mcs_cfg = mcs_cfg_template.render(**vars)
+        mcs_cfg_file = working / f"mcs_config_{team}_{self.metadata}.ini"
+        mcs_cfg_file.write_text(mcs_cfg)
+        self.mcs_cfg_file = mcs_cfg_file
 
-        # Start Ray and run ray commands
-        ray = RayJobRunner(ray_cfg_file, log_file=log_file)
-        # Create config file
-        # metadata level
-        ray.up()
+        # Find and read Ray locations config file
+        # source aws_scripts/load_ini.sh $RAY_LOCATIONS_CONFIG
+        parser = ConfigParser()
+        parser.read(self.ray_locations_config)
+        self.remote_scene_location = parser.get("MCS", "scene_location")
+        self.remote_scene_list = parser.get("MCS", "scene_list")
 
-        ray.rsync_up("pipeline", '~')
-        ray.rsync_up(f"deploy_files/{team}/", '~')
-        ray.rsync_up("configs/", '~/configs/')
-        ray.rsync_up(mcs_cfg_file.as_posix(), '~/configs/')
+        # Create list of scene files
+        files = os.listdir(self.local_scene_dir)
+        with open(self.scene_list_file, 'w') as scene_list_writer:
+            for file in files:
+                if os.path.isfile(os.path.join(self.local_scene_dir, file)):
+                    scene_list_writer.write(file)
+                    scene_list_writer.write('\n')
+            scene_list_writer.close()
 
-        ray.exec(f"mkdir -p {remote_scene_location}")
+        self.submit_params = "--disable_validation" if disable_validation else ""
+        self.submit_params += " --resume" if resume else ""
+        self.submit_params += " --dev" if dev_validation else ""
+        # submit_params += " --output_dir" if group_working_dir else ""
 
-        ray.rsync_up(f"{local_scene_dir}/", remote_scene_location)
-        ray.rsync_up(scene_list_file.as_posix(), remote_scene_list)
+    def parse_status(self, line):
+        json_str = line.split("JSONSTATUS:")[-1]
+        status = json.loads(json_str)
+        succ = status['Succeeded']
+        fail = status['Failed']
+        total = status['Total']
 
-        submit_params = "--disable_validation" if disable_validation else ""
-        submit_params += " --resume" if resume else ""
-        submit_params += " --dev" if dev_validation else ""
-        submit_params += " --output_dir" if group_working_dir else ""
+        self.status.total_scenes = total
+        self.status.success_scenes = succ
+        self.status.failed_scenes = fail
 
-        remote_cfg_path = f"configs/{mcs_cfg_file.name}"
-        ray.submit("pipeline_ray.py", ray_locations_config,
-                   remote_cfg_path, submit_params)
+        complete_percent = '{:.1%}'.format((succ + fail)/total)
+        sp = '{:.1%}'.format(succ/total)
+        fp = '{:.1%}'.format(fail/total)
+        print(
+            f"Group Status - {self.local_scene_dir}-{self.metadata}:"
+            f"\n  Finished {succ + fail}/{total} ({complete_percent}) "
+            f"\n  Success: {succ}/{total} ({sp}) Failed: {fail}/{total} ({fp})")
+        (self.working_dir / "status.txt").write_text(json_str)
+        if self.status_holder:
+            self.status_holder.update_run_status(self.key, self.status)
 
-    if log_file and output_logs:
-        lt.stop()
+    def set_status_holder(self, holder):
+        self.status_holder = holder
 
-    return ray_cfg_file
+    def run_eval(self):
+        """Runs an eval"""
+        log_file = self.log_file
+        # should probably only run once?
+        if self.dry_run:
+            # currently we need to sleep just so the timestamp isn't the same
+            execute_shell("sleep 2", log_file=log_file)
+        else:
+
+            # Start Ray and run ray commands
+            ray = RayJobRunner(self.ray_cfg_file, log_file=log_file)
+            # Create config file
+            # metadata level
+            ray.up()
+
+            ray.rsync_up("pipeline", '~')
+            ray.rsync_up(f"deploy_files/{self.team}/", '~')
+            ray.rsync_up("configs/", '~/configs/')
+            ray.rsync_up(self.mcs_cfg_file.as_posix(), '~/configs/')
+
+            ray.exec(f"mkdir -p {self.remote_scene_location}")
+
+            ray.rsync_up(f"{self.local_scene_dir}/",
+                         self.remote_scene_location)
+            ray.rsync_up(self.scene_list_file.as_posix(),
+                         self.remote_scene_list)
+
+            remote_cfg_path = f"configs/{self.mcs_cfg_file.name}"
+            ray.submit("pipeline_ray.py", self.ray_locations_config,
+                       remote_cfg_path, self.submit_params)
+
+        if self.log_trailer:
+            self.log_trailer.stop()
 
 
 def create_eval_set_from_folder(varset: List[str], base_dir: str, metadata: str = "level2", override: dict = {}):
@@ -290,13 +393,24 @@ def create_eval_set_from_folder(varset: List[str], base_dir: str, metadata: str 
 
 def set_status_for_set(eval_set):
     num_scenes = 0
+    group_status = EvalGroupsStatus(len(eval_set))
     for eval_run in eval_set:
         dir = eval_run.scene_dir
         run_scenes = len([name for name in os.listdir(dir)
                           if name.endswith('.json') and os.path.isfile(os.path.join(dir, name))])
         num_scenes += run_scenes
-        eval_run.stats = EvalRunStatus(run_scenes)
-    return EvalGroupsStatus(len(eval_set), num_scenes)
+        eval_run.status = EvalRunStatus(run_scenes)
+        key = eval_run.get_key()
+        group_status.update_run_status(key, eval_run.status)
+    return group_status
+
+
+def print_status_periodically(status, periodic_seconds):
+    while(True):
+        time.sleep(periodic_seconds)
+        print("Status:")
+        print(f"  {status.get_progress_string()}")
+        print(f"  {status.get_timing_string()}")
 
 
 def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
@@ -308,6 +422,10 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
     group_working_dir = RAY_WORKING_DIR / get_now_str()
 
     all_status = set_status_for_set(eval_set)
+
+    t = threading.Thread(target=print_status_periodically,
+                         args=(all_status, 5), daemon=True)
+    t.start()
 
     def run_eval_from_queue(num, dev=False):
         log_dir_path = "logs-test"
@@ -325,13 +443,16 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
                 log_file = log_dir / pathlib.Path(log_file_name)
                 log_file.unlink(missing_ok=True)
             execute_shell("echo Starting `date`", log_file)
-            last_config_file = run_eval(eval.varset, eval.scene_dir, eval.metadata,
-                                        override_params=eval.override, log_file=log_file,
-                                        cluster=num, disable_validation=disable_validation,
-                                        dev_validation=dev, output_logs=output_logs, dry_run=dry_run,
-                                        base_dir=base_dir, group_working_dir=group_working_dir)
+            eval_run = EvalRun(eval, log_file=log_file,
+                               cluster=num, disable_validation=disable_validation,
+                               dev_validation=dev, output_logs=output_logs, dry_run=dry_run,
+                               base_dir=base_dir, group_working_dir=group_working_dir)
+            eval_run.set_status_holder(all_status)
+
+            eval_run.run_eval()
+            last_config_file = eval_run.ray_cfg_file
             all_status.finished_groups += 1
-            all_status.finished_scenes += eval.stats.total_scenes
+            # all_status.finished_scenes += eval.status.total_scenes
             execute_shell("echo Finishing `date`", log_file)
             print(
                 f"Finished eval from {eval.scene_dir} at {eval.metadata} in cluster {num}")
@@ -518,7 +639,8 @@ if __name__ == "__main__":
         now = get_now_str()
         vars = "-".join(args.varset)
         log_file = f"logs/{now}-{vars}-{args.metadata}.log"
-        run_eval(args.varset, args.local_scene_dir,
-                 metadata=args.metadata, disable_validation=args.disable_validation,
-                 dev_validation=args.dev_validation,
-                 resume=args.resume, log_file=log_file, output_logs=args.redirect_logs)
+        eval_run = EvalRun(args.varset, args.local_scene_dir,
+                           metadata=args.metadata, disable_validation=args.disable_validation,
+                           dev_validation=args.dev_validation,
+                           resume=args.resume, log_file=log_file, output_logs=args.redirect_logs)
+        eval_run.run_eval()
