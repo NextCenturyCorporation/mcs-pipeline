@@ -15,7 +15,7 @@ provider:
   type: aws
   region: ${region}
   availability_zone: us-east-1a,us-east-1b,us-east-1c,us-east-1d,us-east-1e,us-east-1f
-  cache_stopped_nodes: True          # Default True means stopped, false means terminate.
+  cache_stopped_nodes: ${cache_stopped_nodes}          # Default True means stopped, false means terminate.
 
 
 available_node_types:

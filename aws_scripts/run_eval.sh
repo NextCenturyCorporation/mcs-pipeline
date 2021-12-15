@@ -24,14 +24,25 @@
 #  disable_validation: Disables the validation on the MCS configuration.  Useful when
 #    testing or running against the development infrastructure.
 {
+if [ -z $1 ] || [ -z $2 ]; then
+    echo "Need baseline/cora/mess/opics as first parameter, scene dir as second"
+    exit 1
+fi
+
 MODULE=$1
-TMP_DIR=.tmp_pipeline_ray
+LOCAL_SCENE_DIR=$2
+
+if [ ! -d "$LOCAL_SCENE_DIR" ]; then
+    echo "The directory LOCAL_SCENE_DIR does not exist"
+    exit 1
+fi
+
 
 # We probably don't need a new 'locations' file for each team in evals
 RAY_LOCATIONS_CONFIG=configs/${MODULE}_aws.ini
 
+TMP_DIR=/tmp/tmp_pipeline_ray_$(date +%s)
 mkdir -p $TMP_DIR
-rm -rf $TMP_DIR/*
 
 cp -R deploy_files/${MODULE}/* $TMP_DIR/
 
@@ -43,7 +54,7 @@ RAY_CONFIG="autoscaler/ray_${MODULE}_aws.yaml"
 # Handle inputs:
 
 DEFAULT_METADATA="level2"
-LOCAL_SCENE_DIR=$2
+
 # Removing ending slash of scene dir so we have consistency
 LOCAL_SCENE_DIR=$(echo $LOCAL_SCENE_DIR | sed 's:/*$::')
 METADATA=${METADATA:-$DEFAULT_METADATA}

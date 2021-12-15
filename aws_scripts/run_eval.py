@@ -17,10 +17,7 @@ import queue
 import time
 import traceback
 
-# TODO:
-# update after CORA eval4 is merged
-# if a head node fails, system assumes it just completes successfully.  (probably fix in more granular status ticket)
-
+# TODO MCS 1049 if a head node fails, system assumes it just completes successfully.
 
 from configparser import ConfigParser
 
@@ -506,8 +503,7 @@ def create_eval_set_from_file(cfg_file: str):
             dirs = get_array(group, my_base, 'dirs')
             for dir in dirs:
                 log_dir = dir.split("/")[-1]
-                my_override = {}
-                my_override["log_name"] = f"{log_dir}-{metadata}.log"
+                my_override = {'log_name': f"{log_dir}-{metadata}.log"}
                 evals.append(EvalParams(
                     varset, dir, metadata, override=my_override))
             for parent in parents:
@@ -584,51 +580,6 @@ def parse_args():
         help="Sets list of variable set files that should be read.  Only used with the '--local_scene_dir' option.",
     )
     return parser.parse_args()
-
-    """
-    Config File API (yaml):
-    The job of this script is to create a list of 'eval-group' parameters which is a set of parameters
-    to run a single ray job for an eval.  The parameters for an eval group are below, but in general it is
-    used to generate set of files, at a certain metadata level, with some other run parameters.
-    To do this, we use a config file to generate these eval groups, where most values are lists where each entry
-    is a single option.  The script will create eval-groups using each combination of options to create many 
-    permutation of these values.
-    
-    The config file has two high level objects:
-    base - an 'eval-group' object that contains default values for any listed 'eval-groups'.  
-    eval-groups - contains a list of 'eval-group' objects.  Each grouping will create a number of sets as described below.
-    
-    An eval-group is a group of values used to create all permutations of eval sets.  
-    Eval sets are parameters and scenes to run a single task in ray for an eval.
-    
-    values for an eval-group:
-      varset - list of variable files that are used for template generation.  Earlier 
-        files are override by later values if they contain the same variable.  This is 
-        the only array where all values are used for each eval-set instead of each 
-        value creating more permutations.  Varset in the 'eval-groups' will override, not 
-        concatentate, those in the 'base' variable.
-      metadata - single or list of metadata levels.  Each metadata level will create more 
-        permutations of the eval-sets
-      parent-dir - Must be used mutually exclusively with 'dirs'.   This points to a directory
-        where each subdirectory should contain scenes and will be used to create permutations
-        of eval-sets
-      dirs - Must be used mutually exclusively with 'parent-dir'.  Single or list of directories 
-        which each should contain scenes to be used to create permutations of eval-sets.
-    
-    
-    Example:
-    base:
-        varset: ['opics', 'personal']
-    eval-groups:
-        - metadata: ['level1', 'level2']
-          parent-dir: 'mako-test/parent'
-        - metadata: ['level2', 'oracle']
-          dirs: ['mako-test/dirs/dir1', 'mako-test/dirs/dir2']
-          
-    This example will use the 'opics.yaml' and 'personal.yaml' files in the 'variables' directory to fill the templates.
-    It expects to have a directory 'mako-test/parent/' which has one or more subdirectories filled with scenes.  It also
-    expects the following directories with scene files: 'mako-test/dirs/dir1', 'mako-test/dirs/dir2'.
-    """
 
 
 if __name__ == "__main__":

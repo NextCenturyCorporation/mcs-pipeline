@@ -1,1 +1,4 @@
-ami: ami-0e97bd0e9542be37d
+ami: ami-00da8aa4b07be3e9a
+cluster: "cora"
+team: "cora"
+cache_stopped_nodes: True
