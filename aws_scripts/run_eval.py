@@ -15,10 +15,7 @@ import threading
 import queue
 import time
 
-# TODO:
-# update after CORA eval4 is merged
-# if a head node fails, system assumes it just completes successfully.  (probably fix in more granular status ticket)
-
+# TODO MCS 1049 if a head node fails, system assumes it just completes successfully.
 
 from configparser import ConfigParser
 
