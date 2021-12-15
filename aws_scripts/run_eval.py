@@ -382,8 +382,7 @@ def create_eval_set_from_file(cfg_file: str):
             dirs = get_array(group, my_base, 'dirs')
             for dir in dirs:
                 log_dir = dir.split("/")[-1]
-                my_override = {}
-                my_override["log_name"] = f"{log_dir}-{metadata}.log"
+                my_override = {'log_name': f"{log_dir}-{metadata}.log"}
                 evals.append(EvalParams(
                     varset, dir, metadata, override=my_override))
             for parent in parents:
