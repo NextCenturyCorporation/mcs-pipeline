@@ -34,6 +34,7 @@ class EvalRunStatus():
     total_scenes: int
     success_scenes: int = 0
     failed_scenes: int = 0
+    files: dict = field(default_factory=dict)
 
 
 @ dataclass
@@ -43,10 +44,53 @@ class EvalParams:
     metadata: str = "level2"
     override: dict = field(default_factory=dict)
     status: EvalRunStatus = None
+    file_names: List[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        try:
+            self.varset.remove('default')
+        except:
+            pass
 
     def get_key(self):
         varset_str = "-".join(self.varset)
         return f"{self.scene_dir}-{varset_str}-{self.metadata}"
+
+    def get_resume_eval_params(self):
+        ep = EvalParams(copy.deepcopy(self.varset), self.scene_dir,
+                        self.metadata, copy.deepcopy(self.override))
+        if self.status:
+            file_list = []
+            if self.file_names:
+                file_list = self.file_names
+            else:
+                # for _, _, files in os.walk(self.scene_dir ):
+                #    file_list.extend(files)
+                all = os.listdir(self.scene_dir)
+                for file in all:
+                    if os.path.isfile(self.scene_dir + "/" + file):
+                        file_list.append(file)
+            for filename in file_list:
+                if filename not in self.status.files or not self.status.files.get(filename, "") == "SUCCESS":
+                    ep.file_names.append(filename)
+            if not ep.file_names:
+                ep = None
+        return ep
+
+    def get_yaml_dict(self):
+        """Returns dictionary to write as yaml"""
+        d = {
+            # for some reason deep copy fixes a yaml issue
+            'varset': copy.deepcopy(self.varset),
+            'metadata': [self.metadata],
+            'dirs': [self.scene_dir],
+        }
+
+        if self.override:
+            d['override'] = self.override
+        if self.file_names:
+            d['files'] = self.file_names
+        return d
 
 
 @dataclass
@@ -108,11 +152,12 @@ class LogTailer():
     _thread = None
     _triggers = []
 
-    def __init__(self, file, log_prefix="", print_logs=False):
+    def __init__(self, file, log_prefix="", print_logs=False, id=""):
         self._triggers = []
         self._file = file
         self._log_prefix = log_prefix
         self._print_logs = print_logs
+        self._id = f"{id}-" if id else ""
 
     def add_trigger(self, trigger_str, callback):
         self._triggers.append((trigger_str, callback))
@@ -139,7 +184,7 @@ class LogTailer():
         if not self._thread:
             self._terminate = False
             self._thread = threading.Thread(
-                target=self.tail_blocking, daemon=True, name=f"tail-{self._file}-{self._log_prefix}")
+                target=self.tail_blocking, daemon=True, name=f"tail-{self._id}{self._file}")
             self._thread.start()
 
     def tail_blocking(self):
@@ -168,6 +213,7 @@ def get_now_str() -> str:
 
 
 def add_variable_sets(varsets, varset_directory):
+    varsets = copy.deepcopy(varsets)
     if DEFAULT_VARSET not in varsets:
         varsets.insert(0, DEFAULT_VARSET)
     vars = {}
@@ -258,7 +304,7 @@ class EvalRun():
         # Setup Tail
         if log_file:
             self.log_trailer = LogTailer(
-                log_file, f"c{cluster}: ", print_logs=output_logs)
+                log_file, f"c{cluster}: ", print_logs=output_logs, id=cluster)
             self.log_trailer.add_trigger("JSONSTATUS:", self.parse_status)
             self.log_trailer.tail_non_blocking()
 
@@ -322,6 +368,14 @@ class EvalRun():
         fail = status['Failed']
         total = status['Total']
 
+        files = {}
+
+        file_statuses = status['statuses']
+        for fs in file_statuses:
+            file = fs['scene_file']
+            files[file] = fs['status']
+
+        self.status.files = files
         self.status.total_scenes = total
         self.status.success_scenes = succ
         self.status.failed_scenes = fail
@@ -402,12 +456,26 @@ def set_status_for_set(eval_set):
     return group_status
 
 
-def print_status_periodically(status, periodic_seconds):
+def print_status_periodically(status: EvalGroupsStatus, periodic_seconds):
     while(True):
         time.sleep(periodic_seconds)
         print("Status:")
         print(f"  {status.get_progress_string()}")
         print(f"  {status.get_timing_string()}")
+
+
+def save_config_periodically(eval_set: List[EvalParams], periodic_seconds, working_dir):
+    while True:
+        time.sleep(periodic_seconds)
+        resumes = [eval.get_resume_eval_params()
+                   for eval in eval_set]
+        my_list = [eval.get_yaml_dict()
+                   for eval in resumes if eval]
+        resume_file = working_dir / "resume.yaml"
+        with open(resume_file, "w") as file:
+            d = {'eval-groups': my_list}
+            yaml.dump(my_list, file)
+        print(f'wrote resume file {resume_file.as_posix()}')
 
 
 def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
@@ -421,7 +489,11 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
     all_status = set_status_for_set(eval_set)
 
     t = threading.Thread(target=print_status_periodically,
-                         args=(all_status, 5), daemon=True)
+                         args=(all_status, 5), daemon=True, name="status-printer")
+    t.start()
+
+    t = threading.Thread(target=save_config_periodically,
+                         args=(eval_set, 5, group_working_dir), daemon=True, name="status-saver")
     t.start()
 
     def run_eval_from_queue(num, dev=False):
@@ -460,7 +532,8 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
 
     threads = []
     for i in range(num_clusters):
-        t = threading.Thread(target=run_eval_from_queue, args=((i+1), dev))
+        t = threading.Thread(target=run_eval_from_queue,
+                             args=((i+1), dev), name=f"runner-cluster-{i+1}")
         t.start()
         threads.append(t)
 
@@ -496,16 +569,22 @@ def create_eval_set_from_file(cfg_file: str):
 
     for group in eval_groups:
         my_base = copy.deepcopy(base)
-        varset = get_array(group, my_base, 'varset')
+        varset = copy.deepcopy(get_array(group, my_base, 'varset'))
         metadata_list = get_array(group, my_base, 'metadata')
+        override = get_array(group, my_base, 'override')
+        files = get_array(group, base, 'files')
         for metadata in metadata_list:
             parents = get_array(group, my_base, 'parent-dir')
             dirs = get_array(group, my_base, 'dirs')
             for dir in dirs:
                 log_dir = dir.split("/")[-1]
-                my_override = {'log_name': f"{log_dir}-{metadata}.log"}
-                evals.append(EvalParams(
-                    varset, dir, metadata, override=my_override))
+                my_override = copy.deepcopy(override) if override else {}
+                my_override['log_name'] = f"{log_dir}-{metadata}.log"
+                eval = EvalParams(
+                    varset, dir, metadata, override=my_override)
+                if files:
+                    eval.file_names = files
+                evals.append(eval)
             for parent in parents:
                 new_evals = create_eval_set_from_folder(
                     varset, parent, metadata)
