@@ -401,10 +401,9 @@ def run_from_config_file(args):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Run multiple eval sets containing scenes using ray.  There are two modes.  " +
-        "One uses the '--config_file' option.  The other uses the '--local_scene_dir' option.")
+        description="Run multiple eval sets containing scenes using ray.")
     parser.add_argument(
-        "--config_file", "-c",
+        "--config_file", "-c", required=True,
         help="Path to config file which contains details on how exactly to run a series of eval runs."
         + "for the eval files to run.",
     )
@@ -441,34 +440,11 @@ def parse_args():
         "--num_clusters", "-n",
         type=int,
         default=1,
-        help="How many simultanous clusters should be used.  Only used with the '--config_file' option.",
-    )
-    parser.add_argument(
-        "--local_scene_dir", "-s",
-        default=None,
-        help="Local scene directory to be used for a single run.  Cannot be used with the '--config_file' option.",
-    )
-    parser.add_argument(
-        "--metadata", "-m",
-        default='level2',
-        help="Sets the metadata level for a single run.  Only used with the '--local_scene_dir' option.",
-    )
-    parser.add_argument(
-        "--varset", "-v",
-        help="Sets list of variable set files that should be read.  Only used with the '--local_scene_dir' option.",
+        help="How many simultanous clusters should be used.",
     )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.config_file:
-        run_from_config_file(args)
-    elif args.local_scene_dir and args.varset:
-        now = get_now_str()
-        vars = "-".join(args.varset)
-        log_file = f"logs/{now}-{vars}-{args.metadata}.log"
-        run_eval(args.varset, args.local_scene_dir,
-                 metadata=args.metadata, disable_validation=args.disable_validation,
-                 dev_validation=args.dev_validation,
-                 resume=args.resume, log_file=log_file, output_logs=args.redirect_logs)
+    run_from_config_file(args)
