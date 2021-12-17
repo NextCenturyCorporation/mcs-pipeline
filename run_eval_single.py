@@ -42,7 +42,7 @@ def parse_args():
     return parser.parse_args()
 
 
-# TODO This actually hasn't been tested
+# TODO MCS-1066 Finish and test
 if __name__ == "__main__":
     args = parse_args()
     now = get_now_str()
