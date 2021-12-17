@@ -359,7 +359,6 @@ class EvalRun():
         self.submit_params = "--disable_validation" if disable_validation else ""
         self.submit_params += " --resume" if resume else ""
         self.submit_params += " --dev" if dev_validation else ""
-        # submit_params += " --output_dir" if group_working_dir else ""
 
     def parse_status(self, line):
         json_str = line.split("JSONSTATUS:")[-1]
@@ -422,7 +421,7 @@ class EvalRun():
                          self.remote_scene_list)
 
             remote_cfg_path = f"configs/{self.mcs_cfg_file.name}"
-            ray.submit("pipeline_ray.py", self.ray_locations_config,
+            ray.submit("ray_scripts/pipeline_ray.py", self.ray_locations_config,
                        remote_cfg_path, self.submit_params)
 
         if self.log_trailer:
