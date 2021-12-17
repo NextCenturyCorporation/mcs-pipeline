@@ -1,0 +1,18 @@
+ami: "ami-057d4f97fa2bc764f # ami 'dev_0_4_6' - we will want to update the MCS version/AMI later"
+cluster: "videos"
+workers: 8
+
+history_enabled: false
+video_enabled: false
+evaluation_bool: false
+
+save_debug_images: true
+
+s3_bucket: mcs-output-videos
+s3_folder: eval-4-test
+
+history_enabled: false
+team: "videos"
+eval_name: ""
+
+mcs_config_extra: "team= # override team in MCS_config"
