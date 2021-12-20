@@ -105,6 +105,9 @@ class EvalGroupsStatus():
     def update_run_status(self, key: str, run_status: EvalRunStatus):
         self.run_statuses[key] = run_status
 
+    def update_dry_run_status(self, key):
+        self.run_statuses[key].success_scenes = self.run_statuses[key].total_scenes
+
     def get_progress_string(self):
         success = 0
         failed = 0
@@ -351,7 +354,10 @@ class EvalRun():
         files = os.listdir(self.local_scene_dir)
         with open(self.scene_list_file, 'w') as scene_list_writer:
             for file in files:
-                if os.path.isfile(os.path.join(self.local_scene_dir, file)):
+                # does file exist and is it in the file list (if we have a list)
+                if os.path.isfile(os.path.join(self.local_scene_dir, file)) and (
+                    not eval.file_names or file in eval.file_names
+                ):
                     scene_list_writer.write(file)
                     scene_list_writer.write('\n')
             scene_list_writer.close()
@@ -400,6 +406,9 @@ class EvalRun():
         if self.dry_run:
             # currently we need to sleep just so the timestamp isn't the same
             execute_shell("sleep 2", log_file=log_file)
+            if self.status_holder:
+                self.status_holder.update_dry_run_status(self.key)
+
         else:
 
             # Start Ray and run ray commands
@@ -446,8 +455,17 @@ def set_status_for_set(eval_set):
     group_status = EvalGroupsStatus(len(eval_set))
     for eval_run in eval_set:
         dir = eval_run.scene_dir
-        run_scenes = len([name for name in os.listdir(dir)
-                          if name.endswith('.json') and os.path.isfile(os.path.join(dir, name))])
+        if eval_run.file_names:
+            run_scenes = 0
+            for file in eval_run.file_names:
+                if os.path.exists(os.path.join(dir, file)):
+                    run_scenes += 1
+                else:
+                    print(
+                        f"Failed to find file: {os.path.join(dir, file)}.  Skipping file.")
+        else:
+            run_scenes = len([name for name in os.listdir(dir)
+                              if name.endswith('.json') and os.path.isfile(os.path.join(dir, name))])
         num_scenes += run_scenes
         eval_run.status = EvalRunStatus(run_scenes)
         key = eval_run.get_key()
