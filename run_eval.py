@@ -71,7 +71,10 @@ class EvalParams:
                     if os.path.isfile(self.scene_dir + "/" + file):
                         file_list.append(file)
             for filename in file_list:
-                if filename not in self.status.files or not self.status.files.get(filename, "") == "SUCCESS":
+                if (
+                    filename not in self.status.files
+                    or self.status.files.get(filename, "") != "SUCCESS"
+                ):
                     ep.file_names.append(filename)
             if not ep.file_names:
                 ep = None
