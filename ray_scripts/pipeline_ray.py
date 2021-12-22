@@ -279,13 +279,13 @@ def setup_logging(log_file):
 
 # Classes to keep track of status of individual scenes and (possibly
 # multiple) runs of those scenes
-class StatusEnum(Enum):
-    UNKNOWN = auto()
-    PENDING = auto()
-    RETRYING = auto()
-    SUCCESS = auto()
-    ERROR = auto()
-    ERROR_TIMEOUT = auto()
+class StatusEnum(str, Enum):
+    UNKNOWN = 'UNKOWN'
+    PENDING = 'PENDING'
+    RETRYING = 'RETRYING'
+    SUCCESS = 'SUCCESS'
+    ERROR = 'ERROR'
+    ERROR_TIMEOUT = 'ERROR_TIMEOUT'
 
 
 @dataclass
@@ -537,6 +537,7 @@ class SceneRunner:
                 run_status = self.get_run_status(
                     result, output, success, scene_status.scene_file
                 )
+
                 scene_status.run_statuses.append(run_status)
 
                 logging.info(
@@ -556,6 +557,7 @@ class SceneRunner:
                     scene_status.status = run_status.status
                     self.on_scene_finished(scene_status)
                 self.print_status()
+                self.output_status()
 
     def print_status(self):
         """During the run, print out the number of completed jobs,
@@ -572,6 +574,29 @@ class SceneRunner:
 
         for key, value in frequency.items():
             logging.info(f"    {key.name} -> {value}")
+
+    def output_status(self):
+        json_status = {'Succeeded': 0, 'Failed': 0,
+                       'Total': len(self.scene_files_list)}
+        statuses = []
+        json_status['statuses'] = statuses
+
+        for value in self.scene_statuses.values():
+            temp = {
+                'status': value.status,
+                'scene_file': value.scene_file.name,
+                'retries': value.retries,
+            }
+            statuses.append(temp)
+            if value.status is StatusEnum.SUCCESS:
+                json_status['Succeeded'] += 1
+            elif value.status in [StatusEnum.ERROR, StatusEnum.ERROR_TIMEOUT]:
+                json_status['Failed'] += 1
+            # Ignoring PENDING, RETRYING, UNKNOWN
+
+        dump = json.dumps(json_status)
+        logging.info(
+            f"JSONSTATUS: {dump}")
 
     def retry_job(self, scene_status: SceneStatus):
         scene_ref = scene_status.scene_file
