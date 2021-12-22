@@ -17,8 +17,6 @@ import queue
 import time
 import traceback
 
-# TODO MCS 1049 if a head node fails, system assumes it just completes successfully.
-
 from configparser import ConfigParser
 
 from mako.template import Template
@@ -505,11 +503,11 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
     all_status = set_status_for_set(eval_set)
 
     t = threading.Thread(target=print_status_periodically,
-                         args=(all_status, 5), daemon=True, name="status-printer")
+                         args=(all_status, 20), daemon=True, name="status-printer")
     t.start()
 
     t = threading.Thread(target=save_config_periodically,
-                         args=(eval_set, 5, group_working_dir), daemon=True, name="status-saver")
+                         args=(eval_set, 5*60, group_working_dir), daemon=True, name="status-saver")
     t.start()
 
     def run_eval_from_queue(num, dev=False):
