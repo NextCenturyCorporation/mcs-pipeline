@@ -581,8 +581,7 @@ class SceneRunner:
         statuses = []
         json_status['statuses'] = statuses
 
-        for key in self.scene_statuses:
-            value = self.scene_statuses[key]
+        for value in self.scene_statuses.values():
             temp = {
                 'status': value.status,
                 'scene_file': value.scene_file.name,

@@ -82,18 +82,14 @@ class EvalParams:
 
     def get_yaml_dict(self):
         """Returns dictionary to write as yaml"""
-        d = {
-            # for some reason deep copy fixes a yaml issue
+        # for some reason deep copy fixes a yaml issue
+        return {
             'varset': copy.deepcopy(self.varset),
             'metadata': [self.metadata],
             'dirs': [self.scene_dir],
+            'override': self.override or {},
+            'files': self.file_names or []
         }
-
-        if self.override:
-            d['override'] = self.override
-        if self.file_names:
-            d['files'] = self.file_names
-        return d
 
 
 @dataclass
@@ -494,7 +490,7 @@ def save_config_periodically(eval_set: List[EvalParams], periodic_seconds, worki
         resume_file = working_dir / "resume.yaml"
         with open(resume_file, "w") as file:
             d = {'eval-groups': my_list}
-            yaml.dump(my_list, file)
+            yaml.dump(d, file)
         print(f'wrote resume file {resume_file.as_posix()}')
 
 
@@ -591,7 +587,7 @@ def create_eval_set_from_file(cfg_file: str):
         my_base = copy.deepcopy(base)
         varset = copy.deepcopy(get_array(group, my_base, 'varset'))
         metadata_list = get_array(group, my_base, 'metadata')
-        override = get_array(group, my_base, 'override')
+        override = group.get(field, my_base.get('override', {}))
         files = get_array(group, base, 'files')
         for metadata in metadata_list:
             parents = get_array(group, my_base, 'parent-dir')
