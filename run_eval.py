@@ -310,7 +310,7 @@ class EvalRun():
 
         # Setup working directory
         now = get_now_str()
-        team = vars['team']
+        team = vars.get('team', "none")
         self.team = team
 
         suffix = f"-{cluster}" if cluster else ""
