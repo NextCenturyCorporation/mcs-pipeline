@@ -1,0 +1,341 @@
+{
+  "name": "eval_4_validation_shape_constancy_0001_01",
+  "version": "2",
+  "ceilingMaterial": "AI2-THOR/Materials/Ceramics/ConcreteFloor",
+  "floorMaterial": "UnityAssetStore/Kindergarten_Interior/Models/Materials/color wood 1",
+  "wallMaterial": "AI2-THOR/Materials/Wood/WornWood",
+  "performerStart": {
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": -4.5
+    },
+    "rotation": {
+      "y": 0
+    }
+  },
+  "objects": [
+    {
+      "id": "1bc42890-a38a-4af8-99e0-220c5cade8cd",
+      "type": "cylinder",
+      "mass": 2.5,
+      "salientMaterials": ["plastic"],
+      "physics": true,
+      "shows": [
+        {
+          "position": {
+            "x": -0.2999999999999998,
+            "y": 5.45,
+            "z": 2.25
+          },
+          "rotation": {
+            "x": 90,
+            "y": 45,
+            "z": 0
+          },
+          "stepBegin": 83,
+          "scale": {
+            "x": 0.5,
+            "y": 0.25,
+            "z": 0.5
+          }
+        }
+      ],
+      "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color 3"]
+    },
+    {
+      "id": "occluder_wall_67a5b95c-5124-48c2-bb7a-683483d06903",
+      "type": "cube",
+      "kinematic": true,
+      "structure": true,
+      "mass": 100,
+      "materials": ["AI2-THOR/Materials/Ceramics/GREYGRANITE"],
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": -0.2444444444444443,
+            "y": 0.9,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 1.2071067811865475,
+            "y": 1.8,
+            "z": 0.1
+          }
+        }
+      ],
+      "moves": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 6,
+          "vector": {
+            "x": 0,
+            "y": 0.25,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 23,
+          "stepEnd": 28,
+          "vector": {
+            "x": 0,
+            "y": -0.25,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 145,
+          "stepEnd": 150,
+          "vector": {
+            "x": 0,
+            "y": 0.25,
+            "z": 0
+          }
+        }
+      ],
+      "rotates": [
+        {
+          "stepBegin": 7,
+          "stepEnd": 12,
+          "vector": {
+            "x": 15,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 17,
+          "stepEnd": 22,
+          "vector": {
+            "x": -15,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 151,
+          "stepEnd": 156,
+          "vector": {
+            "x": 15,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "occluder_pole_67a5b95c-5124-48c2-bb7a-683483d06903",
+      "type": "cylinder",
+      "kinematic": true,
+      "structure": true,
+      "mass": 100,
+      "materials": ["AI2-THOR/Materials/Metals/BrownMetal 1"],
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": -4.174,
+            "y": 0.9,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 90
+          },
+          "scale": {
+            "x": 0.095,
+            "y": 3.326,
+            "z": 0.095
+          }
+        }
+      ],
+      "moves": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 6,
+          "vector": {
+            "x": 0.25,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 23,
+          "stepEnd": 28,
+          "vector": {
+            "x": -0.25,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 145,
+          "stepEnd": 150,
+          "vector": {
+            "x": 0.25,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "occluder_wall_0825ac3a-3776-4239-aee3-4380de9598ce",
+      "type": "cube",
+      "kinematic": true,
+      "structure": true,
+      "mass": 100,
+      "materials": ["AI2-THOR/Materials/Ceramics/WhiteCountertop"],
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": 2.233082706766917,
+            "y": 0.9,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "scale": {
+            "x": 1.3192388155425119,
+            "y": 1.8,
+            "z": 0.1
+          }
+        }
+      ],
+      "moves": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 6,
+          "vector": {
+            "x": 0,
+            "y": 0.25,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 23,
+          "stepEnd": 28,
+          "vector": {
+            "x": 0,
+            "y": -0.25,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 145,
+          "stepEnd": 150,
+          "vector": {
+            "x": 0,
+            "y": 0.25,
+            "z": 0
+          }
+        }
+      ],
+      "rotates": [
+        {
+          "stepBegin": 7,
+          "stepEnd": 12,
+          "vector": {
+            "x": 15,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 17,
+          "stepEnd": 22,
+          "vector": {
+            "x": -15,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 151,
+          "stepEnd": 156,
+          "vector": {
+            "x": 15,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "occluder_pole_0825ac3a-3776-4239-aee3-4380de9598ce",
+      "type": "cylinder",
+      "kinematic": true,
+      "structure": true,
+      "mass": 100,
+      "materials": ["AI2-THOR/Materials/Metals/BlackSmoothMeta"],
+      "shows": [
+        {
+          "stepBegin": 0,
+          "position": {
+            "x": 5.196,
+            "y": 0.9,
+            "z": 1
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 90
+          },
+          "scale": {
+            "x": 0.095,
+            "y": 2.304,
+            "z": 0.095
+          }
+        }
+      ],
+      "moves": [
+        {
+          "stepBegin": 1,
+          "stepEnd": 6,
+          "vector": {
+            "x": 0.25,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 23,
+          "stepEnd": 28,
+          "vector": {
+            "x": -0.25,
+            "y": 0,
+            "z": 0
+          }
+        },
+        {
+          "stepBegin": 145,
+          "stepEnd": 150,
+          "vector": {
+            "x": 0.25,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ]
+    }
+  ],
+  "goal": {
+    "category": "intuitive physics",
+    "last_step": 160,
+    "action_list": [["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"],["Pass"]],
+    "description": "",
+    "metadata": {}
+  },
+  "intuitivePhysics": true
+}

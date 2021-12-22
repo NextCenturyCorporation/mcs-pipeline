@@ -1,0 +1,4 @@
+ami: ami-0692e3996c2cd196e # AMI 'MESS-4-v7'
+idle_timeout_minutes: 10
+cluster: "mess"
+team: "mess"

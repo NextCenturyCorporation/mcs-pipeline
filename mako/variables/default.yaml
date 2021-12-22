@@ -1,0 +1,21 @@
+workers: 8
+region: us-east-1
+clusterUser: ""
+clusterSuffix: ""
+idle_timeout_minutes: 5
+additional_setup_commands: ""
+additional_file_mounts: ""
+cache_stopped_nodes: True
+
+#Below is for mcs_config_template.ini
+mcs_config_extra: ""
+
+evaluation_bool: true
+eval_name: eval_4
+video_enabled: true
+history_enabled: true
+save_debug_images: false
+
+s3_bucket: dev-evaluation-images
+s3_folder: eval-resources-4
+s3_movies_folder: raw-eval-4

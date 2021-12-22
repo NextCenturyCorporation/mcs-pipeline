@@ -1,0 +1,12 @@
+base:
+  varset: ['opics', 'kdrumm']
+eval-groups:
+  - metadata: ['level1', 'level2']
+    parent-dir: 'eval4-validation-subset/group1'
+  - metadata: ['level2', 'oracle']
+    dirs: ['eval4-validation-subset/group2/object-permanence', 'eval4-validation-subset/group2/shape-consistency']
+  # Files tag is not supported yet
+  # - metadata: ['level2']
+  #  dirs: ['eval4-validation-subset/group3']
+  #  files: 
+  #    - eval_4_validation_interactive_object_permanence_0001_01.json

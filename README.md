@@ -75,7 +75,58 @@ In order to test the pipeline and evaluations, the following is helpful:
   * If you'd like to disable logs being uploaded to s3 while testing, set this in your MCS config: `logs_to_s3=false`
   * Make sure MCS config file validation is off if for testing (see commands below).
 
+#### Eval orchestration script
+
+An eval can be run via the run_eval.py script.  Run script for usage.
+
+The script will require a YAML configuration file
+
+Config File API (yaml):
+    The job of this script is to create a list of 'eval-group' parameters which is a set of parameters
+    to run a single ray job for an eval.  The parameters for an eval group are below, but in general it is
+    used to generate set of files, at a certain metadata level, with some other run parameters.
+    To do this, we use a config file to generate these eval groups, where most values are lists where each entry
+    is a single option.  The script will create eval-groups using each combination of options to create many 
+    permutation of these values.
+    
+    The config file has two high level objects:
+    base - an 'eval-group' object that contains default values for any listed 'eval-groups'.  
+    eval-groups - contains a list of 'eval-group' objects.  Each grouping will create a number of sets as described below.
+    
+    An eval-group is a group of values used to create all permutations of eval sets.  
+    Eval sets are parameters and scenes to run a single task in ray for an eval.
+    
+    values for an eval-group:
+      varset - list of variable files that are used for template generation.  Earlier 
+        files are override by later values if they contain the same variable.  This is 
+        the only array where all values are used for each eval-set instead of each 
+        value creating more permutations.  Varset in the 'eval-groups' will override, not 
+        concatentate, those in the 'base' variable.
+      metadata - single or list of metadata levels.  Each metadata level will create more 
+        permutations of the eval-sets
+      parent-dir - Must be used mutually exclusively with 'dirs'.   This points to a directory
+        where each subdirectory should contain scenes and will be used to create permutations
+        of eval-sets
+      dirs - Must be used mutually exclusively with 'parent-dir'.  Single or list of directories 
+        which each should contain scenes to be used to create permutations of eval-sets.
+    
+    
+    Example:
+    base:
+        varset: ['opics', 'personal']
+    eval-groups:
+        - metadata: ['level1', 'level2']
+          parent-dir: 'mako-test/parent'
+        - metadata: ['level2', 'oracle']
+          dirs: ['mako-test/dirs/dir1', 'mako-test/dirs/dir2']
+          
+    This example will use the 'opics.yaml' and 'personal.yaml' files in the 'variables' directory to fill the templates.
+    It expects to have a directory 'mako-test/parent/' which has one or more subdirectories filled with scenes.  It also
+    expects the following directories with scene files: 'mako-test/dirs/dir1', 'mako-test/dirs/dir2'.
+
 #### Commands
+
+Shell Script (deprecated):
 
 To run an eval, run the following command on your local development machine (driver):
 ```
