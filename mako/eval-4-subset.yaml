@@ -1,5 +1,5 @@
 base:
-  varset: ['opics', 'kdrumm']
+  varset: ['opics']
 eval-groups:
   - metadata: ['level1', 'level2']
     parent-dir: 'eval4-validation-subset/group1'

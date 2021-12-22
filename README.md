@@ -39,7 +39,7 @@ $ source venv/bin/activate
   - If you want to test how a different library will work, you can add an install command in the setup_commands.
 - For testing, find which config/xxxx.ini file that you are using by changing the "evaluation_name" so you can
 find the results easier
-- If you are going to run "run_eval.sh" you need to be in the python virtal environment first. ```source venv/bin/activate```
+- If you are going to run "run_eval.py" you need to be in the python virtal environment first. ```source venv/bin/activate```
 
 #### MCS Config File
 
@@ -62,8 +62,6 @@ If anything above changes, we will need to make sure those changes are incorpora
 #### Eval Test Configuration
 
 In order to test the pipeline and evaluations, the following is helpful:
-
-* In the autoscaler/ray_MODULE_aws.yaml file you plan to use, add your initials or personal ID to the cluster name just so its easier to track in AWS.
 
 * Be sure to stop your cluster and/or terminate the AWS instances when you are done.
 
@@ -126,52 +124,23 @@ Config File API (yaml):
 
 #### Commands
 
-Shell Script (deprecated):
+This script assumes you have the ts.  you can install ts via `sudo apt install moreutils`
 
-To run an eval, run the following command on your local development machine (driver):
-```
-aws_scripts/run_eval MODULE path/to/scene/directory --metadata [metadata_level]
-```
+Python Script:
 
-There is an optional flag to disable config file validation checks if you are just running tests:
+To run a single ray run, run the following command on your local development machine (driver):
 ```
-aws_scripts/run_eval MODULE path/to/scene/directory --metadata [metadata_level] --disable_validation
+python run_eval_single.py -v opics -s eval4-validation-subset/group3 -m level2
 ```
 
-To include timestamps on the output, you can use the linux ts command.  ts may need to be installed via `sudo apt install moreutils`. Append one of the following to your script:
-
-Timestamps:
-
+To run a full eval from a configurd file:
 ```
-2>&1 | ts 
+python run_eval.py -d -n 1 -c mako/eval-4-subset.yaml
 ```
 
-Time since start:
+See the scripts help text for additional options such as disabling validation, using dev validation and redirecting logs to STDOUT, and dry run.
 
-```
-2>&1 | ts -s
-```
-
-To capture the output in a log file, add the following after the command.  Tee will allow the output to be sent both to stdout as well as the file.  
-
-```
-2>&1 | tee <log_filename>
-```
-
-Piping logs to these programs can sometimes lose data and/or color.  To avoid this, use the 'unbuffer' command.
-
-You can also use linux pipes to only push to a file.
-
-Here are examples:
-```
-./aws_scripts/run_eval.sh baseline scenes/subset/
-
-time unbuffer ./aws_scripts/run_eval.sh opics folder --metadata level2  2>&1 | ts -s 2>&1 | tee test.out
-```
-
-Note: This script does not stop your cluster.  You should be sure to stop your cluster (See Common Ray Commands) or carefully terminate your AWS instances associated with the cluster. 
-When you run "run_eval.sh" it will run all scenes in the directory. Make
-a folder somewhere and add the scenes you want to test there.
+Configuration files and a resume.yaml will be written in the .tmp_pipeline_ray directory in a timestamped folder for your run.  To resume an interrupted run or a run with failures, you can change the -c option to the resume.yaml found here.
 
 #### Log Parsing
 
@@ -179,7 +148,7 @@ If run_eval.sh is run with 'ts -s', the output logs can be parsed by the pipelin
 
 #### Script Overview
 
-This script performs the following actions:
+The run_eval**.py scripts performs the following actions and may run them multiple times:
 * Start a Ray cluster based on the autoscaler/ray_MODULE_aws.yaml file
 * Generates a list of scene files and rsyncs that to the head node
 * Rsync the following into the head node:
@@ -189,10 +158,10 @@ This script performs the following actions:
   * provided scenes folder
 * submits a Ray task via the pipeline_ray.py script with the following parameters:
   * Ray locations config (configs/MODULE_aws.ini)
-  * MCS config (configs/mcs_config_MODULE_<METADAT_LEVEL>.ini)
+  * MCS config (configs/mcs_config_MODULE_<METADATA_LEVEL>.ini)
     * Note: by default metadata level is level2
 
-#### Expected Output 
+#### Ray Expected Output 
 
 There can be a lot of output and users may want to verify it is working properly
 
