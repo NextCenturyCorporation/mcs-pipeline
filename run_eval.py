@@ -288,7 +288,7 @@ class EvalRun():
     set_status_holder = None
 
     def __init__(self, eval, disable_validation=False,
-                 dev_validation=False, log_file=None, cluster="", 
+                 dev_validation=False, log_file=None, cluster="",
                  output_logs=False, dry_run=False, base_dir="mako",
                  group_working_dir=RAY_WORKING_DIR) -> pathlib.Path:
         self.eval = eval
@@ -576,7 +576,16 @@ def get_array(group, base, field):
     return force_array(group.get(field, base.get(field, [])))
 
 
-def create_eval_set_from_file(cfg_file: str):
+def create_eval_set_from_file(cfg_file: str, super_override: dict = {}) -> List[EvalParams]:
+    """Creates and array of EvalParams to run an eval from a configuration file.  See Readme for details of config file.
+
+    Args:
+        cfg_file (str): config file
+        super_override (dict, optional): Adds to and overrides override from files. Defaults to {}.
+
+    Returns:
+        (list(EvalParams)): List of parameters for eval runs
+    """
     with open(cfg_file, 'r') as reader:
         cfg = yaml.safe_load(reader)
 
@@ -591,6 +600,12 @@ def create_eval_set_from_file(cfg_file: str):
         varset = copy.deepcopy(get_array(group, my_base, 'varset'))
         metadata_list = get_array(group, my_base, 'metadata')
         override = group.get(field, my_base.get('override', {}))
+
+        # apply super override
+        if super_override:
+            for key, value in super_override.items():
+                override[key] = value
+
         files = get_array(group, base, 'files')
         for metadata in metadata_list:
             parents = get_array(group, my_base, 'parent-dir')
@@ -611,8 +626,18 @@ def create_eval_set_from_file(cfg_file: str):
     return evals
 
 
+def _args_to_override(args) -> dict:
+    override = {}
+    if args.num_workers and args.num_workers > 0:
+        override['workers'] = args.num_workers
+    if args.cluster_user:
+        override['clusterUser'] = args.cluster_user
+    return override
+
+
 def run_from_config_file(args):
-    test_set = create_eval_set_from_file(args.config_file)
+    super_override = _args_to_override(args)
+    test_set = create_eval_set_from_file(args.config_file, super_override)
     run_evals(test_set, dev=args.dev_validation,
               disable_validation=args.disable_validation,
               num_clusters=args.num_clusters, output_logs=args.redirect_logs,
@@ -662,6 +687,18 @@ def parse_args():
         type=int,
         default=1,
         help="How many simultanous clusters should be used.",
+    )
+    parser.add_argument(
+        "--num_workers", "-w",
+        type=int,
+        default=None,
+        help="How many simultanous workers for each cluster.  This will override any value in varsets.",
+    )
+    parser.add_argument(
+        "--cluster_user", "-u",
+        type=str,
+        default=None,
+        help="Tags the cluster with a the username provided with this parameter.",
     )
     return parser.parse_args()
 
