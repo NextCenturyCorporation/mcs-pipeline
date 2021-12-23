@@ -621,7 +621,7 @@ def create_eval_set_from_file(cfg_file: str, super_override: dict = {}) -> List[
                 evals.append(eval)
             for parent in parents:
                 new_evals = create_eval_set_from_folder(
-                    varset, parent, metadata)
+                    varset, parent, metadata, override)
                 evals += new_evals
     return evals
 
