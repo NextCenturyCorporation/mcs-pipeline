@@ -100,6 +100,9 @@ Config File API (yaml):
         the only array where all values are used for each eval-set instead of each 
         value creating more permutations.  Varset in the 'eval-groups' will override, not 
         concatentate, those in the 'base' variable.
+
+        varsets will automatically add 'default' and 'user' to the beginning of the list.  'user' is only added if the file exists.
+        The 'user' varset is to be added for user specific variables like naming clusters with something like 'clusterUser: -myName'
       metadata - single or list of metadata levels.  Each metadata level will create more 
         permutations of the eval-sets
       parent-dir - Must be used mutually exclusively with 'dirs'.   This points to a directory

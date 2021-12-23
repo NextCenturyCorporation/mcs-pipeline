@@ -39,6 +39,11 @@ def parse_args():
         default='level2',
         help="Sets the metadata level for a single run.",
     )
+    parser.add_argument(
+        "--team", "-t",
+        default=None,
+        help="Sets the team a single run.  If set in varset, this is not necessary, but this value will override.",
+    )
     # At one point, I had varset as required.  However, if the user wants to create config file
     # without variables, they can use a template that is the config file itself without variables.
     parser.add_argument(
@@ -52,8 +57,12 @@ if __name__ == "__main__":
     args = parse_args()
     now = get_now_str()
     vars = "-".join(args.varset)
-    log_file = f"logs/{now}-{vars}-{args.metadata}.log"
-    ep = EvalParams(args.varset, args.local_scene_dir, args.metadata)
+    team = args.team
+    override = {'team': team} if team else {}
+    log_team = f"{team}-" if team else ""
+    log_file = f"logs/{now}-{log_team}{vars}-{args.metadata}.log"
+    ep = EvalParams(args.varset, args.local_scene_dir,
+                    args.metadata, override=override)
     execute_shell("echo Starting `date`", log_file)
     run = EvalRun(ep, disable_validation=args.disable_validation,
                   dev_validation=args.dev_validation,

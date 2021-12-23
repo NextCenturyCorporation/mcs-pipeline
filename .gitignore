@@ -16,3 +16,6 @@ venv/
 .vscode/
 logs
 split_logs/
+
+# User specific variable
+mako/variables/user.yaml

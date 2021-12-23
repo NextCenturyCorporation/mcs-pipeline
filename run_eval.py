@@ -22,9 +22,12 @@ from configparser import ConfigParser
 from mako.template import Template
 
 DEFAULT_VARSET = 'default'
+USER_VARSET = 'user'
 RAY_WORKING_DIR = pathlib.Path('./.tmp_pipeline_ray/')
 SCENE_LIST_FILENAME = "scenes_single_scene.txt"
 DATE_FORMAT = '%Y%m%d-%H%M%S'
+RESUME_SAVE_PERIOD_SECONDS = 5*60
+STATUS_PRINT_PERIOD_SECONDS = 30
 
 
 @ dataclass
@@ -214,9 +217,12 @@ def get_now_str() -> str:
 
 def add_variable_sets(varsets, varset_directory):
     varsets = copy.deepcopy(varsets)
+
+    vars = {}
+    if USER_VARSET not in varsets and os.path.exists(f'{varset_directory}{USER_VARSET}.yaml'):
+        varsets.insert(0, USER_VARSET)
     if DEFAULT_VARSET not in varsets:
         varsets.insert(0, DEFAULT_VARSET)
-    vars = {}
     for varset in varsets:
         with open(f'{varset_directory}{varset}.yaml') as def_file:
             new_vars = yaml.safe_load(def_file)
@@ -282,8 +288,8 @@ class EvalRun():
     set_status_holder = None
 
     def __init__(self, eval, disable_validation=False,
-                 dev_validation=False, resume=False,
-                 log_file=None, cluster="", output_logs=False, dry_run=False, base_dir="mako",
+                 dev_validation=False, log_file=None, cluster="", 
+                 output_logs=False, dry_run=False, base_dir="mako",
                  group_working_dir=RAY_WORKING_DIR) -> pathlib.Path:
         self.eval = eval
         self.status = self.eval.status
@@ -360,7 +366,6 @@ class EvalRun():
             scene_list_writer.close()
 
         self.submit_params = "--disable_validation" if disable_validation else ""
-        self.submit_params += " --resume" if resume else ""
         self.submit_params += " --dev" if dev_validation else ""
 
     def parse_status(self, line):
@@ -503,11 +508,11 @@ def run_evals(eval_set: List[EvalParams], num_clusters=3, dev=False,
     all_status = set_status_for_set(eval_set)
 
     t = threading.Thread(target=print_status_periodically,
-                         args=(all_status, 20), daemon=True, name="status-printer")
+                         args=(all_status, STATUS_PRINT_PERIOD_SECONDS), daemon=True, name="status-printer")
     t.start()
 
     t = threading.Thread(target=save_config_periodically,
-                         args=(eval_set, 5*60, group_working_dir), daemon=True, name="status-saver")
+                         args=(eval_set, RESUME_SAVE_PERIOD_SECONDS, group_working_dir), daemon=True, name="status-saver")
     t.start()
 
     def run_eval_from_queue(num, dev=False):
@@ -617,6 +622,7 @@ def run_from_config_file(args):
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Run multiple eval sets containing scenes using ray.")
+    # --config_file is required but still needs tag because varset can have variable parameters
     parser.add_argument(
         "--config_file", "-c", required=True,
         help="Path to config file which contains details on how exactly to run a series of eval runs."
