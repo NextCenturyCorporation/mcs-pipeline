@@ -9,7 +9,6 @@ evaluation_bool: false
 s3_bucket: mcs-output-videos
 s3_folder: topdown-videos
 
-history_enabled: false
 team: "topdown"
 eval_name: ""
 

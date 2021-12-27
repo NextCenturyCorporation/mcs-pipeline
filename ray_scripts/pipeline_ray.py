@@ -55,10 +55,7 @@ def push_to_s3(
         str(source_file),
         bucket,
         s3_filename,
-        ExtraArgs={
-            "ACL": "public-read",
-            "ContentType": mimetype,
-        },
+        ExtraArgs={"ACL": "public-read", "ContentType": mimetype},
     )
 
 
@@ -99,7 +96,8 @@ def run_scene(
     log_file = log_dir.joinpath(f"{scene_name}-{scene_try}-{timestamp}.log")
     setup_logging(log_file)
     logging.info(
-        f"Started scene:{scene_name} try:{scene_try} timestamp:{timestamp}")
+        f"Started scene:{scene_name} try:{scene_try} timestamp:{timestamp}"
+    )
 
     identifier = uuid.uuid4()
     run_script = run_script
@@ -224,7 +222,8 @@ def run_scene(
         push_to_s3(log_file, bucket, log_s3_filename)
 
     logging.info(
-        f"Finished scene:{scene_name} try:{scene_try} timestamp:{timestamp}")
+        f"Finished scene:{scene_name} try:{scene_try} timestamp:{timestamp}"
+    )
 
     logging.shutdown()
     log_file.unlink()
@@ -280,12 +279,12 @@ def setup_logging(log_file):
 # Classes to keep track of status of individual scenes and (possibly
 # multiple) runs of those scenes
 class StatusEnum(str, Enum):
-    UNKNOWN = 'UNKOWN'
-    PENDING = 'PENDING'
-    RETRYING = 'RETRYING'
-    SUCCESS = 'SUCCESS'
-    ERROR = 'ERROR'
-    ERROR_TIMEOUT = 'ERROR_TIMEOUT'
+    UNKNOWN = "UNKOWN"
+    PENDING = "PENDING"
+    RETRYING = "RETRYING"
+    SUCCESS = "SUCCESS"
+    ERROR = "ERROR"
+    ERROR_TIMEOUT = "ERROR_TIMEOUT"
 
 
 @dataclass
@@ -313,14 +312,7 @@ class SceneRunner:
 
     # Valid properties for various fields in mcs_config_file
     METADATA_LVLS = ["level1", "level2", "oracle"]
-    EVAL_NAMES = [
-        "eval_3-75",
-        "eval_4",
-        "eval_5",
-        "eval_6",
-        "eval_7",
-        "eval_8",
-    ]
+    EVAL_NAMES = ["eval_3-75", "eval_4", "eval_5", "eval_6", "eval_7", "eval_8"]
     TEAM_NAMES = ["mess", "mess1", "mess2", "mit", "opics", "baseline", "cora"]
     #  more flexible for Eval 4+ and update folder structure
     CURRENT_EVAL_BUCKET = "evaluation-images"
@@ -361,7 +353,7 @@ class SceneRunner:
 
     def read_mcs_config(self, mcs_config_filename: str):
         mcs_config = configparser.ConfigParser()
-        logging.debug(f'Reading MCS config file {mcs_config_filename}')
+        logging.debug(f"Reading MCS config file {mcs_config_filename}")
         with open(mcs_config_filename, "r") as mcs_config_file:
             mcs_config.read_file(mcs_config_file)
         return mcs_config
@@ -397,8 +389,9 @@ class SceneRunner:
             valid = False
 
         bucket = self.mcs_config.get("MCS", "s3_bucket")
-        if ((bucket != self.CURRENT_EVAL_BUCKET and not self.dev_validation) or
-                (bucket != self.CURRENT_DEV_EVAL_BUCKET and self.dev_validation)):
+        if (bucket != self.CURRENT_EVAL_BUCKET and not self.dev_validation) or (
+            bucket != self.CURRENT_DEV_EVAL_BUCKET and self.dev_validation
+        ):
             logging.error(
                 "Error: MCS Config file does not have "
                 + "the correct s3 bucket specified."
@@ -413,10 +406,12 @@ class SceneRunner:
             )
             valid = False
 
-        s3_movies_folder = self.mcs_config.get('MCS', 's3_movies_folder')
+        s3_movies_folder = self.mcs_config.get("MCS", "s3_movies_folder")
         if s3_movies_folder != self.CURRENT_MOVIE_FOLDER:
-            logging.error('Error: MCS Config file does not have ' +
-                          'the correct s3 movies folder specified.')
+            logging.error(
+                "Error: MCS Config file does not have "
+                + "the correct s3 movies folder specified."
+            )
 
             valid = False
 
@@ -465,9 +460,7 @@ class SceneRunner:
             "MCS", "logs_to_s3", fallback=True
         )
         if not logs_to_s3:
-            logging.error(
-                "Error: MCS Config does not have logs_to_s3 enabled."
-            )
+            logging.error("Error: MCS Config does not have logs_to_s3 enabled.")
             valid = False
 
         if not valid:
@@ -488,17 +481,12 @@ class SceneRunner:
                 self.scene_files_list.append(base_dir / line.strip())
 
         # Filter scene_files_list based on last run file.
-        if (
-            self.resume
-            and pathlib.Path(FINISHED_SCENES_LIST_FILENAME).exists()
-        ):
+        if self.resume and pathlib.Path(FINISHED_SCENES_LIST_FILENAME).exists():
             with open(FINISHED_SCENES_LIST_FILENAME) as last_run_list:
                 lines = last_run_list.readlines()
                 for line in lines:
                     file = pathlib.Path(line.strip())
-                    logging.debug(
-                        f"Attempting to remove {line} from file list"
-                    )
+                    logging.debug(f"Attempting to remove {line} from file list")
                     if file in self.scene_files_list:
                         self.scene_files_list.remove(file)
 
@@ -564,8 +552,7 @@ class SceneRunner:
         number current running, number to go, number failed, etc"""
         logging.info(f"Status for {len(self.scene_statuses)} scenes: ")
         current_statuses = [
-            scene_status.status
-            for scene_status in self.scene_statuses.values()
+            scene_status.status for scene_status in self.scene_statuses.values()
         ]
         frequency = {
             scene_status: current_statuses.count(scene_status)
@@ -576,27 +563,29 @@ class SceneRunner:
             logging.info(f"    {key.name} -> {value}")
 
     def output_status(self):
-        json_status = {'Succeeded': 0, 'Failed': 0,
-                       'Total': len(self.scene_files_list)}
+        json_status = {
+            "Succeeded": 0,
+            "Failed": 0,
+            "Total": len(self.scene_files_list),
+        }
         statuses = []
-        json_status['statuses'] = statuses
+        json_status["statuses"] = statuses
 
         for value in self.scene_statuses.values():
             temp = {
-                'status': value.status,
-                'scene_file': value.scene_file.name,
-                'retries': value.retries,
+                "status": value.status,
+                "scene_file": value.scene_file.name,
+                "retries": value.retries,
             }
             statuses.append(temp)
             if value.status is StatusEnum.SUCCESS:
-                json_status['Succeeded'] += 1
+                json_status["Succeeded"] += 1
             elif value.status in [StatusEnum.ERROR, StatusEnum.ERROR_TIMEOUT]:
-                json_status['Failed'] += 1
+                json_status["Failed"] += 1
             # Ignoring PENDING, RETRYING, UNKNOWN
 
         dump = json.dumps(json_status)
-        logging.info(
-            f"JSONSTATUS: {dump}")
+        logging.info(f"JSONSTATUS: {dump}")
 
     def retry_job(self, scene_status: SceneStatus):
         scene_ref = scene_status.scene_file
@@ -641,7 +630,11 @@ class SceneRunner:
         logging.info(f"{prefix}Retryable: {run.retry}")
 
     def get_run_status(
-        self, result: int, output: str, reported_success: bool, scene_file_path: str
+        self,
+        result: int,
+        output: str,
+        reported_success: bool,
+        scene_file_path: str,
     ) -> RunStatus:
         status = RunStatus(result, output, StatusEnum.SUCCESS, False)
         if result != 0:
@@ -653,7 +646,8 @@ class SceneRunner:
             status.status = StatusEnum.ERROR_TIMEOUT
         if not reported_success:
             logging.info(
-                f"Pipeline reported failure for file ={scene_file_path}")
+                f"Pipeline reported failure for file ={scene_file_path}"
+            )
             status.retry |= True
             status.status = StatusEnum.ERROR
         # Add more conditions to retry here
@@ -710,8 +704,12 @@ def parse_args():
         help="Whether or not one is running on a local machine "
         + "or on a remote cluster",
     )
-    parser.add_argument("--dev_validation", default=False,
-                        action="store_true", help="Whether to validate against development")
+    parser.add_argument(
+        "--dev_validation",
+        default=False,
+        action="store_true",
+        help="Whether to validate against development",
+    )
 
     return parser.parse_args()
 

@@ -1,4 +1,4 @@
-## X Server for EC2 machines 
+## X Server for EC2 machines
 This directory contains code that runs an Xorg X server that does not
 do anything.
 
@@ -8,7 +8,7 @@ display or X server.
 ### Requirements
 
 * Xorg install -- 'sudo apt install xserver-xorg'
-* lspci -- Part of PCI tools, which determine what is in the PCI 
+* lspci -- Part of PCI tools, which determine what is in the PCI
 (Peripheral Component Interconnect) buses. 'sudo apt install pciutils'
 
 ### Usage

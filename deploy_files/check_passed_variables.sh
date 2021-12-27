@@ -4,7 +4,7 @@
 
 # Will be passed in two things:
 #    mcs_configfile  scene_file
-if [ -z $1 ] || [ -z $2 ] || [ -z $3 ]; then
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
     echo "Need mcs_configfile as first parameter, scene_file as second, eval_dir as third"
     exit 1
 fi
