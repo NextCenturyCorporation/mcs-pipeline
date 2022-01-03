@@ -631,7 +631,7 @@ def _args_to_override(args) -> dict:
     if args.num_workers and args.num_workers > 0:
         override['workers'] = args.num_workers
     if args.cluster_user:
-        override['clusterUser'] = args.cluster_user
+        override['clusterUser'] = f"-{args.cluster_user}"
     return override
 
 
