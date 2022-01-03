@@ -5,12 +5,12 @@ The pipeline makes heavy use of Ray.  Getting familiar with Ray is beneficial.
 Ray:
 https://docs.ray.io/en/master/index.html
 
-Ray Body of Knowledge: 
+Ray Body of Knowledge:
 https://nextcentury.atlassian.net/wiki/spaces/MCS/pages/2156757749/BoK
 
 ****
 
-MCS Project for running evaluations.  Most of this code runs scene files on EC2 machines.  
+MCS Project for running evaluations.  Most of this code runs scene files on EC2 machines.
 
 ## Assumptions:
 * There is an AMI that exists with the software necessary to run an evaluation.  (Usually this includes performer software, MCS, and MCS AI2THOR)
@@ -25,7 +25,34 @@ $ python3 -m venv --prompt pipeline venv
 $ source venv/bin/activate
 (pipeline) $ python -m pip install --upgrade pip setuptools wheel
 (pipeline) $ python -m pip install -r requirements.txt
+(pipeline) $ pre-commit install
 ```
+
+## Linting
+
+### Python Code
+
+This project uses [black](https://pypi.org/project/black/) for linting and formatting the Python code.
+
+A full list of error codes and warnings enforced can be found [here](https://flake8.pycqa.org/en/latest/user/error-codes.html)
+
+Both have settings so that they should run on save within Visual Studio Code [settings.json](.vscode/settings.json) as well as on commit after running `pre-commit install` (see [.pre-commit-config.yaml]\
+(.pre-commit-config.yaml)), but can also be run on the command line:
+
+```bash
+(pipeline) $ pre-commit run --all-files
+```
+
+### Shell Scripts
+
+The shell scripts are linted using [shellcheck](https://www.shellcheck.net/).
+https://github.com/koalaman/shellcheck
+https://github.com/koalaman/shellcheck#installing
+
+There's a VS Code extension as well.
+https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck
+
+
 ## Run Pipeline in AWS
 
 ### Run Eval Script
@@ -54,10 +81,10 @@ and UI related functionality will work correctly (these can be turned off for te
 - **submission_id** - currently, only needed for MESS submissions (if multiple given). Needs to match the team label (either `1` or `2`)
 - **s3_bucket** - should be `evaluation-images`
 - **s3_folder** - json output - has to be the folder we store output for the current eval (right now, set to `eval-resources-4` for eval 4)
-- **s3_movies_folder**: required post-3.75 (value should be `raw-eval-4` for eval 4) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well 
+- **s3_movies_folder**: required post-3.75 (value should be `raw-eval-4` for eval 4) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well
 - **video_enabled** - must be set to `true`
 
-If anything above changes, we will need to make sure those changes are incorporated into the ingest process/UI as needed. 
+If anything above changes, we will need to make sure those changes are incorporated into the ingest process/UI as needed.
 
 #### Eval Test Configuration
 
@@ -68,7 +95,7 @@ In order to test the pipeline and evaluations, the following is helpful:
 * Know if/where your results will be uploaded to avoid conflicts:
   * Videos are only saved when `videos_enabled=true`
   * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has `evalution=true`
-  * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test 
+  * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test
   * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
   * If you'd like to disable logs being uploaded to s3 while testing, set this in your MCS config: `logs_to_s3=false`
   * Make sure MCS config file validation is off if for testing (see commands below).
@@ -84,31 +111,31 @@ Config File API (yaml):
     to run a single ray job for an eval.  The parameters for an eval group are below, but in general it is
     used to generate set of files, at a certain metadata level, with some other run parameters.
     To do this, we use a config file to generate these eval groups, where most values are lists where each entry
-    is a single option.  The script will create eval-groups using each combination of options to create many 
+    is a single option.  The script will create eval-groups using each combination of options to create many
     permutation of these values.
-    
+
     The config file has two high level objects:
-    base - an 'eval-group' object that contains default values for any listed 'eval-groups'.  
+    base - an 'eval-group' object that contains default values for any listed 'eval-groups'.
     eval-groups - contains a list of 'eval-group' objects.  Each grouping will create a number of sets as described below.
-    
-    An eval-group is a group of values used to create all permutations of eval sets.  
+
+    An eval-group is a group of values used to create all permutations of eval sets.
     Eval sets are parameters and scenes to run a single task in ray for an eval.
-    
+
     values for an eval-group:
-      varset - list of variable files that are used for template generation.  Earlier 
-        files are override by later values if they contain the same variable.  This is 
-        the only array where all values are used for each eval-set instead of each 
-        value creating more permutations.  Varset in the 'eval-groups' will override, not 
+      varset - list of variable files that are used for template generation.  Earlier
+        files are override by later values if they contain the same variable.  This is
+        the only array where all values are used for each eval-set instead of each
+        value creating more permutations.  Varset in the 'eval-groups' will override, not
         concatentate, those in the 'base' variable.
-      metadata - single or list of metadata levels.  Each metadata level will create more 
+      metadata - single or list of metadata levels.  Each metadata level will create more
         permutations of the eval-sets
       parent-dir - Must be used mutually exclusively with 'dirs'.   This points to a directory
         where each subdirectory should contain scenes and will be used to create permutations
         of eval-sets
-      dirs - Must be used mutually exclusively with 'parent-dir'.  Single or list of directories 
+      dirs - Must be used mutually exclusively with 'parent-dir'.  Single or list of directories
         which each should contain scenes to be used to create permutations of eval-sets.
-    
-    
+
+
     Example:
     base:
         varset: ['opics', 'personal']
@@ -117,7 +144,7 @@ Config File API (yaml):
           parent-dir: 'mako-test/parent'
         - metadata: ['level2', 'oracle']
           dirs: ['mako-test/dirs/dir1', 'mako-test/dirs/dir2']
-          
+
     This example will use the 'opics.yaml' and 'personal.yaml' files in the 'variables' directory to fill the templates.
     It expects to have a directory 'mako-test/parent/' which has one or more subdirectories filled with scenes.  It also
     expects the following directories with scene files: 'mako-test/dirs/dir1', 'mako-test/dirs/dir2'.
@@ -161,7 +188,7 @@ The run_eval**.py scripts performs the following actions and may run them multip
   * MCS config (configs/mcs_config_MODULE_<METADATA_LEVEL>.ini)
     * Note: by default metadata level is level2
 
-#### Ray Expected Output 
+#### Ray Expected Output
 
 There can be a lot of output and users may want to verify it is working properly
 
@@ -199,15 +226,15 @@ Retryable: False
 
 ## Run Pipeline Locally
 
-To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine. 
+To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine.
 
 "run_script" is currently MCS-pipeline/deploy_files/local/ray_script.sh
 "scene_location" is currently MCS/docs/source/scenes/
 "scene_list" is a .txt file that you put one scene on each line to run.
 "eval_dir" is where the evaluations are written
 
-If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in 
-configs/mcs_config_local_level2.ini. 
+If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in
+configs/mcs_config_local_level2.ini.
 
 Next you will need to create a "local.yaml" in the "autoscaler" directory. Examples can be found at https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
@@ -227,7 +254,7 @@ The pipeline is setup to run different "modules" and uses convention to locate f
 
 * autoscaler - Contains Ray configuration for different modules to run in AWS.  The file name convention is ray_MODULE_aws.yaml.  See below and Ray documentation for more details of fields.
 * aws_scripts - Contains scripts and text documents to facilitate running in AWS.
-  * Note: 
+  * Note:
 * configs - Contains all necessary configs for each module that will be pushed to Ray head node.  (maybe should be moved to individual deploy_files directories)
 * deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node
 * pipeline - python code used to run the pipeline that will be pushed to head node
@@ -241,7 +268,7 @@ Some portions of ray_MODULE_aws.yaml are important to how evals are executed and
     * Create an appropriate IAM role and verify it has an instance profile
     * In ray_MODULE_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
     ```
-    IamInstanceProfile: 
+    IamInstanceProfile:
         Arn: IAM role instance profile ARN
     ```
 * In many modules, some files need to be pushed to all nodes including the worker nodes.  The best way we've found to do this is with the file_mounts property.
@@ -254,15 +281,15 @@ Some portions of ray_MODULE_aws.yaml are important to how evals are executed and
 * You can also connect to a node via the following:
 
     <code>ssh -i ~/.ssh/pemfilename.pem username@ec2.2.amazon.com run_script.sh</code>
-    
-* secrets file, containing the pemfilename and the username.  Copy from pipeline/secrets_template.py 
+
+* secrets file, containing the pemfilename and the username.  Copy from pipeline/secrets_template.py
 to pipeline/secrets.py and fill it in.  Do not add to github.
 * We no longer use an AWS credentials file for Ray.  Instances in AWS should be given an IAM role via configurations.
-  * When running locally, your system may need an AWS credentials file.  This should be in the file ~/.aws/credentials.  This will allow you to 
-use [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) to get 
-EC2 machines.  
+  * When running locally, your system may need an AWS credentials file.  This should be in the file ~/.aws/credentials.  This will allow you to
+use [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) to get
+EC2 machines.
 * Add the following to your ~/.ssh/config:   <code>StrictHostKeyChecking accept-new</code>
-This will allow the EC2 machines to be called without you agreeing to accept them 
+This will allow the EC2 machines to be called without you agreeing to accept them
 manually.
 
 ### Logs
@@ -271,8 +298,8 @@ Logs will be written to the head node and sometimes be pushed to S3.  Details TB
 
 ### Mess Example
 
-Here is an example of running the MESS code.  Warning:  It's not very pretty, but 
-we're going to use mess_tasks_runner.py as if it were an interactive tool.  
+Here is an example of running the MESS code.  Warning:  It's not very pretty, but
+we're going to use mess_tasks_runner.py as if it were an interactive tool.
 
 * Have a running EC2 machine that has the MESS code and the tasks on it, or a small number
 * Open mess_task_runner.py in your editor of choice
@@ -288,7 +315,7 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
   * Uncomment the line <code>run_tasks.runXStartup()</code>
   * Run mess_task_runner.py
   * Recomment line
-  * Wait 30 seconds 
+  * Wait 30 seconds
   * Uncomment the line <code>run_tasks.runCheckXorg()</code>
   * Run mess_task_runner.py
   * Recomment line
@@ -301,10 +328,10 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
 2021-03-01 17:25:05,920 main         INFO     Return_code 0
 </pre>
 * Run a trivial test:
-  * This code uses mcs_test.py which starts a controller and runs for 10 steps.  If this 
-  is not on the EC2 machine, you will need some other trivial code.  
+  * This code uses mcs_test.py which starts a controller and runs for 10 steps.  If this
+  is not on the EC2 machine, you will need some other trivial code.
   * Uncomment the line <code>run_tasks.run_test()</code>
-  * Run mess_task_runner.py and re-comment.  
+  * Run mess_task_runner.py and re-comment.
   * Output should look like:
 <pre>
 2021-03-01 17:31:13,858 main         INFO     Sending the following command: ['ssh', '-i', '~/.ssh/clarkdorman-keypair.pem', 'ubuntu@ec2-18-206-232-67.compute-1.amazonaws.com', 'cd /home/ubuntu/ai2thor-docker && python3 mcs_test.py']
@@ -320,25 +347,25 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
 2021-03-01 17:31:23,861 main         INFO     Return_code 0
 </pre>
 * Try a small run:
-  * Copy over an mcs_config.yaml that does not write to the bucket.  Create the mcs_config.yaml in 
+  * Copy over an mcs_config.yaml that does not write to the bucket.  Create the mcs_config.yaml in
   this directory
   * Modify pipeline/mess_config_change.py to make sure that it is looking at the right file locally
   * Uncomment the <code>run_tasks.change_mcs_config()</code> line
   * Run mess_task_runner.py
   * Recomment the line
-  * Create a short list of scene files or use <code>tasks_single_tasks.txt</code>.  Set mess_task_runner to use 
+  * Create a short list of scene files or use <code>tasks_single_tasks.txt</code>.  Set mess_task_runner to use
   that list of scene files (TASK_FILE_PATH)
   * Uncomment the line <code>run_tasks.runTasks()</code>
   * Run mess_task_runner.py
 * Big run:
   * Start lots of machines (~120 or so)
-  * Same as the small run, following the same basic steps, one at a time: 
-    * Start the X server on each by uncommenting that line and running.  Since this does not  
+  * Same as the small run, following the same basic steps, one at a time:
+    * Start the X server on each by uncommenting that line and running.  Since this does not
     run a thread per machine, this might take a couple of minutes
-    * Copy over mcs_config.yaml.  Make sure to put in all the information, set 
-    the AWS keys, make sure bucket and directory is correct, correct metadata level etc.  Uncomment 
-    that line and run.  Again, not parallelized (i.e. thread per machine) so takes a couple 
-    of minutes.  
+    * Copy over mcs_config.yaml.  Make sure to put in all the information, set
+    the AWS keys, make sure bucket and directory is correct, correct metadata level etc.  Uncomment
+    that line and run.  Again, not parallelized (i.e. thread per machine) so takes a couple
+    of minutes.
     * Make a file with the correct list of tasks and set the TASK_FILE_PATH to point to it
     * Run the tasks
 
@@ -367,25 +394,6 @@ This pipline runs the `run_last_action.py` script (from the `machine_common_sens
 ```bash
 ./aws_scripts/run_eval.sh topdown <json_data_folder> --metadata level1 --disable_validation
 ```
-
-## Linting
-
-### Python Code
-
-We are currently using [flake8](https://flake8.pycqa.org/en/latest/) and [autopep8](https://pypi.org/project/autopep8/) for linting and formatting our Python code. This is enforced within the python_api\
- and scene_generator projects. Both are [PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant (besides some inline exceptions), although we are ignoring the following rules:
-- **E402**: Module level import not at top of file
-- **W504**: Line break occurred after a binary operator
-
-A full list of error codes and warnings enforced can be found [here](https://flake8.pycqa.org/en/latest/user/error-codes.html)
-
-Both have settings so that they should run on save within Visual Studio Code [settings.json](.vscode/settings.json) as well as on commit after running `pre-commit install` (see [.pre-commit-config.yaml]\
-(.pre-commit-config.yaml) and [.flake8](.flake8)), but can also be run on the command line:
-
-### Shell Scripts
-
-The shell scripts do not currently have a linter, but it should be added and then 
-documented here.
 
 ## Acknowledgements
 

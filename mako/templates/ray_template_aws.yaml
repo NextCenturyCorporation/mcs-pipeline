@@ -9,7 +9,7 @@ max_workers: ${workers}                       # 2 is the default
 
 idle_timeout_minutes: ${idle_timeout_minutes}
 
-# Note that ray only seems to use the first availability zone, so if there are issues with that 
+# Note that ray only seems to use the first availability zone, so if there are issues with that
 # one, just need to put a different one first.
 provider:
   type: aws
@@ -32,7 +32,7 @@ available_node_types:
     node_config:
       InstanceType: p2.xlarge
       ImageId: ${ami}
-      IamInstanceProfile: 
+      IamInstanceProfile:
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
 auth:
@@ -45,7 +45,7 @@ file_mounts: {
   "/home/ubuntu/ray_script.sh": "deploy_files/${team}/ray_script.sh",
   "/home/ubuntu/check_passed_variables.sh": "deploy_files/check_passed_variables.sh",
   "/home/ubuntu/start_x_server.sh": "deploy_files/start_x_server.sh",
-  "/home/ubuntu/asound.conf": "deploy_files/asound.conf"
+  "/home/ubuntu/asound.conf": "deploy_files/asound.conf",
   ${additional_file_mounts}
 }
 

@@ -19,7 +19,7 @@ if controller is None:
 config_data, status = mcs.load_scene_json_file(config_json_file_path)
 output = controller.start_scene(config_data)
 
-action = 'MoveAhead'
+action = "MoveAhead"
 
 for x in range(0, 10):
     step_output = controller.step(action)
