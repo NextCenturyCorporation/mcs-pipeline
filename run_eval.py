@@ -17,10 +17,13 @@ from typing import List
 import yaml
 from mako.template import Template
 
-DEFAULT_VARSET = "default"
-RAY_WORKING_DIR = pathlib.Path("./.tmp_pipeline_ray/")
+DEFAULT_VARSET = 'default'
+USER_VARSET = 'user'
+RAY_WORKING_DIR = pathlib.Path('./.tmp_pipeline_ray/')
 SCENE_LIST_FILENAME = "scenes_single_scene.txt"
-DATE_FORMAT = "%Y%m%d-%H%M%S"
+DATE_FORMAT = '%Y%m%d-%H%M%S'
+RESUME_SAVE_PERIOD_SECONDS = 5*60
+STATUS_PRINT_PERIOD_SECONDS = 30
 
 
 @dataclass
@@ -220,9 +223,12 @@ def get_now_str() -> str:
 
 def add_variable_sets(varsets, varset_directory):
     varsets = copy.deepcopy(varsets)
+
+    vars = {}
+    if USER_VARSET not in varsets and os.path.exists(f'{varset_directory}{USER_VARSET}.yaml'):
+        varsets.insert(0, USER_VARSET)
     if DEFAULT_VARSET not in varsets:
         varsets.insert(0, DEFAULT_VARSET)
-    vars = {}
     for varset in varsets:
         with open(f"{varset_directory}{varset}.yaml") as def_file:
             new_vars = yaml.safe_load(def_file)
@@ -297,7 +303,6 @@ class EvalRun:
         eval,
         disable_validation=False,
         dev_validation=False,
-        resume=False,
         log_file=None,
         cluster="",
         output_logs=False,
@@ -385,7 +390,6 @@ class EvalRun:
         self.submit_params = (
             "--disable_validation" if disable_validation else ""
         )
-        self.submit_params += " --resume" if resume else ""
         self.submit_params += " --dev" if dev_validation else ""
 
     def parse_status(self, line):
@@ -447,7 +451,8 @@ class EvalRun:
 
             ray.exec(f"mkdir -p {self.remote_scene_location}")
 
-            ray.rsync_up(f"{self.local_scene_dir}/", self.remote_scene_location)
+            ray.rsync_up(f"{self.local_scene_dir}/",
+                         self.remote_scene_location)
             ray.rsync_up(
                 self.scene_list_file.as_posix(), self.remote_scene_list
             )
@@ -556,7 +561,7 @@ def run_evals(
 
     t = threading.Thread(
         target=print_status_periodically,
-        args=(all_status, 20),
+        args=(all_status, STATUS_PRINT_PERIOD_SECONDS),
         daemon=True,
         name="status-printer",
     )
@@ -564,7 +569,7 @@ def run_evals(
 
     t = threading.Thread(
         target=save_config_periodically,
-        args=(eval_set, 5 * 60, group_working_dir),
+        args=(eval_set, RESUME_SAVE_PERIOD_SECONDS, group_working_dir),
         daemon=True,
         name="status-saver",
     )
@@ -643,7 +648,16 @@ def get_array(group, base, field):
     return force_array(group.get(field, base.get(field, [])))
 
 
-def create_eval_set_from_file(cfg_file: str):
+def create_eval_set_from_file(cfg_file: str, super_override: dict = {}) -> List[EvalParams]:
+    """Creates and array of EvalParams to run an eval from a configuration file.  See Readme for details of config file.
+
+    Args:
+        cfg_file (str): config file
+        super_override (dict, optional): Adds to and overrides override from files. Defaults to {}.
+
+    Returns:
+        (list(EvalParams)): List of parameters for eval runs
+    """
     with open(cfg_file, "r") as reader:
         cfg = yaml.safe_load(reader)
 
@@ -658,6 +672,12 @@ def create_eval_set_from_file(cfg_file: str):
         varset = copy.deepcopy(get_array(group, my_base, "varset"))
         metadata_list = get_array(group, my_base, "metadata")
         override = group.get(field, my_base.get("override", {}))
+
+        # apply super override
+        if super_override:
+            for key, value in super_override.items():
+                override[key] = value
+
         files = get_array(group, base, "files")
         for metadata in metadata_list:
             parents = get_array(group, my_base, "parent-dir")
@@ -672,14 +692,25 @@ def create_eval_set_from_file(cfg_file: str):
                 evals.append(eval)
             for parent in parents:
                 new_evals = create_eval_set_from_folder(
-                    varset, parent, metadata
+                    varset, parent, metadata, override
                 )
+
                 evals += new_evals
     return evals
 
 
+def _args_to_override(args) -> dict:
+    override = {}
+    if args.num_workers and args.num_workers > 0:
+        override['workers'] = args.num_workers
+    if args.cluster_user:
+        override['clusterUser'] = f"-{args.cluster_user}"
+    return override
+
+
 def run_from_config_file(args):
-    test_set = create_eval_set_from_file(args.config_file)
+    super_override = _args_to_override(args)
+    test_set = create_eval_set_from_file(args.config_file, super_override)
     run_evals(
         test_set,
         dev=args.dev_validation,
@@ -687,7 +718,7 @@ def run_from_config_file(args):
         num_clusters=args.num_clusters,
         output_logs=args.redirect_logs,
         dry_run=args.dry_run,
-        base_dir=args.base_dir,
+        base_dir=args.base_dir
     )
 
 
@@ -695,6 +726,8 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Run multiple eval sets containing scenes using ray."
     )
+    # --config_file is required but still needs tag because varset can have variable parameters
+
     parser.add_argument(
         "--config_file",
         "-c",
@@ -740,6 +773,18 @@ def parse_args():
         type=int,
         default=1,
         help="How many simultanous clusters should be used.",
+    )
+    parser.add_argument(
+        "--num_workers", "-w",
+        type=int,
+        default=None,
+        help="How many simultanous workers for each cluster.  This will override any value in varsets.",
+    )
+    parser.add_argument(
+        "--cluster_user", "-u",
+        type=str,
+        default=None,
+        help="Tags the cluster with a the username provided with this parameter.",
     )
     return parser.parse_args()
 
