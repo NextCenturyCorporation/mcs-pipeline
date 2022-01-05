@@ -2,11 +2,11 @@ import logging
 import os
 
 logPath = "./logs/"
-formatString = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+formatString = "%(asctime)s %(name)-12s %(levelname)-8s %(message)s"
 
 
 def configure_base_logging(logFileName):
-    mainLog = logging.getLogger('main')
+    mainLog = logging.getLogger("main")
     mainLog.setLevel(logging.INFO)
 
     # add a handler that prints to stdout
@@ -36,9 +36,9 @@ def configure_logging(logName, logFileName):
 
     Only call this once for shared loggers since it calls addHandler, and you
     end up adding a new FileHandler each time"""
-    logger = logging.getLogger('main.' + logName)
+    logger = logging.getLogger("main." + logName)
     logger.setLevel(logging.DEBUG)
-    full_path = logPath + logFileName + '.log'
+    full_path = logPath + logFileName + ".log"
     try:
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
         handler = logging.FileHandler(full_path)

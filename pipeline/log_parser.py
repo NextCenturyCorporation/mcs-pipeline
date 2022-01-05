@@ -11,8 +11,8 @@ well providing a timestamp.
 import argparse
 import logging
 import os
-import re
 import pathlib
+import re
 import shutil
 from typing import List
 
@@ -21,7 +21,7 @@ PID_REGEX = "\\(pid=(\\d+)"
 TIMESTAMP_REGEX = "^(\\d{2}:\\d{2}:\\d{2})"
 
 
-class ExecutionStats():
+class ExecutionStats:
     start = -1
     end = -1
     last_time = -1
@@ -50,7 +50,7 @@ class ExecutionStats():
     def get_pretty_print_time(self, ts: int):
         """take an integer value of seconds and convert to
         'days:hours:minutes:seconds' format.  hours/minutes/seconds will be 2
-        digit with leading 0 when necessary. """
+        digit with leading 0 when necessary."""
         seconds = ts % 60
         minutes = int(ts / 60) % 60
         hours = int(ts / 3600) % 60
@@ -64,7 +64,7 @@ class ExecutionStats():
             print(f"{key:<20}:  {self.get_pretty_print_time(val)}")
 
 
-class LogMatcher():
+class LogMatcher:
     def __init__(self, name, regex) -> None:
         self.name = name
         self.regex = regex
@@ -77,10 +77,11 @@ class LogMatcher():
         return re.search(self.regex, line)
 
 
-class RayLogProcessor():
-
+class RayLogProcessor:
     @staticmethod
-    def split_and_process_log(file: str, output_dir: pathlib.Path, matchers: List[LogMatcher]):
+    def split_and_process_log(
+        file: str, output_dir: pathlib.Path, matchers: List[LogMatcher]
+    ):
         RayLogProcessor._split_log(file, output_dir)
         return RayLogProcessor._process_files_in_directory(output_dir, matchers)
 
@@ -102,16 +103,19 @@ class RayLogProcessor():
 
                 if pid is not None:
                     ip_group = re.search(IP_REGEX, line)
-                    ip = (ip_group.groups()[0]
-                          if ip_group is not None else 'head')
+                    ip = (
+                        ip_group.groups()[0] if ip_group is not None else "head"
+                    )
                     out_file = output_dir / f"{ip}.txt"
-                    with open(out_file, 'a') as out:
+                    with open(out_file, "a") as out:
                         out.write(pid_group.string)
                         out.flush()
                         out.close()
 
     @staticmethod
-    def _parse_single_server_file(file: pathlib.Path, matchers: List[LogMatcher]):
+    def _parse_single_server_file(
+        file: pathlib.Path, matchers: List[LogMatcher]
+    ):
         start = None
         exe_stat = None
         index = 0
@@ -141,7 +145,7 @@ class RayLogProcessor():
                     result = re.search(name_matcher, line)
                     if result is not None:
                         exe_stat.name = result.groups()[0]
-                        exe_stat.group = exe_stat.name.split('_')[0]
+                        exe_stat.group = exe_stat.name.split("_")[0]
                         print(exe_stat.name)
 
         return runs
@@ -154,8 +158,8 @@ class RayLogProcessor():
         for (base, folders, files) in os.walk(output_dir):
             for file in files:
                 my_runs = RayLogProcessor._parse_single_server_file(
-                    output_dir/file,
-                    matchers)
+                    output_dir / file, matchers
+                )
                 runs += my_runs
         return runs
 
@@ -186,24 +190,27 @@ class RayLogProcessor():
 def get_opics_matchers():
     return [
         LogMatcher(
-            'start', "copying files to subsystem-specific scene directories..."),
-        LogMatcher('split-overhead',
-                   "(running pvoe scenes)|(running avoe scenes)|(running interactive scenes)"),
-        LogMatcher('found-ai2thor', "Found path: /home/ubuntu/"),
-        LogMatcher('setup', "Initialize return: {'cameraNearPlane'"),
+            "start", "copying files to subsystem-specific scene directories..."
+        ),
         LogMatcher(
-            'Run', "(pvoe scenes complete)|(avoe scenes complete)|(interactive scenes complete)"),
+            "split-overhead",
+            "(running pvoe scenes)|(running avoe scenes)|(running interactive scenes)",
+        ),
+        LogMatcher("found-ai2thor", "Found path: /home/ubuntu/"),
+        LogMatcher("setup", "Initialize return: {'cameraNearPlane'"),
         LogMatcher(
-            'Upload', "Pushing .*\\.log"),
+            "Run",
+            "(pvoe scenes complete)|(avoe scenes complete)|(interactive scenes complete)",
+        ),
+        LogMatcher("Upload", "Pushing .*\\.log"),
     ]
 
 
 def get_default_matchers():
     return [
-        LogMatcher(
-            'Start', "In run scene."),
-        LogMatcher('Initialization', "Found path:"),
-        LogMatcher('Finish scene', "History file timestamp")
+        LogMatcher("Start", "In run scene."),
+        LogMatcher("Initialization", "Found path:"),
+        LogMatcher("Finish scene", "History file timestamp"),
     ]
 
 
@@ -225,14 +232,14 @@ def main(args):
     log_file = args.log_file
     output_dir = pathlib.Path(args.output_dir)
     matchers = None
-    if args.matchers == 'OPICS':
+    if args.matchers == "OPICS":
         matchers = get_opics_matchers()
     else:
         logger.error(
-            f"Warning: Matchers not defined for {args.matchers}.  Using Defaults")
+            f"Warning: Matchers not defined for {args.matchers}.  Using Defaults"
+        )
         matchers = get_default_matchers()
-    runs = RayLogProcessor.split_and_process_log(
-        log_file, output_dir, matchers)
+    runs = RayLogProcessor.split_and_process_log(log_file, output_dir, matchers)
 
     groups = {}
     for run in runs:
@@ -248,19 +255,27 @@ def main(args):
     RayLogProcessor.debug_print_runs(runs, True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description='Parse log files from run_eval.sh.  Logs must include timestamps from the ts command.'
+        description="Parse log files from run_eval.sh.  Logs must include timestamps from the ts command."
     )
-    parser.add_argument('--output-dir', '-o', default='./split_logs/',
-                        help="Folder where logs will be placed once split up")
     parser.add_argument(
-        'log_file', help="Log file that is to be split and parsed.")
+        "--output-dir",
+        "-o",
+        default="./split_logs/",
+        help="Folder where logs will be placed once split up",
+    )
     parser.add_argument(
-        '--matchers', '-m', choices=['OPICS', 'MESS', 'CORA', 'BASELINE'],
+        "log_file", help="Log file that is to be split and parsed."
+    )
+    parser.add_argument(
+        "--matchers",
+        "-m",
+        choices=["OPICS", "MESS", "CORA", "BASELINE"],
         required=True,
-        help="Group of matchers to determine where logs should be split up")
+        help="Group of matchers to determine where logs should be split up",
+    )
 
     args = parser.parse_args()
     main(args)
