@@ -7,13 +7,13 @@
 1. Open the EC2 dashboard: https://console.aws.amazon.com/ec2
 2. Click on "Instances"
 3. Click on "Launch instances"
-4. Under "Choose AMI", select "Ubuntu Server 20.04" *(You can also try one of the Deep Learning AMIs, but this documentation is not tailored to them.)*
-5. Under "Choose Instance Type", select p2.xlarge
-6. Click "Next", click "Next"
-7. Under "Add Storage", increase size (I used 32 GB)
-8. Click "Review and Launch", click "Launch"
-9. Select a key pair and click "Launch Instances"
-10. Connect to your new EC2 instance via SSH
+4. Under "Application and OS Images", select "Ubuntu Server 22.04" *(You can also try one of the Deep Learning AMIs, but this documentation is not tailored to them.)*
+5. Under "Instance Type", select p2.xlarge
+6. Under "Key Pair", select your key pair (this won't matter once you image the machine)
+7. Under "Configure Storage", increase size (I used 32 GB)
+8. Click "Launch Instance"
+9. Wait a few minutes for it to boot
+10. Right-click on your instance in the list, click "Connect", and copy the example SSH command
 
 ### Install Xorg
 
@@ -38,38 +38,58 @@ sudo /usr/bin/Xorg :0 &
 
 If you don't start Xorg correctly, you'll see `No protocol specified` and `xdpyinfo:  unable to open display ":0.0"` error messages when you start the MCS controller.
 
+### Switch Python
+
+MCS currently doesn't run on python version 3.10 (check using `python3 --version`), so you may need to install version 3.9:
+
+```
+sudo apt install software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install python3.9
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 2
+sudo update-alternatives --set python3 /usr/bin/python3.9
+sudo apt install python3.9-venv
+```
+
+Otherwise, if you plan on installing MCS from source code, install the default python venv package:
+
+```
+sudo apt install python3-venv
+```
+
 ### Download the MCS Unity Release
 
 Update the version tag as needed.
 
 ```
 mkdir unity_app; cd unity_app
-wget https://github.com/NextCenturyCorporation/MCS/releases/download/0.4.6/MCS-AI2-THOR-Unity-App-v0.4.6-linux.zip
-unzip MCS-AI2-THOR-Unity-App-v0.4.6-linux.zip
-tar -xzvf MCS-AI2-THOR-Unity-App-v0.4.6_Data.tar.gz
-chmod a+x MCS-AI2-THOR-Unity-App-v0.4.6.x86_64
+wget https://github.com/NextCenturyCorporation/MCS/releases/download/0.5.6/MCS-AI2-THOR-Unity-App-v0.5.6-linux.zip
+sudo apt install unzip
+unzip MCS-AI2-THOR-Unity-App-v0.5.6-linux.zip
+tar -xzvf MCS-AI2-THOR-Unity-App-v0.5.6_Data.tar.gz
+chmod a+x MCS-AI2-THOR-Unity-App-v0.5.6.x86_64
 ```
 
 ### Install the MCS Python Library
 
 ```
 cd ~
-sudo apt install python3-venv
-python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip setuptools wheel
 deactivate
 ```
 
-If you don't want to access the source code, just pip-install the library:
+If you don't want to access the source code, just pip-install the machine_common_sense library:
 
 ```
+cd ~
 source venv/bin/activate
-pip install git+https://github.com/NextCenturyCorporation/MCS@master#egg=machine_common_sense
+pip install machine_common_sense
 deactivate
 ```
 
-If you want to access the source code, then git-clone the MCS repository:
+Otherwise, to access the source code, git-clone the MCS repository:
 
 ```
 cd ~
@@ -85,7 +105,7 @@ You can use a scene file from the source code to test your installation. For exa
 ```
 cd ~
 source venv/bin/activate
-python MCS/machine_common_sense/scripts/run_last_action.py --mcs_unity_build_file /home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.6.x86_64 MCS/docs/source/scenes/gravity_support_ex_01.json --debug
+python MCS/machine_common_sense/scripts/run_last_action.py --mcs_unity_build_file /home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.5.6.x86_64 MCS/docs/source/scenes/gravity_support_ex_01.json --debug
 ls gravity_support_ex_01
 deactivate
 ```
