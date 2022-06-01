@@ -124,10 +124,11 @@ The `gravity_support_ex_01` folder should have all of the debug files for the ru
 
 ### Setup to Run an MCS Pipeline
 
-Install the AWS CLI and update the corresponding pip library outside of your python virtual environment:
+Install the AWS CLI and update the corresponding pip library **outside of your python virtual environment**:
 
 ```
 sudo apt install awscli
+deactivate
 pip install awscli==1.20.9
 pip install boto3==1.18.9
 pip install botocore==1.21.9
