@@ -7,7 +7,7 @@
 1. Open the EC2 dashboard: https://console.aws.amazon.com/ec2
 2. Click on "Instances"
 3. Click on "Launch instances"
-4. Under "Application and OS Images", select "Ubuntu Server 22.04" *(You can also try one of the Deep Learning AMIs, but this documentation is not tailored to them.)*
+4. Under "Application and OS Images", select "Ubuntu Server 20.04" *(You can also try one of the Deep Learning AMIs, but this documentation is not tailored to them)*
 5. Under "Instance Type", select p2.xlarge
 6. Under "Key Pair", select your key pair (this won't matter once you image the machine)
 7. Under "Configure Storage", increase size (I used 32 GB)
@@ -38,9 +38,17 @@ sudo /usr/bin/Xorg :0 &
 
 If you don't start Xorg correctly, you'll see `No protocol specified` and `xdpyinfo:  unable to open display ":0.0"` error messages when you start the MCS controller.
 
-### Switch Python
+### Install Python, Pip, and Virtual Environment
 
-MCS currently doesn't run on python version 3.10 (check using `python3 --version`), so you may need to install version 3.9:
+You must install python and pip outside of the python virtual environment so our pipeline code can install the ray module, then use `update-alternatives` so ray can run the `python` command (and redirect it to `python3`).
+
+```
+sudo apt install python3 python3-pip
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+python --version
+```
+
+MCS currently doesn't run on python 3.10 (especially if you've upgraded to Ubuntu Server 22.04), so you may need to install 3.9:
 
 ```
 sudo apt install software-properties-common
@@ -50,12 +58,14 @@ sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
 sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 2
 sudo update-alternatives --set python3 /usr/bin/python3.9
 sudo apt install python3.9-venv
+python3 -m venv venv
 ```
 
-Otherwise, if you plan on installing MCS from source code, install the default python venv package:
+Otherwise, install the default python 3 venv package:
 
 ```
 sudo apt install python3-venv
+python3 -m venv venv
 ```
 
 ### Download the MCS Unity Release
@@ -111,16 +121,6 @@ deactivate
 ```
 
 The `gravity_support_ex_01` folder should have all of the debug files for the run.
-
-### Install Python and Pip
-
-You must install python and pip outside of the python virtual environment so our pipeline code can install the ray module, then use `update-alternatives` so ray can run the `python` command (and redirect it to `python3`).
-
-```
-sudo apt install python3 python3-pip
-sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-python --version
-```
 
 ### Setup to Run an MCS Pipeline
 
