@@ -157,6 +157,7 @@ Config File API (yaml):
 #### Commands
 
 This script assumes you have the ts.  you can install ts via `sudo apt install moreutils`
+This script assumes you have the unbuffer.  you can install ts via `sudo apt install expect`
 
 Python Script:
 

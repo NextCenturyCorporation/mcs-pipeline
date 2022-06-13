@@ -15,6 +15,12 @@ def parse_args():
         help="Local scene directory to be used for a single run.",
     )
     parser.add_argument(
+        "--local_template_dir",
+        "-b",
+        default="mako",
+        help="Local directory containing 'variables' and 'templates' directory for creating config files.",
+    )
+    parser.add_argument(
         "--dev_validation",
         "-d",
         default=False,
