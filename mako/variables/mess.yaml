@@ -1,6 +1,8 @@
 cluster: "mess"
 team: "mess"
-workers: 4
 region: us-east-1
-ami: ami-00ad4212c970adc83 # AMI 'MESS-5-v1'
+ami: ami-0f3d2fc73250f2b55 # AMI 'MESS-5-g4dn-v1'
+InstanceType: g4dn.xlarge
+
+#ami: ami-00ad4212c970adc83 # AMI 'MESS-5-v1'
 idle_timeout_minutes: 10
