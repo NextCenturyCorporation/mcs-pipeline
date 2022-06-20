@@ -317,8 +317,8 @@ class SceneRunner:
     #  more flexible for Eval 4+ and update folder structure
     CURRENT_EVAL_BUCKET = "evaluation-images"
     CURRENT_DEV_EVAL_BUCKET = "dev-evaluation-images"
-    CURRENT_EVAL_FOLDER = "eval-resources-4"
-    CURRENT_MOVIE_FOLDER = "raw-eval-4"
+    CURRENT_EVAL_FOLDER = "eval-resources-5"
+    CURRENT_MOVIE_FOLDER = "raw-eval-5"
 
     def __init__(self, args):
 
