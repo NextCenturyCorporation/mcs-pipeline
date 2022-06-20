@@ -2,4 +2,4 @@ base:
   varset: ['opics']
 eval-groups:
   - metadata: ['level2']
-    dirs: ['eval5-validation-passive-physics/']
+    dirs: ['agents_test1/', 'agents_test2/']
