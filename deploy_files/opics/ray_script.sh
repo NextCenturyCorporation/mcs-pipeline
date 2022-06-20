@@ -25,7 +25,7 @@ mkdir -p "$SCENE_DIR"
 echo Moving scene_file="$scene_file" to "$SCENE_DIR"
 cp "$scene_file" "$SCENE_DIR"/
 
-export MCS_CONFIG_FILE_PATH=/home/ubuntu/eval5/cfg/$mcs_configfile
+export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
 # Run the Performer code
 echo Starting Evaluation:
