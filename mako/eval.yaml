@@ -1,7 +1,5 @@
 base:
-  varset: ['opics']
+  varset: ['cora']
 eval-groups:
-  - metadata: ['level1', 'level2']
-    parent-dir: 'mako-test/parent'
-  - metadata: ['level2', 'oracle']
-    dirs: ['mako-test/dirs/dir1', 'mako-test/dirs/dir2']
+  - metadata: ['level2']
+    dirs: ['eval_5_validation_passive_physics']

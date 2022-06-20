@@ -1,4 +1,4 @@
-ami: ami-00da8aa4b07be3e9a
-cluster: "cora"
+ami: ami-03d77a16ead707e25
+cluster: "cora-brian-test"
 team: "cora"
 cache_stopped_nodes: True

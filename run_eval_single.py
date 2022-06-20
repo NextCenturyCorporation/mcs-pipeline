@@ -47,7 +47,8 @@ def parse_args():
         help="Sets the metadata level for a single run.",
     )
     parser.add_argument(
-        "--team", "-t",
+        "--team",
+        "-t",
         default=None,
         help="Sets the team a single run.  If set in varset, this is not necessary, but this value will override.",
     )
@@ -69,11 +70,12 @@ if __name__ == "__main__":
     now = get_now_str()
     vars = "-".join(args.varset)
     team = args.team
-    override = {'team': team} if team else {}
+    override = {"team": team} if team else {}
     log_team = f"{team}-" if team else ""
     log_file = f"logs/{now}-{log_team}{vars}-{args.metadata}.log"
-    ep = EvalParams(args.varset, args.local_scene_dir,
-                    args.metadata, override=override)
+    ep = EvalParams(
+        args.varset, args.local_scene_dir, args.metadata, override=override
+    )
     execute_shell("echo Starting `date`", log_file)
     run = EvalRun(
         ep,
