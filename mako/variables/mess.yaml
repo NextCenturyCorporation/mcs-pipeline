@@ -1,6 +1,5 @@
 cluster: "mess"
 team: "mess"
-clusterUser: "rach"
 #workers: 2
 region: us-east-2
 ami: ami-085c6b20f122889da # east region ami for 'mess-5-v1'
