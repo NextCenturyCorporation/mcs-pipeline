@@ -1,5 +1,0 @@
-base:
-  varset: ['opics']
-eval-groups:
-  - metadata: ['level2']
-    dirs: ['agents_test1/', 'agents_test2/']

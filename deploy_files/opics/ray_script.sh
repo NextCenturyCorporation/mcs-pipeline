@@ -32,9 +32,5 @@ echo Starting Evaluation:
 conda init bash
 chmod +x run_opics_commands.sh
 bash -i /home/ubuntu/run_opics_commands.sh "$eval_dir" "$mcs_configfile" "$SCENE_DIR"
-#opics_eval5
-#sudo /usr/bin/Xorg :0 &
-#sudo nvidia-xconfig --use-display-device=None --virtual=600x400 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
-#cd "$eval_dir" && cp "$mcs_configfile" ./mcs_config.ini && python run_opics.py --scenes "$SCENE_DIR"
 
 unset MCS_CONFIG_FILE_PATH
