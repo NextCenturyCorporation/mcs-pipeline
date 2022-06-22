@@ -52,7 +52,6 @@ file_mounts: {
 setup_commands:
   - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
   - pip install --upgrade pip
-  - aws configure set region us-east-1
   - pip install -U "ray[default]"==1.13.0
 #  - pip install aioredis==1.3.1
 #  - pip install aiohttp==3.7.4.post0 # Is this ok for all performers?

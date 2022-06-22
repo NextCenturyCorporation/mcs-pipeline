@@ -16,7 +16,7 @@ def parse_args():
     )
     parser.add_argument(
         "--local_template_dir",
-        "-t",
+        "-b",
         default="mako",
         help="Local directory containing 'variables' and 'templates' directory for creating config files.",
     )

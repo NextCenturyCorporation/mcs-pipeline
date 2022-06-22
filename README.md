@@ -80,8 +80,8 @@ and UI related functionality will work correctly (these can be turned off for te
 - **team** - has to be either `mess` (for multiple submissions, `mess1` or `mess2`), `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
 - **submission_id** - currently, only needed for MESS submissions (if multiple given). Needs to match the team label (either `1` or `2`)
 - **s3_bucket** - should be `evaluation-images`
-- **s3_folder** - json output - has to be the folder we store output for the current eval (right now, set to `eval-resources-4` for eval 4)
-- **s3_movies_folder**: required post-3.75 (value should be `raw-eval-4` for eval 4) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well
+- **s3_folder** - json output - has to be the folder we store output for the current eval (right now, set to `eval-resources-5` for eval 5)
+- **s3_movies_folder**: required post-3.75 (value should be `raw-eval-5` for eval 5) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well
 - **video_enabled** - must be set to `true`
 
 If anything above changes, we will need to make sure those changes are incorporated into the ingest process/UI as needed.
@@ -129,10 +129,10 @@ Config File API (yaml):
         concatentate, those in the 'base' variable.
 
         varsets will automatically add 'default' and 'user' to the beginning of the list.
-        'user' is only added if the file exists. The 'user' varset is to be added for 
+        'user' is only added if the file exists. The 'user' varset is to be added for
         user specific variables like naming clusters with something like
         'clusterUser: -myName'
-      metadata - single or list of metadata levels.  Each metadata level will create more 
+      metadata - single or list of metadata levels.  Each metadata level will create more
         permutations of the eval-sets
       parent-dir - Must be used mutually exclusively with 'dirs'.   This points to a directory
         where each subdirectory should contain scenes and will be used to create permutations
@@ -157,6 +157,7 @@ Config File API (yaml):
 #### Commands
 
 This script assumes you have the ts.  you can install ts via `sudo apt install moreutils`
+This script assumes you have the unbuffer.  you can install ts via `sudo apt install expect`
 
 Python Script:
 
