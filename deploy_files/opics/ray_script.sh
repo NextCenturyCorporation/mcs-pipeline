@@ -29,12 +29,7 @@ export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
 # Run the Performer code
 echo Starting Evaluation:
-
-# Intilizatize the shell
-conda init bash
-
-# Run the commands after the initilization in a seperate script to get conda activate to work
-chmod +x run_opics_commands.sh
-bash -i /home/ubuntu/run_opics_commands.sh "$eval_dir" "$mcs_configfile" "$SCENE_DIR"
+opics_eval5
+cd "$eval_dir" && cp "$mcs_configfile" ../cfg/mcs_config.ini && bash -i ./opics.sh "$SCENE_DIR"
 
 unset MCS_CONFIG_FILE_PATH
