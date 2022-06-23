@@ -2,6 +2,6 @@ cluster: "mess"
 team: "mess"
 #workers: 2
 region: us-east-2
-#ami: ami-085c6b20f122889da # east region ami for 'mess-5-v1'
-ami: ami-0ce7bbcc0c8f7c045 # AMI 'MESS-5-v2'
+ami: ami-098ce70ba6c06a0bf # east region ami for 'mess-5-v2.1'
+#ami: ami-0ce7bbcc0c8f7c045 # AMI 'MESS-5-v2'
 idle_timeout_minutes: 10
