@@ -1,7 +1,7 @@
 cluster: "mess"
 team: "mess"
-#workers: 2
 region: us-east-2
-ami: ami-098ce70ba6c06a0bf # east region ami for 'mess-5-v2.1'
-#ami: ami-0ce7bbcc0c8f7c045 # AMI 'MESS-5-v2'
+ami: ami-0e99d87c7e7f2bc31 # AMI 'MESS-5-v2.2-g4dn'
+InstanceType: g4dn.xlarge
+resources: {"CPU": 4, "GPU": 1}
 idle_timeout_minutes: 10
