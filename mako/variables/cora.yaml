@@ -1,4 +1,6 @@
 ami: ami-09eab56aec4c903ab
-cluster: "cora"
+cluster: "cora-g4dn"
 team: "cora"
 cache_stopped_nodes: False
+InstanceType: g4dn.2xlarge
+resources: {"CPU": 4, "GPU": 1}
