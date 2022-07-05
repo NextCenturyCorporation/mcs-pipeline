@@ -1,5 +1,7 @@
 cluster: "opics"
 team: "opics"
-ami: ami-0d4d42526808a86c9
+ami: ami-08e776e947c603518 #g4dn
 additional_setup_commands: "# Shapely got automatically updated to 1.8 which caused some significant performance problems in eval 4.\n  # We are unsure as to exactly what automatic process caused this, but this reverts it.\n  - pip install shapely==1.7.1\n"
 #additional_file_mounts: "\"/home/ubuntu/run_opics_commands.sh\": \"deploy_files/opics/run_opics_commands.sh\""
+InstanceType: g4dn.xlarge
+resources: {"CPU": 4, "GPU": 1}

@@ -30,6 +30,8 @@ export MCS_CONFIG_FILE_PATH=$mcs_configfile
 # Run the Performer code
 echo Starting Evaluation:
 opics_eval5
+#run this because opics_eval5 sets xserver conf file
+sudo nvidia-xconfig --no-use-display-device --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
 cd "$eval_dir" && cp "$mcs_configfile" ../cfg/mcs_config.ini && bash -i ./opics.sh "$SCENE_DIR"
 
 unset MCS_CONFIG_FILE_PATH
