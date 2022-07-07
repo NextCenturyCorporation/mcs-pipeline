@@ -29,7 +29,6 @@ export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
 # Run the Performer code
 echo Starting Evaluation:
-opics_eval5
-cd "$eval_dir" && cp "$mcs_configfile" ../cfg/mcs_config.ini && bash -i ./opics.sh "$SCENE_DIR"
+bash -i /home/ubuntu/run_opics_commands.sh "$eval_dir" "$mcs_configfile" "$SCENE_DIR"
 
 unset MCS_CONFIG_FILE_PATH
