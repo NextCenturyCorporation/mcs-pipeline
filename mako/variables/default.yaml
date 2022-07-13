@@ -1,4 +1,4 @@
-workers: 50
+workers: 75
 region: us-east-1
 clusterUser: ""
 clusterSuffix: ""
