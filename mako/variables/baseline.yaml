@@ -1,3 +1,4 @@
 ami: ami-02f646a2e4a6b3a2c
-cluster: "baseline"
+cluster: baseline
+team: baseline
 workers: 10
