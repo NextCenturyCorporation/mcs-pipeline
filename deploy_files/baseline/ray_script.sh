@@ -46,6 +46,6 @@ cd $eval_dir
 echo Starting Evaluation:
 echo $eval_dir
 
-../venv/bin/python run_baselines.py $scene_file --debug
+venv/bin/python run_scene_nyu_eval_5.py --scene_path $scene_file
 
 unset MCS_CONFIG_FILE_PATH

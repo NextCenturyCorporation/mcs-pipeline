@@ -52,7 +52,7 @@ echo "GENERATING RGB VIDEO: $scene_file ($SCENE_NAME)"
 echo
 source /home/ubuntu/venv/bin/activate
 
-UNITY_APP=/home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.6.x86_64
+UNITY_APP=/home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.5.6.x86_64
 
 # Read variables from MCS config file
 S3_BUCKET=$(awk -F '=' '/s3_bucket/ {print $2}' $mcs_configfile | xargs)

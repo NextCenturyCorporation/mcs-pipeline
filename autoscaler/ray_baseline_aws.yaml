@@ -4,8 +4,8 @@
 #
 # This file is a modification of: https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
-cluster_name: baseline
-max_workers: 8                       # 2 is the default
+cluster_name: thomas-nyu
+max_workers: 10
 
 # Note that ray only seems to use the first availability zone, so if there are issues with that 
 # one, just need to put a different one first.
@@ -23,13 +23,13 @@ available_node_types:
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0828f7cadf39e9d1f
+      ImageId: ami-02f646a2e4a6b3a2c
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
       InstanceType: p2.xlarge
-      ImageId: ami-0828f7cadf39e9d1f
+      ImageId: ami-02f646a2e4a6b3a2c
       IamInstanceProfile: 
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
 
