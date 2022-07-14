@@ -1,1 +1,3 @@
-ami: ami-00da8aa4b07be3e9a
+ami: ami-02f646a2e4a6b3a2c
+cluster: "baseline"
+workers: 10

@@ -1,0 +1,5 @@
+base:
+  varset: ['baseline']
+eval-groups:
+  - metadata: ['level2']
+    dirs: ['/home/tschellenberg/nyu_red_team_eval_5_subset/']
