@@ -41,6 +41,7 @@ echo Making SCENE_DIR="$SCENE_DIR"
 mkdir -p "$SCENE_DIR"
 echo Moving scene_file="$scene_file" to "$SCENE_DIR"
 cp "$scene_file" "$SCENE_DIR"/
+scene_name=${scene_file##*/}
 
 export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
@@ -49,6 +50,6 @@ cd "$eval_dir" || exit
 echo Starting Evaluation:
 echo "$eval_dir"
 
-venv/bin/python run_scene_nyu_eval_5.py --scene_path $scene_file
+venv/bin/python run_scene_nyu_eval_5.py --scene_path $scene_name
 
 unset MCS_CONFIG_FILE_PATH
