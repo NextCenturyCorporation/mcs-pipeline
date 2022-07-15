@@ -1,0 +1,5 @@
+ami: ami-05b81601d3c4abb23
+cluster: nyu_moving_target_prediction
+filePrefix: nyu_moving_target_prediction
+team: baseline
+workers: 1
