@@ -1,4 +1,4 @@
-ami: ami-0f1e1131ad2113c5a
+ami: ami-049942b3fed09519e
 cluster: nyu_spatial_elimination
 filePrefix: nyu_spatial_elimination
 team: baseline
