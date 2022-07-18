@@ -16,4 +16,4 @@ eval-groups:
   - varset: ['nyu_support_relations']
     dirs: ['/home/ubuntu/nyu_red_team_eval_5_subset/support_relations/']
   - varset: ['nyu_tool_use']
-    dirs: ['/home/ubuntutschellenberg/nyu_red_team_eval_5_subset/tool_use/']
+    dirs: ['/home/ubuntu/nyu_red_team_eval_5_subset/tool_use/']
