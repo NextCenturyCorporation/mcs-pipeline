@@ -2,4 +2,7 @@ base:
   varset: ['cora']
 eval-groups:
   - metadata: ['level2']
-    dirs: ['eval_5_validation_passive_physics', 'eval_5_validation_interactive', 'eval_5_validation_passive_agent_v2']
+    dirs: ['../oscar_containers', '../papa_obstacles', '../quebec_occluders',
+    '../romeo_object_permence', '../sierra_agent_identification', '../tango_moving_target',
+    '../uniform_holes', '../victor_lava','../whiskey_ramps', '../xray_solidity', '../zulu_support_relations',
+    '../omega_tool_use','../yankee_support_relations']
