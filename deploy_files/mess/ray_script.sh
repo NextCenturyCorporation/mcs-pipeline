@@ -16,7 +16,7 @@ source /home/ubuntu/start_x_server.sh
 echo Clearing History at "$eval_dir"/SCENE_HISTORY/
 rm -f "$eval_dir"/SCENE_HISTORY/*
 echo Clearing "$SCENE_DIR"
-rm -f "$SCENE_DIR"
+rm -rf "${SCENE_DIR:?}"/*
 
 # Move files to appropriate locations
 echo Making SCENE_DIR="$SCENE_DIR"
