@@ -1,8 +1,11 @@
 base:
   varset: ['cora']
 eval-groups:
+  # - metadata: ['level2']
+  #   dirs: ['../oscar_containers', '../papa_obstacles', '../quebec_occluders',
+  #   '../romeo_object_permence', '../sierra_agent_identification', '../tango_moving_target',
+  #   '../uniform_holes', '../victor_lava','../whiskey_ramps', '../xray_solidity', '../zulu_support_relations',
+  #   '../omega_tool_use','../yankee_support_relations']
   - metadata: ['level2']
-    dirs: ['../oscar_containers', '../papa_obstacles', '../quebec_occluders',
-    '../romeo_object_permence', '../sierra_agent_identification', '../tango_moving_target',
-    '../uniform_holes', '../victor_lava','../whiskey_ramps', '../xray_solidity', '../zulu_support_relations',
-    '../omega_tool_use','../yankee_support_relations']
+    dirs: ['../alpha_collisions', '../bravo_gravity_support', '../charlie_object_permanence', '../delta_shape_constancy',
+    '../echo_spatio_temporal_continuity']
