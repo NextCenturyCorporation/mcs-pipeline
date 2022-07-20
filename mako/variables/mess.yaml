@@ -2,5 +2,4 @@ cluster: "mess"
 team: "mess"
 workers: 28
 region: us-east-2
-ami: ami-0f753abfe946f3e56 # east-2 region ami for 'mess-eval5-submission-v3'
-idle_timeout_minutes: 10
+ami: ami-0a5f3f1f18bec9ede # east-2 region ami for 'mess-eval5-submission-v4'
