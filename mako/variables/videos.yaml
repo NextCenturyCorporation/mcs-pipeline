@@ -1,17 +1,21 @@
-ami: "ami-057d4f97fa2bc764f # ami 'dev_0_4_6' - we will want to update the MCS version/AMI later"
-cluster: "videos"
-workers: 8
-
-history_enabled: false
-video_enabled: false
-evaluation_bool: false
-
-save_debug_images: true
-
-s3_bucket: mcs-output-videos
-s3_folder: eval-4-test
-
-team: "videos"
+ami: ami-0e78ac0636bcaeb0a
+cluster: videos
 eval_name: ""
+team: ""
+workers: 10
 
-mcs_config_extra: "team= # override team in MCS_config"
+# We won't use the MCS python library to upload output to S3
+evaluation_bool: false
+# Always run metadata level 1 since we just need the RGB images
+metadata: level1
+# We don't need to save the scene history in order to generate the videos
+history_enabled: false
+# We need to save the images in order to generate the videos
+save_debug_images: true
+# We don't use the MCS python library to save the videos
+video_enabled: false
+
+# The S3 bucket and subfolder in which to save the video files
+# Adjust either as needed, though feel free to use the existing bucket
+s3_bucket: mcs-output-videos
+s3_folder: rgb-videos

@@ -1,15 +1,19 @@
-ami: "ami-057d4f97fa2bc764f # ami 'dev_0_4_6' - we will want to update the MCS version/AMI later"
-cluster: "topdown"
-workers: 8
+ami: ami-0e78ac0636bcaeb0a
+cluster: videos
+eval_name: ""
+team: ""
+workers: 10
 
-history_enabled: false
-video_enabled: true
+# We won't use the MCS python library to upload output to S3
 evaluation_bool: false
+# Always run metadata level 1 since we just need the RGB images
+metadata: level1
+# We don't need to save the scene history in order to generate the videos
+history_enabled: false
+# We use the MCS python library to save the topdown videos
+video_enabled: true
 
+# The S3 bucket and subfolder in which to save the video files
+# Adjust either as needed, though feel free to use the existing bucket
 s3_bucket: mcs-output-videos
 s3_folder: topdown-videos
-
-team: "topdown"
-eval_name: ""
-
-mcs_config_extra: "team= # override team in MCS_config"
