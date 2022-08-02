@@ -1,0 +1,5 @@
+ami: ami-0e8dd9d293691adbb
+cluster: nyu_support_relations
+filePrefix: nyu_support_relations
+team: baseline
+workers: 5

@@ -338,16 +338,17 @@ class EvalRun:
         now = get_now_str()
         team = vars.get("team", "none")
         self.team = team
+        file_prefix = vars.get("filePrefix", team)
 
         suffix = f"-{cluster}" if cluster else ""
-        working_name = f"{now}-{team}{suffix}"
+        working_name = f"{now}-{file_prefix}{suffix}"
         group_working_dir.mkdir(exist_ok=True, parents=True)
         working = group_working_dir / working_name
         working.mkdir()
         self.scene_list_file = working / SCENE_LIST_FILENAME
         self.working_dir = working
 
-        self.ray_locations_config = f"configs/{team}_aws.ini"
+        self.ray_locations_config = f"configs/{file_prefix}_aws.ini"
 
         # Generate Ray Config
         ray_cfg_template = Template(
@@ -355,7 +356,7 @@ class EvalRun:
         )
 
         ray_cfg = ray_cfg_template.render(**vars)
-        ray_cfg_file = working / f"ray_{team}_aws.yaml"
+        ray_cfg_file = working / f"ray_{file_prefix}_aws.yaml"
         ray_cfg_file.write_text(ray_cfg)
         self.ray_cfg_file = ray_cfg_file
 
@@ -364,7 +365,9 @@ class EvalRun:
             filename=f"{base_dir}/templates/mcs_config_template.ini"
         )
         mcs_cfg = mcs_cfg_template.render(**vars)
-        mcs_cfg_file = working / f"mcs_config_{team}_{self.metadata}.ini"
+        mcs_cfg_file = (
+            working / f"mcs_config_{file_prefix}_{self.metadata}.ini"
+        )
         mcs_cfg_file.write_text(mcs_cfg)
         self.mcs_cfg_file = mcs_cfg_file
 

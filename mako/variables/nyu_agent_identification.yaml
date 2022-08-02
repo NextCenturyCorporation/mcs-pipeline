@@ -1,0 +1,5 @@
+ami: ami-0e8dd9d293691adbb
+cluster: nyu_agent_identification
+filePrefix: nyu_agent_identification
+team: baseline
+workers: 5

@@ -1,0 +1,5 @@
+ami: ami-0e8dd9d293691adbb
+cluster: nyu_spatial_elimination
+filePrefix: nyu_spatial_elimination
+team: baseline
+workers: 5
