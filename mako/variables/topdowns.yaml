@@ -1,6 +1,6 @@
 ami: ami-060185d3269ac01f0
-cluster: topdown
-team: topdown
+cluster: topdowns
+team: topdowns
 workers: 10
 
 # We won't use the MCS python library to upload output to S3
