@@ -1,7 +1,6 @@
-ami: ami-0e78ac0636bcaeb0a
-cluster: videos
-eval_name: ""
-team: ""
+ami: ami-060185d3269ac01f0
+cluster: topdown
+team: topdown
 workers: 10
 
 # We won't use the MCS python library to upload output to S3
@@ -17,3 +16,6 @@ video_enabled: true
 # Adjust either as needed, though feel free to use the existing bucket
 s3_bucket: mcs-output-videos
 s3_folder: topdown-videos
+
+# Can be set to append a prefix to all the output filenames.
+eval_name: ""

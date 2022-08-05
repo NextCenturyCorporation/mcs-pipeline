@@ -1,7 +1,6 @@
-ami: ami-0e78ac0636bcaeb0a
+ami: ami-060185d3269ac01f0
 cluster: videos
-eval_name: ""
-team: ""
+team: videos
 workers: 10
 
 # We won't use the MCS python library to upload output to S3
@@ -19,3 +18,6 @@ video_enabled: false
 # Adjust either as needed, though feel free to use the existing bucket
 s3_bucket: mcs-output-videos
 s3_folder: rgb-videos
+
+# Can be set to append a prefix to all the output filenames.
+eval_name: ""

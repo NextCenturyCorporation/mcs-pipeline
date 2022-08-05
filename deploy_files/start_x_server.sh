@@ -16,7 +16,15 @@ else
   then
     echo 'Successfully started X Server'
   else
-    echo 'Error:  Unable to start X Server!!'
-    exit 1
+    echo "Sleeping for another 20 seconds to wait for X server"
+    sleep 20
+    echo "Sleep finished"
+    if pgrep -x Xorg > /dev/null
+    then
+      echo 'Successfully started X Server'
+    else
+      echo 'Error:  Unable to start X Server!!'
+      exit 1
+    fi
   fi
 fi

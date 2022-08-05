@@ -309,6 +309,7 @@ class EvalRun:
         dry_run=False,
         base_dir="mako",
         group_working_dir=RAY_WORKING_DIR,
+        num_retries: int = 3
     ) -> pathlib.Path:
         self.eval = eval
         self.status = self.eval.status
@@ -394,6 +395,7 @@ class EvalRun:
             "--disable_validation" if disable_validation else ""
         )
         self.submit_params += " --dev" if dev_validation else ""
+        self.submit_params += f" --num_retries {num_retries}"
 
     def parse_status(self, line):
         json_str = line.split("JSONSTATUS:")[-1]
@@ -553,6 +555,7 @@ def run_evals(
     output_logs=False,
     dry_run=False,
     base_dir="mako",
+    num_retries: int = 3
 ):
     q = queue.Queue()
     for eval in eval_set:
@@ -605,6 +608,7 @@ def run_evals(
                 dry_run=dry_run,
                 base_dir=base_dir,
                 group_working_dir=group_working_dir,
+                num_retries=num_retries
             )
             eval_run.set_status_holder(all_status)
 
@@ -721,7 +725,8 @@ def run_from_config_file(args):
         num_clusters=args.num_clusters,
         output_logs=args.redirect_logs,
         dry_run=args.dry_run,
-        base_dir=args.base_dir
+        base_dir=args.base_dir,
+        num_retries=args.num_retries
     )
 
 
@@ -776,6 +781,12 @@ def parse_args():
         type=int,
         default=1,
         help="How many simultanous clusters should be used.",
+    )
+    parser.add_argument(
+        "--num_retries",
+        type=int,
+        default=3,
+        help="How many times to retry running a failed scene which is eligible for retry."
     )
     parser.add_argument(
         "--num_workers", "-w",
