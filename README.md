@@ -394,7 +394,7 @@ eval-groups:
 4. Terminate your AWS instances once finished.
 
 ```bash
-python run_eval.py --disable_validation -d -n 1 -c <mako_config> -u <cluster_name> --num_retries 5
+python run_eval.py --disable_validation -n 1 -c <mako_config> -u <cluster_name> --num_retries 5
 ```
 
 ## Generating Topdown Videos
@@ -416,7 +416,7 @@ eval-groups:
 4. Terminate your AWS instances once finished.
 
 ```bash
-python run_eval.py --disable_validation -d -n 1 -c <mako_config> -u <cluster_name> --num_retries 5
+python run_eval.py --disable_validation -n 1 -c <mako_config> -u <cluster_name> --num_retries 5
 ```
 
 ## Acknowledgements
