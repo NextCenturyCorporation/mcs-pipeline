@@ -17,12 +17,12 @@ from typing import List
 import yaml
 from mako.template import Template
 
-DEFAULT_VARSET = 'default'
-USER_VARSET = 'user'
-RAY_WORKING_DIR = pathlib.Path('./.tmp_pipeline_ray/')
+DEFAULT_VARSET = "default"
+USER_VARSET = "user"
+RAY_WORKING_DIR = pathlib.Path("./.tmp_pipeline_ray/")
 SCENE_LIST_FILENAME = "scenes_single_scene.txt"
-DATE_FORMAT = '%Y%m%d-%H%M%S'
-RESUME_SAVE_PERIOD_SECONDS = 5*60
+DATE_FORMAT = "%Y%m%d-%H%M%S"
+RESUME_SAVE_PERIOD_SECONDS = 5 * 60
 STATUS_PRINT_PERIOD_SECONDS = 30
 
 
@@ -225,7 +225,9 @@ def add_variable_sets(varsets, varset_directory):
     varsets = copy.deepcopy(varsets)
 
     vars = {}
-    if USER_VARSET not in varsets and os.path.exists(f'{varset_directory}{USER_VARSET}.yaml'):
+    if USER_VARSET not in varsets and os.path.exists(
+        f"{varset_directory}{USER_VARSET}.yaml"
+    ):
         varsets.insert(0, USER_VARSET)
     if DEFAULT_VARSET not in varsets:
         varsets.insert(0, DEFAULT_VARSET)
@@ -309,7 +311,7 @@ class EvalRun:
         dry_run=False,
         base_dir="mako",
         group_working_dir=RAY_WORKING_DIR,
-        num_retries: int = 3
+        num_retries: int = 3,
     ) -> pathlib.Path:
         self.eval = eval
         self.status = self.eval.status
@@ -366,9 +368,7 @@ class EvalRun:
             filename=f"{base_dir}/templates/mcs_config_template.ini"
         )
         mcs_cfg = mcs_cfg_template.render(**vars)
-        mcs_cfg_file = (
-            working / f"mcs_config_{file_prefix}_{self.metadata}.ini"
-        )
+        mcs_cfg_file = working / f"mcs_config_{file_prefix}_{self.metadata}.ini"
         mcs_cfg_file.write_text(mcs_cfg)
         self.mcs_cfg_file = mcs_cfg_file
 
@@ -456,8 +456,7 @@ class EvalRun:
 
             ray.exec(f"mkdir -p {self.remote_scene_location}")
 
-            ray.rsync_up(f"{self.local_scene_dir}/",
-                         self.remote_scene_location)
+            ray.rsync_up(f"{self.local_scene_dir}/", self.remote_scene_location)
             ray.rsync_up(
                 self.scene_list_file.as_posix(), self.remote_scene_list
             )
@@ -555,7 +554,7 @@ def run_evals(
     output_logs=False,
     dry_run=False,
     base_dir="mako",
-    num_retries: int = 3
+    num_retries: int = 3,
 ):
     q = queue.Queue()
     for eval in eval_set:
@@ -608,7 +607,7 @@ def run_evals(
                 dry_run=dry_run,
                 base_dir=base_dir,
                 group_working_dir=group_working_dir,
-                num_retries=num_retries
+                num_retries=num_retries,
             )
             eval_run.set_status_holder(all_status)
 
@@ -655,7 +654,9 @@ def get_array(group, base, field):
     return force_array(group.get(field, base.get(field, [])))
 
 
-def create_eval_set_from_file(cfg_file: str, super_override: dict = {}) -> List[EvalParams]:
+def create_eval_set_from_file(
+    cfg_file: str, super_override: dict = {}
+) -> List[EvalParams]:
     """Creates and array of EvalParams to run an eval from a configuration file.  See Readme for details of config file.
 
     Args:
@@ -709,9 +710,9 @@ def create_eval_set_from_file(cfg_file: str, super_override: dict = {}) -> List[
 def _args_to_override(args) -> dict:
     override = {}
     if args.num_workers and args.num_workers > 0:
-        override['workers'] = args.num_workers
+        override["workers"] = args.num_workers
     if args.cluster_user:
-        override['clusterUser'] = f"-{args.cluster_user}"
+        override["clusterUser"] = f"-{args.cluster_user}"
     return override
 
 
@@ -726,7 +727,7 @@ def run_from_config_file(args):
         output_logs=args.redirect_logs,
         dry_run=args.dry_run,
         base_dir=args.base_dir,
-        num_retries=args.num_retries
+        num_retries=args.num_retries,
     )
 
 
@@ -786,16 +787,18 @@ def parse_args():
         "--num_retries",
         type=int,
         default=3,
-        help="How many times to retry running a failed scene which is eligible for retry."
+        help="How many times to retry running a failed scene which is eligible for retry.",
     )
     parser.add_argument(
-        "--num_workers", "-w",
+        "--num_workers",
+        "-w",
         type=int,
         default=None,
         help="How many simultanous workers for each cluster.  This will override any value in varsets.",
     )
     parser.add_argument(
-        "--cluster_user", "-u",
+        "--cluster_user",
+        "-u",
         type=str,
         default=None,
         help="Tags the cluster with a the username provided with this parameter.",
