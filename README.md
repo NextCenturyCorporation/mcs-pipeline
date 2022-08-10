@@ -171,6 +171,8 @@ Configuration files and a resume.yaml will be written in the .tmp_pipeline_ray d
 
 #### Log Parsing
 
+TODO
+
 If run_eval.sh is run with 'ts -s', the output logs can be parsed by the pipeline/log_parser.py.  This command will split the logs into logs per working node and then use some regex to report some metrics on how long different portions of a run took.  At the moment, the script output is somewhat rough and it only has good support for tracking opics logging.
 
 #### Script Overview
@@ -219,7 +221,7 @@ Retryable: False
 * Copy files to head node: `ray rsync_up /path/to/config.yaml SOURCE DEST`
 * Execute shell command on head node: `ray exec /path/to/config.yaml "COMMAND"`
 * Submit a Ray python script to the cluster: `ray submit /path/to/config.yaml PARAMETER1 PARAMETER2`
-* Monitor cluster (creates tunnel so you can see it locally): `ray dashboard autoscaler/ray_baseline_aws.yaml`
+* TODO Monitor cluster (creates tunnel so you can see it locally): `ray dashboard autoscaler/ray_baseline_aws.yaml`
   * Point browser to localhost:8265 (port will be in command output)
 * Connect to shell on head node: `ray attach /path/to/config.yaml`
 * Shutdown cluster (stops AWS instances): `ray down /path/to/config.yaml`
@@ -292,6 +294,8 @@ This will allow the EC2 machines to be called without you agreeing to accept the
 manually.
 
 ### Logs
+
+TODO
 
 Logs will be written to the head node and sometimes be pushed to S3.  Details TBD.
 
