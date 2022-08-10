@@ -60,12 +60,6 @@ https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck
 ### Quickstart Tips
 
 - Make sure you have AWS credentials for MCS set as default.
-- For testing, make the follow edits to the autoscaler/xxxx.yaml file you plan to use.
-
-  - Change the cluster name, this will prevent name collsion of EC2s and make finding yours easier.
-  - If you want to test how a different library will work, you can add an install command in the setup_commands.
-- For testing, find which config/xxxx.ini file that you are using by changing the "evaluation_name" so you can
-find the results easier
 - If you are going to run "run_eval.py" you need to be in the python virtal environment first. ```source venv/bin/activate```
 
 #### MCS Config File
@@ -94,7 +88,7 @@ In order to test the pipeline and evaluations, the following is helpful:
 
 * Know if/where your results will be uploaded to avoid conflicts:
   * Videos are only saved when `videos_enabled=true`
-  * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has `evalution=true`
+  * Results are only uploaded if the MCS config (mako/templates/mcs_config_template.ini) has `evalution=true`
   * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test
   * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
   * If you'd like to disable logs being uploaded to s3 while testing, set this in your MCS config: `logs_to_s3=false`
@@ -166,7 +160,7 @@ To run a single ray run, run the following command on your local development mac
 python run_eval_single.py -v opics -s eval4-validation-subset/group3 -m level2
 ```
 
-To run a full eval from a configurd file:
+To run a full eval from a configured file:
 ```
 python run_eval.py -d -n 1 -c mako/eval-4-subset.yaml
 ```
@@ -182,7 +176,7 @@ If run_eval.sh is run with 'ts -s', the output logs can be parsed by the pipelin
 #### Script Overview
 
 The run_eval**.py scripts performs the following actions and may run them multiple times:
-* Start a Ray cluster based on the autoscaler/ray_MODULE_aws.yaml file
+* Start a Ray cluster based on the mako configs
 * Generates a list of scene files and rsyncs that to the head node
 * Rsync the following into the head node:
   * pipeline folder
@@ -191,7 +185,7 @@ The run_eval**.py scripts performs the following actions and may run them multip
   * provided scenes folder
 * submits a Ray task via the pipeline_ray.py script with the following parameters:
   * Ray locations config (configs/MODULE_aws.ini)
-  * MCS config (configs/mcs_config_MODULE_<METADATA_LEVEL>.ini)
+  * MCS config (mako/templates/mcs_config_template.ini)
     * Note: by default metadata level is level2
 
 #### Ray Expected Output
@@ -234,20 +228,19 @@ Retryable: False
 
 To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine.
 
-"run_script" is currently MCS-pipeline/deploy_files/local/ray_script.sh
-"scene_location" is currently MCS/docs/source/scenes/
-"scene_list" is a .txt file that you put one scene on each line to run.
-"eval_dir" is where the evaluations are written
+- "run_script" is currently mcs-pipeline/deploy_files/local/ray_script.sh
+- "scene_location" is currently MCS/docs/source/scenes/
+- "scene_list" is a .txt file that you put one scene on each line to run.
+- "eval_dir" is where the evaluations are written
 
-If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in
-configs/mcs_config_local_level2.ini.
+If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in mako/templates/mcs_config_template.ini.
 
 Next you will need to create a "local.yaml" in the "autoscaler" directory. Examples can be found at https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
 Then run the following:
 
 ```
-python pipeline_ray.py configs/test_local.ini configs/mcs_config_local_level2.ini --disable_validation --local_only
+python ray_scripts/pipeline_ray.py configs/test_local.ini configs/mcs_config_local_level2.ini --disable_validation --local_only
 ```
 
 The ray_script.sh here is set to run run_just_pass.py from the MCS project on the list of scenes passed along, but that can be changed to whatever is needed.
@@ -258,21 +251,21 @@ The pipeline is setup to run different "modules" and uses convention to locate f
 
 ### Folder Structure
 
-* autoscaler - Contains Ray configuration for different modules to run in AWS.  The file name convention is ray_MODULE_aws.yaml.  See below and Ray documentation for more details of fields.
-* aws_scripts - Contains scripts and text documents to facilitate running in AWS.
-  * Note:
-* configs - Contains all necessary configs for each module that will be pushed to Ray head node.  (maybe should be moved to individual deploy_files directories)
-* deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node
-* pipeline - python code used to run the pipeline that will be pushed to head node
+* configs - Contains all necessary configs for each module that will be pushed to Ray head node.
+* deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node.
+* mako/templates/mcs_config_template.ini - Template for the MCS configuration for running modules on AWS.
+* mako/templates/ray_template_aws.yaml - Template for the Ray configuration for running modules on AWS. See below and Ray documentation for more details of fields.
+* mako/variables/ - Contains specific pipeline configuration for running individual modules.
+* pipeline - Python code used to run the pipeline that will be pushed to head node.
 
-### ray_MODULE_aws.yaml
+### Ray Template
 
-Some portions of ray_MODULE_aws.yaml are important to how evals are executed and are pointed out here:
+Some portions of `ray_template_aws.yaml` are important to how evals are executed and are pointed out here:
 * All nodes need permissions to push data to S3.  The head node gets those permissions by default from Ray.  However, the worker nodes by default have no permissions.  To Grant permissions to the worker nodes 2 steps must be taken.
   * Once per AWS account, Add iam:PassRole permission to IAM role assigned to head node (typically ray-autoscaler-v1).  This has been done on MCS's AWS.  This allows the head node to assign IAM roles to the worker nodes.
-  * Assign an IAM role to the worker node in ray_MODULE_aws.yaml
+  * Assign an IAM role to the worker node in ray_template_aws.yaml
     * Create an appropriate IAM role and verify it has an instance profile
-    * In ray_MODULE_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
+    * In ray_template_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
     ```
     IamInstanceProfile:
         Arn: IAM role instance profile ARN
