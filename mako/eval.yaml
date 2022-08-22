@@ -1,15 +1,7 @@
 base:
-  varset: ['cora']
+  varset: ['opics']
 eval-groups:
-  - metadata: ['level2']
-    dirs: ['../oscar_containers', '../papa_obstacles', '../quebec_occluders',
-    '../romeo_object_permence', '../sierra_agent_identification', '../tango_moving_target',
-    '../uniform_holes', '../victor_lava','../whiskey_ramps', '../xray_solidity', '../yankee_support_relations',
-    '../zulu_support_relations', '../omega_tool_use']
-  - metadata: ['level2']
-    dirs: ['../alpha_collisions', '../bravo_gravity_support', '../charlie_object_permanence', '../delta_shape_constancy',
-    '../echo_spatio_temporal_continuity']
-  - metadata: ['level2']
-    dirs: ['../foxtrot_path_lure', '../golf_time_control', '../hotel_inaccessible_goal', '../india_multiple_agents',
-    '../juliett_object_preference', '../kilo_blocking_barrier', '../lima_inconsequential_barrier', '../mike_no_barrier',
-    '../november_collisions']
+  - metadata: ['level1', 'level2']
+    parent-dir: 'mako-test/parent'
+  - metadata: ['level2', 'oracle']
+    dirs: ['mako-test/dirs/dir1', 'mako-test/dirs/dir2']
