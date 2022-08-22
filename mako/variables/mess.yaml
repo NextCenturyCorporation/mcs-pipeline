@@ -1,7 +1,7 @@
-cluster: "mess-agency-redo"
+cluster: "mess"
 team: "mess"
-workers: 149
-region: us-east-1
-#ami: ami-0a6ecfa816f06f9c0 # east-1 region ami for 'mess-eval5-submission-v4'
-ami: ami-02ebe497bfb78c911 # east-1 region ami for 'mess-eval5-agency-redo'
+region: us-east-2
+ami: ami-0a5f3f1f18bec9ede # east-2 region ami for 'mess-eval5-submission-v4'
+# ami: ami-0a6ecfa816f06f9c0 # east-1 region ami for 'mess-eval5-submission-v4'
+# ami: ami-02ebe497bfb78c911 # east-1 region ami for 'mess-eval5-agency-redo' (agency rerun)
 cache_stopped_nodes: False
