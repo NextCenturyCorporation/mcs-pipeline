@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 # Check passed mcs_config and scene file
 # shellcheck source=/dev/null
@@ -56,13 +57,13 @@ echo
 # shellcheck source=/dev/null
 source /home/ubuntu/venv/bin/activate
 
-UNITY_APP=/home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.6.x86_64
+UNITY_APP=/home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.5.7.x86_64
 
 # Read variables from MCS config file
 S3_BUCKET=$(awk -F '=' '/s3_bucket/ {print $2}' "$mcs_configfile" | xargs)
 S3_FOLDER=$(awk -F '=' '/s3_folder/ {print $2}' "$mcs_configfile" | xargs)
 EVAL_NAME=$(awk -F '=' '/evaluation_name/ {print $2}' "$mcs_configfile" | xargs)
-TEAM_NAME=$(awk -F '=' '/team/ {print $2}' "$mcs_configfile" | xargs)
+TEAM_NAME=""
 
 # Set the output prefix by checking if EVAL_NAME or TEAM_NAME are blank
 [[ -z $EVAL_NAME || -z $TEAM_NAME ]] && OUTPUT_PREFIX=${EVAL_NAME}${TEAM_NAME} || OUTPUT_PREFIX=${EVAL_NAME}_${TEAM_NAME}
