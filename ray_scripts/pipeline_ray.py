@@ -582,7 +582,7 @@ class SceneRunner:
             elif value.status in [
                 StatusEnum.ERROR,
                 StatusEnum.ERROR_TIMEOUT,
-                StatusEnum.ERROR_XSERVER
+                StatusEnum.ERROR_XSERVER,
             ]:
                 json_status["Failed"] += 1
             # Ignoring PENDING, RETRYING, UNKNOWN
@@ -722,7 +722,7 @@ def parse_args():
         "--num_retries",
         type=int,
         default=3,
-        help="How many times to retry running a failed scene which is eligible for retry."
+        help="How many times to retry running a failed scene which is eligible for retry.",
     )
     return parser.parse_args()
 
