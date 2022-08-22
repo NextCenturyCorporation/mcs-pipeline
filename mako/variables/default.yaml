@@ -1,6 +1,6 @@
 workers: 8
 region: us-east-1
-clusterUser: "jaud"
+clusterUser: ""
 clusterSuffix: ""
 idle_timeout_minutes: 5
 additional_setup_commands: ""
