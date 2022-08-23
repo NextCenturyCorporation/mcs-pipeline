@@ -6,10 +6,8 @@ idle_timeout_minutes: 5
 additional_setup_commands: ""
 additional_file_mounts: ""
 cache_stopped_nodes: True
-
 #Below is for mcs_config_template.ini
 mcs_config_extra: ""
-
 evaluation_bool: true
 eval_name: eval_5
 video_enabled: true

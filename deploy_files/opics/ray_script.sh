@@ -1,4 +1,5 @@
 #!/bin/bash
+set -m
 
 # Check passed mcs_config and scene file
 # shellcheck source=/dev/null
@@ -28,12 +29,6 @@ export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
 # Run the Performer code
 echo Starting Evaluation:
-echo
-# eval3: cd $eval_dir && source activate mcs_opics && python3 eval.py  --scenes $SCENE_DIR
-# eval4:
-sed -r -i 's/    python/    timeout -s 9 120m python/g' "$eval_dir"/opics.sh
-# This allows us to change the timeout if we already set it
-# sed -r -i 's/timeout -s 9 [0-9]+. python/timeout -s 9 65m python/g' $eval_dir/opics.sh
-cd "$eval_dir" && cp "$mcs_configfile" ./mcs_config.ini && bash -i opics.sh "$SCENE_DIR"
+bash -i /home/ubuntu/run_opics_commands.sh "$eval_dir" "$mcs_configfile" "$SCENE_DIR"
 
 unset MCS_CONFIG_FILE_PATH
