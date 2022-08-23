@@ -17,7 +17,7 @@ import shutil
 from typing import List
 
 IP_REGEX = "ip=(\\d+\\.\\d+\\.\\d+\\.\\d+)"
-PID_REGEX = "\\(pid=(\\d+)"
+PID_REGEX = "\\(run_scene pid=(\\d+)"
 TIMESTAMP_REGEX = "^(\\d{2}:\\d{2}:\\d{2})"
 
 
