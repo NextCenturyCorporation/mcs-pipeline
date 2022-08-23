@@ -1,5 +1,7 @@
 base:
   varset: ['opics']
 eval-groups:
-  - metadata: ['level2']
-    dirs: ['']
+  - metadata: ['level1', 'level2']
+    parent-dir: 'mako-test/parent'
+  - metadata: ['level2', 'oracle']
+    dirs: ['mako-test/dirs/dir1', 'mako-test/dirs/dir2']
