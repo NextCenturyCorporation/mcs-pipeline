@@ -16,7 +16,7 @@ source /home/ubuntu/start_x_server.sh
 echo Clearing History at "$eval_dir"/SCENE_HISTORY/
 rm -f "$eval_dir"/SCENE_HISTORY/*
 echo Clearing "$SCENE_DIR"
-rm -f "$SCENE_DIR"
+rm -rf "${SCENE_DIR:?}"/*
 
 # Move files to appropriate locations
 echo Making SCENE_DIR="$SCENE_DIR"
@@ -31,7 +31,12 @@ cd "$eval_dir" || exit
 
 # Activate conda environment
 source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
-conda activate af_mess4
+conda activate mess5
+
+# if DISPLAY environment variable is set in their environment,
+# unset it - they are setup a little differently and use vncserver
+# instead
+unset DISPLAY
 
 # Run the Performer code
 echo Starting Evaluation:
@@ -49,6 +54,6 @@ scene_file_basename=$(basename "$scene_file")
 # run with SUBMISSION_ID set to '1' or '2' for both MESS submissions
 #python3 script_mess.py scenes/$scene_file_basename $SUBMISSION_ID
 
-python script_mess_eval4_ms.py scenes/"$scene_file_basename"
+python src/script_mess_clean.py scenes/"$scene_file_basename"
 
 unset MCS_CONFIG_FILE_PATH

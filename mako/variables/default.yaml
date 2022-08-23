@@ -15,7 +15,6 @@ eval_name: eval_5
 video_enabled: true
 history_enabled: true
 save_debug_images: false
-
 s3_bucket: dev-evaluation-images
 s3_folder: eval-resources-5
 s3_movies_folder: raw-eval-5
