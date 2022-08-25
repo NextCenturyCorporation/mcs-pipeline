@@ -1,5 +1,5 @@
 cluster: "opics"
 team: "opics"
-ami: ami-08bde062a06f974a3
+ami: ami-01bbc0f814dc5586e # opics-evaluation5-submission
 additional_setup_commands: "# Shapely got automatically updated to 1.8 which caused some significant performance problems in eval 4.\n  # We are unsure as to exactly what automatic process caused this, but this reverts it.\n  - pip install shapely==1.7.1\n"
 additional_file_mounts: "\"/home/ubuntu/run_opics_commands.sh\": \"deploy_files/opics/run_opics_commands.sh\""
