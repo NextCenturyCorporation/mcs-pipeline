@@ -87,11 +87,11 @@ In order to test the pipeline and evaluations, the following is helpful:
 * Be sure to stop your cluster and/or terminate the AWS instances when you are done.
 
 * Know if/where your results will be uploaded to avoid conflicts:
-  * Videos are only saved when `videos_enabled=true`
-  * Results are only uploaded if the MCS config (mako/templates/mcs_config_template.ini) has `evalution=true`
-  * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test
-  * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
-  * If you'd like to disable logs being uploaded to s3 while testing, set this in your MCS config: `logs_to_s3=false`
+  * Videos are only saved when `videos_enabled: true`
+  * Results are only uploaded if `evalution_bool: true`
+  * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. `s3_folder: eval-35-test`
+  * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E eval_name: kdrumm-eval375
+  * If you'd like to disable logs being uploaded to s3 while testing, change `logs_to_s3` in `mako/templates/mcs_config_template.ini` to be `false`
   * Make sure MCS config file validation is off if for testing (see commands below).
 
 #### Eval orchestration script
@@ -171,9 +171,7 @@ Configuration files and a resume.yaml will be written in the .tmp_pipeline_ray d
 
 #### Log Parsing
 
-TODO
-
-If run_eval.sh is run with 'ts -s', the output logs can be parsed by the pipeline/log_parser.py.  This command will split the logs into logs per working node and then use some regex to report some metrics on how long different portions of a run took.  At the moment, the script output is somewhat rough and it only has good support for tracking opics logging.
+The `run_eval` script is always run with 'ts -s', and the output logs can be parsed by `pipeline/log_parser.py`.  This command will split the logs into logs per working node and then use some regex to report some metrics on how long different portions of a run took.  At the moment, the script output is somewhat rough and it only has good support for tracking opics logging.
 
 #### Script Overview
 
@@ -221,7 +219,7 @@ Retryable: False
 * Copy files to head node: `ray rsync_up /path/to/config.yaml SOURCE DEST`
 * Execute shell command on head node: `ray exec /path/to/config.yaml "COMMAND"`
 * Submit a Ray python script to the cluster: `ray submit /path/to/config.yaml PARAMETER1 PARAMETER2`
-* TODO Monitor cluster (creates tunnel so you can see it locally): `ray dashboard autoscaler/ray_baseline_aws.yaml`
+* Monitor cluster (creates tunnel so you can see it locally): `ray dashboard /path/to/config.yaml`
   * Point browser to localhost:8265 (port will be in command output)
 * Connect to shell on head node: `ray attach /path/to/config.yaml`
 * Shutdown cluster (stops AWS instances): `ray down /path/to/config.yaml`
@@ -263,15 +261,7 @@ The pipeline is setup to run different "modules" and uses convention to locate f
 ### Ray Template
 
 Some portions of `ray_template_aws.yaml` are important to how evals are executed and are pointed out here:
-* All nodes need permissions to push data to S3.  The head node gets those permissions by default from Ray.  However, the worker nodes by default have no permissions.  To Grant permissions to the worker nodes 2 steps must be taken.
-  * Once per AWS account, Add iam:PassRole permission to IAM role assigned to head node (typically ray-autoscaler-v1).  This has been done on MCS's AWS.  This allows the head node to assign IAM roles to the worker nodes.
-  * Assign an IAM role to the worker node in ray_template_aws.yaml
-    * Create an appropriate IAM role and verify it has an instance profile
-    * In ray_template_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
-    ```
-    IamInstanceProfile:
-        Arn: IAM role instance profile ARN
-    ```
+* We use a default IamInstanceProfile to give our worker nodes permission to push data to S3.
 * In many modules, some files need to be pushed to all nodes including the worker nodes.  The best way we've found to do this is with the file_mounts property.
 
 ## Additional Information
