@@ -1,4 +1,5 @@
 import argparse
+import pathlib
 
 from run_eval import EvalParams, EvalRun, execute_shell, get_now_str
 
@@ -72,7 +73,10 @@ if __name__ == "__main__":
     team = args.team
     override = {"team": team} if team else {}
     log_team = f"{team}-" if team else ""
-    log_file = f"logs/{now}-{log_team}{vars}-{args.metadata}.log"
+    log_dir_path = "logs-single-run"
+    log_dir = pathlib.Path(log_dir_path)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = f"{log_dir_path}/{now}-{log_team}{vars}-{args.metadata}.log"
     ep = EvalParams(
         args.varset, args.local_scene_dir, args.metadata, override=override
     )
