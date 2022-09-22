@@ -91,7 +91,7 @@ In order to test the pipeline and evaluations, the following is helpful:
   * Results are only uploaded if `evalution_bool: true`
   * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. `s3_folder: eval-35-test`
   * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E eval_name: kdrumm-eval375
-  * If you'd like to disable logs being uploaded to s3 while testing, change `logs_to_s3` to be `false` in `mako/templates/mcs_config_template.ini` (if running remotely) or `configs/mcs_config_local_level2` (if running locally)
+  * If you'd like to disable logs being uploaded to s3 while testing, change `logs_to_s3` to be `false` in `mako/templates/mcs_config_template.ini`
   * Make sure MCS config file validation is off if for testing (see commands below).
 
 #### Eval orchestration script
