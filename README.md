@@ -91,7 +91,7 @@ In order to test the pipeline and evaluations, the following is helpful:
   * Results are only uploaded if `evalution_bool: true`
   * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. `s3_folder: eval-35-test`
   * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E eval_name: kdrumm-eval375
-  * If you'd like to disable logs being uploaded to s3 while testing, change `logs_to_s3` in `mako/templates/mcs_config_template.ini` to be `false`
+  * If you'd like to disable logs being uploaded to s3 while testing, change `logs_to_s3` to be `false` in `mako/templates/mcs_config_template.ini` (if running remotely) or `configs/mcs_config_local_level2` (if running locally)
   * Make sure MCS config file validation is off if for testing (see commands below).
 
 #### Eval orchestration script
@@ -228,14 +228,12 @@ Retryable: False
 
 To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine.
 
-- "run_script" is currently mcs-pipeline/deploy_files/local/ray_script.sh
-- "scene_location" is currently MCS/docs/source/scenes/
+- "run_script" will be `<mcs-pipeline>/deploy_files/local/ray_script.sh`
+- "scene_location" is where the JSON scene files are located; you can find some sample scenes in the `docs/source/scenes/` folder in the `MCS` GitHub repository
 - "scene_list" is a .txt file that you put one scene on each line to run.
 - "eval_dir" is where the evaluations are written
 
 If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in mako/templates/mcs_config_template.ini.
-
-Next you will need to create a "local.yaml" in the "autoscaler" directory. Examples can be found at https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
 
 Then run the following:
 
@@ -282,12 +280,6 @@ EC2 machines.
 * Add the following to your ~/.ssh/config:   <code>StrictHostKeyChecking accept-new</code>
 This will allow the EC2 machines to be called without you agreeing to accept them
 manually.
-
-### Logs
-
-TODO
-
-Logs will be written to the head node and sometimes be pushed to S3.  Details TBD.
 
 ### Mess Example
 
