@@ -233,7 +233,7 @@ To run the pipeline locally, make sure to update the paths in configs/test_local
 - "scene_list" is a .txt file that you put one scene on each line to run.
 - "eval_dir" is where the evaluations are written
 
-If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in mako/templates/mcs_config_template.ini.
+If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in configs/mcs_config_local_level2.ini.
 
 Then run the following:
 
