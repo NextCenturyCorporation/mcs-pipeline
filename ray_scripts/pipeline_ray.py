@@ -29,9 +29,6 @@ from typing import List
 import boto3
 import ray
 
-# Number of retries before we give up on a job and call it failed
-NUM_RETRIES = 3
-
 # File the records the files that finished.  If we want to restart,
 # we can skip these files.
 FINISHED_SCENES_LIST_FILENAME = "./.last_run_finished.txt"
@@ -285,6 +282,7 @@ class StatusEnum(str, Enum):
     SUCCESS = "SUCCESS"
     ERROR = "ERROR"
     ERROR_TIMEOUT = "ERROR_TIMEOUT"
+    ERROR_XSERVER = "ERROR_XSERVER"
 
 
 @dataclass
@@ -328,6 +326,7 @@ class SceneRunner:
         self.exec_config.read(args.execution_config_file)
         self.disable_validation = args.disable_validation
         self.dev_validation = args.dev_validation
+        self.num_retries = args.num_retries
         self.resume = args.resume
 
         # Get MCS configuration, which has information about how to
@@ -533,7 +532,7 @@ class SceneRunner:
                 )
                 self.print_run_status(run_status, "    ")
 
-                if run_status.retry and scene_status.retries < NUM_RETRIES:
+                if run_status.retry and scene_status.retries < self.num_retries:
                     self.retry_job(scene_status)
                     scene_status.retries += 1
                     scene_status.status = StatusEnum.RETRYING
@@ -580,7 +579,11 @@ class SceneRunner:
             statuses.append(temp)
             if value.status is StatusEnum.SUCCESS:
                 json_status["Succeeded"] += 1
-            elif value.status in [StatusEnum.ERROR, StatusEnum.ERROR_TIMEOUT]:
+            elif value.status in [
+                StatusEnum.ERROR,
+                StatusEnum.ERROR_TIMEOUT,
+                StatusEnum.ERROR_XSERVER,
+            ]:
                 json_status["Failed"] += 1
             # Ignoring PENDING, RETRYING, UNKNOWN
 
@@ -644,6 +647,11 @@ class SceneRunner:
             logging.info(f"Timeout occured for file={scene_file_path}")
             status.retry |= True
             status.status = StatusEnum.ERROR_TIMEOUT
+        # This error message is copied from deploy_files/start_x_server.sh
+        if "Unable to start X Server" in output:
+            logging.info(f"X Server failed: file={scene_file_path}")
+            status.retry |= True
+            status.status = StatusEnum.ERROR_XSERVER
         if not reported_success:
             logging.info(
                 f"Pipeline reported failure for file ={scene_file_path}"
@@ -710,7 +718,12 @@ def parse_args():
         action="store_true",
         help="Whether to validate against development",
     )
-
+    parser.add_argument(
+        "--num_retries",
+        type=int,
+        default=3,
+        help="How many times to retry running a failed scene which is eligible for retry.",
+    )
     return parser.parse_args()
 
 

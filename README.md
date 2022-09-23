@@ -60,12 +60,6 @@ https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck
 ### Quickstart Tips
 
 - Make sure you have AWS credentials for MCS set as default.
-- For testing, make the follow edits to the autoscaler/xxxx.yaml file you plan to use.
-
-  - Change the cluster name, this will prevent name collsion of EC2s and make finding yours easier.
-  - If you want to test how a different library will work, you can add an install command in the setup_commands.
-- For testing, find which config/xxxx.ini file that you are using by changing the "evaluation_name" so you can
-find the results easier
 - If you are going to run "run_eval.py" you need to be in the python virtal environment first. ```source venv/bin/activate```
 
 #### MCS Config File
@@ -93,11 +87,11 @@ In order to test the pipeline and evaluations, the following is helpful:
 * Be sure to stop your cluster and/or terminate the AWS instances when you are done.
 
 * Know if/where your results will be uploaded to avoid conflicts:
-  * Videos are only saved when `videos_enabled=true`
-  * Results are only uploaded if the MCS config (configs/mcs_config_MODULE_METADATA.ini) has `evalution=true`
-  * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. s3_folder=eval-35-test
-  * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E evaluation_name=kdrumm-eval375
-  * If you'd like to disable logs being uploaded to s3 while testing, set this in your MCS config: `logs_to_s3=false`
+  * Videos are only saved when `videos_enabled: true`
+  * Results are only uploaded if `evalution_bool: true`
+  * Setting the s3_folder in the MCS config file to have a suffix of -test is a good idea.  I.E. `s3_folder: eval-35-test`
+  * The S3 file names are generated partially by the `team` and `evaluation_name` properties in the MCS config file.  Prefixing `evaluation_name` with your initials or a personal ID can make it easier to find your files in S3.  I.E eval_name: kdrumm-eval375
+  * If you'd like to disable logs being uploaded to s3 while testing, change `logs_to_s3` to be `false` in `mako/templates/mcs_config_template.ini`
   * Make sure MCS config file validation is off if for testing (see commands below).
 
 #### Eval orchestration script
@@ -166,7 +160,7 @@ To run a single ray run, run the following command on your local development mac
 python run_eval_single.py -v opics -s eval4-validation-subset/group3 -m level2
 ```
 
-To run a full eval from a configurd file:
+To run a full eval from a configured file:
 ```
 python run_eval.py -d -n 1 -c mako/eval-4-subset.yaml
 ```
@@ -177,12 +171,12 @@ Configuration files and a resume.yaml will be written in the .tmp_pipeline_ray d
 
 #### Log Parsing
 
-If run_eval.sh is run with 'ts -s', the output logs can be parsed by the pipeline/log_parser.py.  This command will split the logs into logs per working node and then use some regex to report some metrics on how long different portions of a run took.  At the moment, the script output is somewhat rough and it only has good support for tracking opics logging.
+The `run_eval` script is always run with 'ts -s', and the output logs can be parsed by `pipeline/log_parser.py`.  This command will split the logs into logs per working node and then use some regex to report some metrics on how long different portions of a run took.  At the moment, the script output is somewhat rough and it only has good support for tracking opics logging.
 
 #### Script Overview
 
 The run_eval**.py scripts performs the following actions and may run them multiple times:
-* Start a Ray cluster based on the autoscaler/ray_MODULE_aws.yaml file
+* Start a Ray cluster based on the mako configs
 * Generates a list of scene files and rsyncs that to the head node
 * Rsync the following into the head node:
   * pipeline folder
@@ -191,7 +185,7 @@ The run_eval**.py scripts performs the following actions and may run them multip
   * provided scenes folder
 * submits a Ray task via the pipeline_ray.py script with the following parameters:
   * Ray locations config (configs/MODULE_aws.ini)
-  * MCS config (configs/mcs_config_MODULE_<METADATA_LEVEL>.ini)
+  * MCS config (mako/templates/mcs_config_template.ini)
     * Note: by default metadata level is level2
 
 #### Ray Expected Output
@@ -225,7 +219,7 @@ Retryable: False
 * Copy files to head node: `ray rsync_up /path/to/config.yaml SOURCE DEST`
 * Execute shell command on head node: `ray exec /path/to/config.yaml "COMMAND"`
 * Submit a Ray python script to the cluster: `ray submit /path/to/config.yaml PARAMETER1 PARAMETER2`
-* Monitor cluster (creates tunnel so you can see it locally): `ray dashboard autoscaler/ray_baseline_aws.yaml`
+* Monitor cluster (creates tunnel so you can see it locally): `ray dashboard /path/to/config.yaml`
   * Point browser to localhost:8265 (port will be in command output)
 * Connect to shell on head node: `ray attach /path/to/config.yaml`
 * Shutdown cluster (stops AWS instances): `ray down /path/to/config.yaml`
@@ -234,20 +228,17 @@ Retryable: False
 
 To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine.
 
-"run_script" is currently MCS-pipeline/deploy_files/local/ray_script.sh
-"scene_location" is currently MCS/docs/source/scenes/
-"scene_list" is a .txt file that you put one scene on each line to run.
-"eval_dir" is where the evaluations are written
+- "run_script" will be `<mcs-pipeline>/deploy_files/local/ray_script.sh`
+- "scene_location" is where the JSON scene files are located; you can find some sample scenes in the `docs/source/scenes/` folder in the `MCS` GitHub repository
+- "scene_list" is a .txt file that you put one scene on each line to run.
+- "eval_dir" is where the evaluations are written
 
-If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in
-configs/mcs_config_local_level2.ini.
-
-Next you will need to create a "local.yaml" in the "autoscaler" directory. Examples can be found at https://github.com/ray-project/ray/blob/master/python/ray/autoscaler/aws/example-full.yaml
+If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in configs/mcs_config_local_level2.ini.
 
 Then run the following:
 
 ```
-python pipeline_ray.py configs/test_local.ini configs/mcs_config_local_level2.ini --disable_validation --local_only
+python ray_scripts/pipeline_ray.py configs/test_local.ini configs/mcs_config_local_level2.ini --disable_validation --local_only
 ```
 
 The ray_script.sh here is set to run run_just_pass.py from the MCS project on the list of scenes passed along, but that can be changed to whatever is needed.
@@ -258,25 +249,17 @@ The pipeline is setup to run different "modules" and uses convention to locate f
 
 ### Folder Structure
 
-* autoscaler - Contains Ray configuration for different modules to run in AWS.  The file name convention is ray_MODULE_aws.yaml.  See below and Ray documentation for more details of fields.
-* aws_scripts - Contains scripts and text documents to facilitate running in AWS.
-  * Note:
-* configs - Contains all necessary configs for each module that will be pushed to Ray head node.  (maybe should be moved to individual deploy_files directories)
-* deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node
-* pipeline - python code used to run the pipeline that will be pushed to head node
+* configs - Contains all necessary configs for each module that will be pushed to Ray head node.
+* deploy_files - Contains a folder per module named after the module.  All files will be pushed to the home directory of the head node.
+* mako/templates/mcs_config_template.ini - Template for the MCS configuration for running modules on AWS.
+* mako/templates/ray_template_aws.yaml - Template for the Ray configuration for running modules on AWS. See below and Ray documentation for more details of fields.
+* mako/variables/ - Contains specific pipeline configuration for running individual modules.
+* pipeline - Python code used to run the pipeline that will be pushed to head node.
 
-### ray_MODULE_aws.yaml
+### Ray Template
 
-Some portions of ray_MODULE_aws.yaml are important to how evals are executed and are pointed out here:
-* All nodes need permissions to push data to S3.  The head node gets those permissions by default from Ray.  However, the worker nodes by default have no permissions.  To Grant permissions to the worker nodes 2 steps must be taken.
-  * Once per AWS account, Add iam:PassRole permission to IAM role assigned to head node (typically ray-autoscaler-v1).  This has been done on MCS's AWS.  This allows the head node to assign IAM roles to the worker nodes.
-  * Assign an IAM role to the worker node in ray_MODULE_aws.yaml
-    * Create an appropriate IAM role and verify it has an instance profile
-    * In ray_MODULE_aws.yaml, under the worker node (usually ray.worker.default) node config, add the following:
-    ```
-    IamInstanceProfile:
-        Arn: IAM role instance profile ARN
-    ```
+Some portions of `ray_template_aws.yaml` are important to how evals are executed and are pointed out here:
+* We use a default IamInstanceProfile to give our worker nodes permission to push data to S3.
 * In many modules, some files need to be pushed to all nodes including the worker nodes.  The best way we've found to do this is with the file_mounts property.
 
 ## Additional Information
@@ -297,10 +280,6 @@ EC2 machines.
 * Add the following to your ~/.ssh/config:   <code>StrictHostKeyChecking accept-new</code>
 This will allow the EC2 machines to be called without you agreeing to accept them
 manually.
-
-### Logs
-
-Logs will be written to the head node and sometimes be pushed to S3.  Details TBD.
 
 ### Mess Example
 
@@ -379,26 +358,44 @@ we're going to use mess_tasks_runner.py as if it were an interactive tool.
 
 This pipline runs the `run_last_action.py` script (from the `machine_common_sense/scripts/` folder in the MCS repository) to generate videos from the RGB output frames using FFMPEG (with the correct video codecs so the videos are usable on Macs and in web browsers) and upload them to a specific S3 bucket.
 
-1. Update the `s3_bucket`, `s3_folder`, `evaluation_name`, and/or `team_name` in [configs/mcs_config_videos_level1.ini](configs/mcs_config_videos_level1.ini), as needed.
-2. Update the `cluster_name` in [autoscaler/ray_videos_aws.yaml](autoscaler/ray_videos_aws.yaml), if needed.
+1. Update the `s3_bucket`, `s3_folder`, and/or `eval_name`, in [mako/variables/videos.yaml](mako/variables/videos.yaml), as needed.
+2. Create a mako config with a `varset` of `videos` and a `metadata` of `level1`. See the example below.
+
+```yaml
+base:
+  varset: ['videos']
+  metadata: ['level1']
+eval-groups:
+  - dirs: ['my_folder/']
+```
+
 3. Run the command below.
 4. Terminate your AWS instances once finished.
 
 ```bash
-./aws_scripts/run_eval.sh videos <json_data_folder> --metadata level1 --disable_validation
+python run_eval.py --disable_validation -n 1 -c <mako_config> -u <cluster_name> --num_retries 5
 ```
 
 ## Generating Topdown Videos
 
 This pipline runs the `run_last_action.py` script (from the `machine_common_sense/scripts/` folder in the MCS repository) to generate topdown videos using the plotter inside the machine_common_sense python library and upload them to a specific S3 bucket.
 
-1. Update the `s3_bucket`, `s3_folder`, `evaluation_name`, and/or `team_name` in [configs/mcs_config_topdown_level1.ini](configs/mcs_config_topdown_level1.ini), as needed.
-2. Update the `cluster_name` in [autoscaler/ray_topdown_aws.yaml](autoscaler/ray_topdown_aws.yaml), if needed.
+1. Update the `s3_bucket`, `s3_folder`, and/or `eval_name`, in [mako/variables/topdowns.yaml](mako/variables/topdowns.yaml), as needed.
+2. Create a mako config with a `varset` of `topdowns` and a `metadata` of `level1`. See the example below.
+
+```yaml
+base:
+  varset: ['topdowns']
+  metadata: ['level1']
+eval-groups:
+  - dirs: ['my_folder/']
+```
+
 3. Run the command below.
 4. Terminate your AWS instances once finished.
 
 ```bash
-./aws_scripts/run_eval.sh topdown <json_data_folder> --metadata level1 --disable_validation
+python run_eval.py --disable_validation -n 1 -c <mako_config> -u <cluster_name> --num_retries 5
 ```
 
 ## Acknowledgements

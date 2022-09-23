@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 # Check passed mcs_config and scene file
 source /home/ubuntu/check_passed_variables.sh
@@ -54,13 +55,13 @@ echo "GENERATING TOPDOWN VIDEO: $scene_file ($SCENE_NAME)"
 echo
 source /home/ubuntu/venv/bin/activate
 
-UNITY_APP=/home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.4.6.x86_64
+UNITY_APP=/home/ubuntu/unity_app/MCS-AI2-THOR-Unity-App-v0.5.7.x86_64
 
 # Read variables from MCS config file
 S3_BUCKET=$(awk -F '=' '/s3_bucket/ {print $2}' "$mcs_configfile" | xargs)
 S3_FOLDER=$(awk -F '=' '/s3_folder/ {print $2}' "$mcs_configfile" | xargs)
 EVAL_NAME=$(awk -F '=' '/evaluation_name/ {print $2}' "$mcs_configfile" | xargs)
-TEAM_NAME=$(awk -F '=' '/team/ {print $2}' "$mcs_configfile" | xargs)
+TEAM_NAME=""
 
 # Set the output prefix by checking if EVAL_NAME or TEAM_NAME are blank
 [[ -z $EVAL_NAME || -z $TEAM_NAME ]] && OUTPUT_PREFIX=${EVAL_NAME}${TEAM_NAME} || OUTPUT_PREFIX=${EVAL_NAME}_${TEAM_NAME}
@@ -74,10 +75,11 @@ else
 fi
 
 # Upload the mp4 video to S3 with credentials from the worker's AWS IAM role
-OUTPUT_FOLDER=/home/ubuntu/${SCENE_NAME}/
-OUTPUT_FILENAME=${SCENE_NAME}_topdown.mp4
-mv "${OUTPUT_FOLDER}"/*topdown*.mp4 "${OUTPUT_FOLDER}"/"${OUTPUT_FILENAME}"
-aws s3 cp "${OUTPUT_FOLDER}"/"${OUTPUT_FILENAME}" s3://"${S3_BUCKET}"/"${S3_FOLDER}"/ --acl public-read
+OUTPUT_FOLDER=/home/ubuntu/${SCENE_NAME}
+OLD_FILENAME=$(ls "${OUTPUT_FOLDER}"/*topdown*topdown*.mp4)
+NEW_FILENAME="${OUTPUT_FOLDER}"/"${SCENE_NAME}"_topdown.mp4
+mv "${OLD_FILENAME}" "${NEW_FILENAME}"
+aws s3 cp ${NEW_FILENAME} s3://"${S3_BUCKET}"/"${S3_FOLDER}"/ --acl public-read
 
 # Cleanup the worker for future use
 rm -rf "${OUTPUT_FOLDER}"

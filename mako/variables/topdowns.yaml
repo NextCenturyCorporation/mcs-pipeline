@@ -1,6 +1,6 @@
 ami: ami-060185d3269ac01f0
-cluster: videos
-team: videos
+cluster: topdowns
+team: topdowns
 workers: 10
 
 # We won't use the MCS python library to upload output to S3
@@ -9,15 +9,13 @@ evaluation_bool: false
 metadata: level1
 # We don't need to save the scene history in order to generate the videos
 history_enabled: false
-# We need to save the images in order to generate the videos
-save_debug_images: true
-# We don't use the MCS python library to save the videos
-video_enabled: false
+# We use the MCS python library to save the topdown videos
+video_enabled: true
 
 # The S3 bucket and subfolder in which to save the video files
 # Adjust either as needed, though feel free to use the existing bucket
 s3_bucket: mcs-output-videos
-s3_folder: rgb-videos
+s3_folder: topdown-videos
 
 # Can be set to append a prefix to all the output filenames.
 eval_name: ""

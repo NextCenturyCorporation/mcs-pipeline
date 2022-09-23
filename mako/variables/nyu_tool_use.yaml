@@ -1,0 +1,5 @@
+ami: ami-0e8dd9d293691adbb
+cluster: nyu_tool_use
+filePrefix: nyu_tool_use
+team: baseline
+workers: 5

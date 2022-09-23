@@ -17,12 +17,12 @@ from typing import List
 import yaml
 from mako.template import Template
 
-DEFAULT_VARSET = 'default'
-USER_VARSET = 'user'
-RAY_WORKING_DIR = pathlib.Path('./.tmp_pipeline_ray/')
+DEFAULT_VARSET = "default"
+USER_VARSET = "user"
+RAY_WORKING_DIR = pathlib.Path("./.tmp_pipeline_ray/")
 SCENE_LIST_FILENAME = "scenes_single_scene.txt"
-DATE_FORMAT = '%Y%m%d-%H%M%S'
-RESUME_SAVE_PERIOD_SECONDS = 5*60
+DATE_FORMAT = "%Y%m%d-%H%M%S"
+RESUME_SAVE_PERIOD_SECONDS = 5 * 60
 STATUS_PRINT_PERIOD_SECONDS = 30
 
 
@@ -225,7 +225,9 @@ def add_variable_sets(varsets, varset_directory):
     varsets = copy.deepcopy(varsets)
 
     vars = {}
-    if USER_VARSET not in varsets and os.path.exists(f'{varset_directory}{USER_VARSET}.yaml'):
+    if USER_VARSET not in varsets and os.path.exists(
+        f"{varset_directory}{USER_VARSET}.yaml"
+    ):
         varsets.insert(0, USER_VARSET)
     if DEFAULT_VARSET not in varsets:
         varsets.insert(0, DEFAULT_VARSET)
@@ -309,6 +311,7 @@ class EvalRun:
         dry_run=False,
         base_dir="mako",
         group_working_dir=RAY_WORKING_DIR,
+        num_retries: int = 3,
     ) -> pathlib.Path:
         self.eval = eval
         self.status = self.eval.status
@@ -338,16 +341,17 @@ class EvalRun:
         now = get_now_str()
         team = vars.get("team", "none")
         self.team = team
+        file_prefix = vars.get("filePrefix", team)
 
         suffix = f"-{cluster}" if cluster else ""
-        working_name = f"{now}-{team}{suffix}"
+        working_name = f"{now}-{file_prefix}{suffix}"
         group_working_dir.mkdir(exist_ok=True, parents=True)
         working = group_working_dir / working_name
         working.mkdir()
         self.scene_list_file = working / SCENE_LIST_FILENAME
         self.working_dir = working
 
-        self.ray_locations_config = f"configs/{team}_aws.ini"
+        self.ray_locations_config = f"configs/{file_prefix}_aws.ini"
 
         # Generate Ray Config
         ray_cfg_template = Template(
@@ -355,7 +359,7 @@ class EvalRun:
         )
 
         ray_cfg = ray_cfg_template.render(**vars)
-        ray_cfg_file = working / f"ray_{team}_aws.yaml"
+        ray_cfg_file = working / f"ray_{file_prefix}_aws.yaml"
         ray_cfg_file.write_text(ray_cfg)
         self.ray_cfg_file = ray_cfg_file
 
@@ -364,7 +368,7 @@ class EvalRun:
             filename=f"{base_dir}/templates/mcs_config_template.ini"
         )
         mcs_cfg = mcs_cfg_template.render(**vars)
-        mcs_cfg_file = working / f"mcs_config_{team}_{self.metadata}.ini"
+        mcs_cfg_file = working / f"mcs_config_{file_prefix}_{self.metadata}.ini"
         mcs_cfg_file.write_text(mcs_cfg)
         self.mcs_cfg_file = mcs_cfg_file
 
@@ -391,6 +395,7 @@ class EvalRun:
             "--disable_validation" if disable_validation else ""
         )
         self.submit_params += " --dev" if dev_validation else ""
+        self.submit_params += f" --num_retries {num_retries}"
 
     def parse_status(self, line):
         json_str = line.split("JSONSTATUS:")[-1]
@@ -451,8 +456,7 @@ class EvalRun:
 
             ray.exec(f"mkdir -p {self.remote_scene_location}")
 
-            ray.rsync_up(f"{self.local_scene_dir}/",
-                         self.remote_scene_location)
+            ray.rsync_up(f"{self.local_scene_dir}/", self.remote_scene_location)
             ray.rsync_up(
                 self.scene_list_file.as_posix(), self.remote_scene_list
             )
@@ -550,6 +554,7 @@ def run_evals(
     output_logs=False,
     dry_run=False,
     base_dir="mako",
+    num_retries: int = 3,
 ):
     q = queue.Queue()
     for eval in eval_set:
@@ -602,6 +607,7 @@ def run_evals(
                 dry_run=dry_run,
                 base_dir=base_dir,
                 group_working_dir=group_working_dir,
+                num_retries=num_retries,
             )
             eval_run.set_status_holder(all_status)
 
@@ -648,7 +654,9 @@ def get_array(group, base, field):
     return force_array(group.get(field, base.get(field, [])))
 
 
-def create_eval_set_from_file(cfg_file: str, super_override: dict = {}) -> List[EvalParams]:
+def create_eval_set_from_file(
+    cfg_file: str, super_override: dict = {}
+) -> List[EvalParams]:
     """Creates and array of EvalParams to run an eval from a configuration file.  See Readme for details of config file.
 
     Args:
@@ -702,9 +710,9 @@ def create_eval_set_from_file(cfg_file: str, super_override: dict = {}) -> List[
 def _args_to_override(args) -> dict:
     override = {}
     if args.num_workers and args.num_workers > 0:
-        override['workers'] = args.num_workers
+        override["workers"] = args.num_workers
     if args.cluster_user:
-        override['clusterUser'] = f"-{args.cluster_user}"
+        override["clusterUser"] = f"-{args.cluster_user}"
     return override
 
 
@@ -718,7 +726,8 @@ def run_from_config_file(args):
         num_clusters=args.num_clusters,
         output_logs=args.redirect_logs,
         dry_run=args.dry_run,
-        base_dir=args.base_dir
+        base_dir=args.base_dir,
+        num_retries=args.num_retries,
     )
 
 
@@ -775,13 +784,21 @@ def parse_args():
         help="How many simultanous clusters should be used.",
     )
     parser.add_argument(
-        "--num_workers", "-w",
+        "--num_retries",
+        type=int,
+        default=3,
+        help="How many times to retry running a failed scene which is eligible for retry.",
+    )
+    parser.add_argument(
+        "--num_workers",
+        "-w",
         type=int,
         default=None,
         help="How many simultanous workers for each cluster.  This will override any value in varsets.",
     )
     parser.add_argument(
-        "--cluster_user", "-u",
+        "--cluster_user",
+        "-u",
         type=str,
         default=None,
         help="Tags the cluster with a the username provided with this parameter.",
