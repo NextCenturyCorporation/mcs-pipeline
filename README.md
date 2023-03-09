@@ -153,6 +153,8 @@ Config File API (yaml):
 This script assumes you have the ts.  you can install ts via `sudo apt install moreutils`
 This script assumes you have the unbuffer.  you can install ts via `sudo apt install expect`
 
+Note that for Mac users, you can install both moreutils and expect with brew.
+
 Python Script:
 
 To run a single ray run, run the following command on your local development machine (driver):
