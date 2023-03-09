@@ -74,8 +74,8 @@ and UI related functionality will work correctly (these can be turned off for te
 - **team** - has to be either `mess` (for multiple submissions, `mess1` or `mess2`), `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
 - **submission_id** - currently, only needed for MESS submissions (if multiple given). Needs to match the team label (either `1` or `2`)
 - **s3_bucket** - should be `evaluation-images`
-- **s3_folder** - json output - has to be the folder we store output for the current eval (right now, set to `eval-resources-5` for eval 5)
-- **s3_movies_folder**: required post-3.75 (value should be `raw-eval-5` for eval 5) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well
+- **s3_folder** - json output - has to be the folder we store output for the current eval (right now, set to `eval-resources-6` for eval 6)
+- **s3_movies_folder**: required post-3.75 (value should be `raw-eval-6` for eval 6) - only mp4 output, MediaConvert will copy all mp4s to the "s3_folder" config property as well
 - **video_enabled** - must be set to `true`
 
 If anything above changes, we will need to make sure those changes are incorporated into the ingest process/UI as needed.
