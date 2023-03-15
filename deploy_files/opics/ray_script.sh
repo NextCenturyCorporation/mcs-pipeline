@@ -1,6 +1,10 @@
 #!/bin/bash
 set -m
 
+main_optics
+cd scripts/ || exit
+OPICS_EVAL_DIR=$(pwd)
+
 # Check passed mcs_config and scene file
 # shellcheck source=/dev/null
 source /home/ubuntu/check_passed_variables.sh
@@ -8,14 +12,14 @@ source /home/ubuntu/check_passed_variables.sh
 SCENE_DIR="$eval_dir/eval_scene/"
 
 # shellcheck disable=SC2154
-echo "Running OPICS with config $mcs_configfile and scene $scene_file using eval dir $eval_dir"
+echo "Running OPICS with config $mcs_configfile and scene $scene_file using eval dir $OPICS_EVAL_DIR"
 
 # Start X
 source /home/ubuntu/start_x_server.sh
 
 # Clear out directories
-echo Clearing History at "$eval_dir"/SCENE_HISTORY/
-rm -f "$eval_dir"/SCENE_HISTORY/*
+echo Clearing History at "$OPICS_EVAL_DIR"/SCENE_HISTORY/
+rm -f "$OPICS_EVAL_DIR"/SCENE_HISTORY/*
 echo Clearing "$SCENE_DIR"
 rm -rf "${SCENE_DIR:?}"/*
 
@@ -29,6 +33,6 @@ export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
 # Run the Performer code
 echo Starting Evaluation:
-bash -i /home/ubuntu/run_opics_commands.sh "$eval_dir" "$mcs_configfile" "$SCENE_DIR"
+python opics_eval6_run_scene.py --scene "$SCENE_DIR"/"$scene_file"
 
 unset MCS_CONFIG_FILE_PATH
