@@ -1,7 +1,9 @@
 cluster: "ra-mess"
+workers: 12
 team: "mess"
 region: us-east-2
-ami: ami-03e0383c0fda9e80f # east-2 region ami for 'mess-6-validation-1-with-patch'
+ami: ami-0e8301ba082d5377f # east-2 region ami for 'mess-6-validation-1-with-patch-v2'
+#ami: ami-03e0383c0fda9e80f # east-2 region ami for 'mess-6-validation-1-with-patch'
 # ami: ami-0a5f3f1f18bec9ede # east-2 region ami for 'mess-eval5-submission-v4'
 # ami: ami-0a6ecfa816f06f9c0 # east-1 region ami for 'mess-eval5-submission-v4'
 # ami: ami-02ebe497bfb78c911 # east-1 region ami for 'mess-eval5-agency-redo' (agency rerun)
