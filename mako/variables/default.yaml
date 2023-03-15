@@ -9,10 +9,10 @@ cache_stopped_nodes: True
 #Below is for mcs_config_template.ini
 mcs_config_extra: ""
 evaluation_bool: true
-eval_name: eval_5
+eval_name: eval_6
 video_enabled: true
 history_enabled: true
 save_debug_images: false
 s3_bucket: dev-evaluation-images
-s3_folder: eval-resources-5
-s3_movies_folder: raw-eval-5
+s3_folder: eval-resources-6
+s3_movies_folder: raw-eval-6
