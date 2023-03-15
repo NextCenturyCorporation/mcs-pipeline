@@ -1,7 +1,11 @@
-cluster: "mess"
+cluster: "ra-mess"
 team: "mess"
 region: us-east-2
-ami: ami-0a5f3f1f18bec9ede # east-2 region ami for 'mess-eval5-submission-v4'
+ami: ami-03e0383c0fda9e80f # east-2 region ami for 'mess-6-validation-1-with-patch'
+# ami: ami-0a5f3f1f18bec9ede # east-2 region ami for 'mess-eval5-submission-v4'
 # ami: ami-0a6ecfa816f06f9c0 # east-1 region ami for 'mess-eval5-submission-v4'
 # ami: ami-02ebe497bfb78c911 # east-1 region ami for 'mess-eval5-agency-redo' (agency rerun)
 cache_stopped_nodes: False
+s3_bucket: dev-evaluation-images
+s3_folder: eval-35-test
+s3_movies_folder: eval-35-test

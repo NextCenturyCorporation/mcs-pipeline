@@ -26,12 +26,12 @@ cp "$scene_file" "$SCENE_DIR"/
 
 export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
-# Go to the mess_eval4/, which is where we will be running things
+# Go to the mess-eval6/, which is where we will be running things
 cd "$eval_dir" || exit
 
-# Activate conda environment
-source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
-conda activate mess5
+# Activate mamba/conda environment
+source /home/ubuntu/mambaforge/etc/profile.d/conda.sh
+conda activate mess6
 
 # if DISPLAY environment variable is set in their environment,
 # unset it - they are setup a little differently and use vncserver
@@ -43,7 +43,7 @@ echo Starting Evaluation:
 echo
 scene_file_basename=$(basename "$scene_file")
 
-# For eval 4, MESS only gave one submission -- commenting out multi
+# For eval 4+, MESS only gave one submission -- commenting out multi
 # submission bits from eval 3.75...
 
 # Read in which submission to run from MCS config file
