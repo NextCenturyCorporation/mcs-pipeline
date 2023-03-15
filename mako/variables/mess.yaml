@@ -8,6 +8,3 @@ ami: ami-0e8301ba082d5377f # east-2 region ami for 'mess-6-validation-1-with-pat
 # ami: ami-0a6ecfa816f06f9c0 # east-1 region ami for 'mess-eval5-submission-v4'
 # ami: ami-02ebe497bfb78c911 # east-1 region ami for 'mess-eval5-agency-redo' (agency rerun)
 cache_stopped_nodes: False
-s3_bucket: dev-evaluation-images
-s3_folder: eval-35-test
-s3_movies_folder: eval-35-test
