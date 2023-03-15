@@ -140,17 +140,18 @@ def run_scene(
     # mcs_config.getboolean("MCS", "video_enabled", fallback=False)
     success = True
     if evaluation:
+        timestamp = None
+
         # find scene history file (should only be one file in directory)
-        scene_hist_matches = glob.glob(
-            eval_dir + "/SCENE_HISTORY/" + scene_name + "*.json"
-        )
+        history_files = f"{eval_dir}/SCENE_HISTORY/{scene_name}*.json"
+        scene_hist_matches = glob.glob(history_files)
 
         if len(scene_hist_matches) > 0:
             found_scene_hist = max(scene_hist_matches, key=os.path.getctime)
             hist_filename_no_ext = os.path.splitext(found_scene_hist)[0]
             timestamp = hist_filename_no_ext[-15:]
 
-            logging.info("History file timestamp: " + timestamp)
+            logging.info(f"History file found with timestamp: {timestamp}")
 
             scene_hist_dest = (
                 folder
@@ -166,21 +167,20 @@ def run_scene(
                 scene_hist_file, bucket, scene_hist_dest, "application/json"
             )
         else:
-            logging.warning("History file not found for scene " + scene_name)
+            logging.warning(f"History file not found: {history_files}")
             success = False
 
-        # find and upload videos
-        find_video_files = glob.glob(
-            eval_dir + "/" + scene_name + "/*" + timestamp + ".mp4"
-        )
+        video_dir = f"{eval_dir}/{scene_name}/"
+        video_dir_exists = pathlib.Path(video_dir).exists()
 
-        if len(find_video_files) == 0:
-            logging.warning(
-                "No video files found for scene "
-                + scene_name
-                + " and timestamp "
-                + timestamp
-            )
+        # find and upload videos
+        find_video_files = []
+        if timestamp and video_dir_exists:
+            video_files = f"{eval_dir}/{scene_name}/*{timestamp}.mp4"
+            find_video_files = glob.glob(video_files)
+            if not len(find_video_files):
+                logging.warning(f"Video files not found: {video_files}")
+                success = False
 
         for vid_file in find_video_files:
             # type of video (depth, segmentation, etc) should be at the
