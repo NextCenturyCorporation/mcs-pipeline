@@ -4,7 +4,9 @@ set -m
 # This is what the "main_optics" command does (from the instructions TA1 gave us).
 echo "OPICS Pipeline: Running TA1 environment setup..."
 cd /home/ubuntu/ || exit
-headless
+sudo nvidia-xconfig --use-display-device=None --virtual=600x400 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
+export OUR_XPID=
+export DISPLAY=:0
 export OPTICS_HOME=~/main_optics
 export PYTHONPATH=$OPTICS_HOME:$OPTICS_HOME/opics_common
 export OPTICS_DATASTORE=ec2b
@@ -19,13 +21,13 @@ source /home/ubuntu/check_passed_variables.sh
 echo "OPICS Pipeline: Running OPICS with MCS config file $mcs_configfile and eval dir $eval_dir and scene file $scene_file"
 
 echo "OPICS Pipeline: Removing previous scene history files in $eval_dir/SCENE_HISTORY/"
-rm -f "$eval_dir/SCENE_HISTORY/*"
+rm -f "$eval_dir"/SCENE_HISTORY/*
 
 # shellcheck disable=SC2207
-CONTAINER_DIRS=($(ls "/home/ubuntu/test__*" -d))
+CONTAINER_DIRS=($(ls /home/ubuntu/test__* -d))
 for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     echo "OPICS Pipeline: Removing previous scene history files in $CONTAINER_DIR/scripts/SCENE_HISTORY/"
-    rm -f "$CONTAINER_DIR/scripts/SCENE_HISTORY/*"
+    rm -f "$CONTAINER_DIR"/scripts/SCENE_HISTORY/*
 done
 
 # Start X
