@@ -24,13 +24,13 @@ available_node_types:
     max_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
-      InstanceType: p2.xlarge
+      InstanceType: g4dn.xlarge
       ImageId: ${ami}
   ray.worker.default:
     min_workers: 0
     resources: {"CPU": 4, "GPU": 1}
     node_config:
-      InstanceType: p2.xlarge
+      InstanceType: g4dn.xlarge
       ImageId: ${ami}
       IamInstanceProfile:
         Arn: arn:aws:iam::795237661910:instance-profile/ray-autoscaler-worker-v1
