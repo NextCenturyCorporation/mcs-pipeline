@@ -1,3 +1,4 @@
 cluster: "opics"
-team: "opics"
-ami: ami-0dd2845bd5c9e818e #opics-eval6-validation1
+filePrefix: "opics"
+team: "opics-v2-p2"
+ami: ami-03553540374bd042a #opics-eval-6-validation-2-interactive

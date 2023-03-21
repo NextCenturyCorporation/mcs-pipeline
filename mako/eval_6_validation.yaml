@@ -2,4 +2,4 @@ base:
   varset: ['opics']
   metadata: ['level2']
 eval-groups:
-  - dirs: ['/home/tschellenberg/eval_6_validation_subset/']
+  - dirs: ['/home/ubuntu/eval_6_validation_subset/']
