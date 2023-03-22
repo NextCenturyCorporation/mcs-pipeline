@@ -65,8 +65,8 @@ done
 SCENE_NAME=$(sed -nE 's/.*"name": "(\w+)".*/\1/pi' "$scene_file")
 DISAMBIGUATED_SCENE_NAME=$(basename "$scene_file" .json)
 
-TA1_LOG=${eval_dir}${DISAMBIGUATED_SCENE_NAME}_stdout.log
-RENAMED_LOG=${eval_dir}${SCENE_NAME}_stdout.log
+TA1_LOG=${eval_dir}/logs/${DISAMBIGUATED_SCENE_NAME}_stdout.log
+RENAMED_LOG=${eval_dir}/logs/${SCENE_NAME}_stdout.log
 mv "${TA1_LOG}" "${RENAMED_LOG}"
 
 # Read these variables from the MCS config file.
