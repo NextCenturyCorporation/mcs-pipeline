@@ -61,3 +61,17 @@ for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
         fi
     done
 done
+
+SCENE_NAME=$(sed -nE 's/.*"name": "(\w+)".*/\1/pi' "$scene_file")
+DISAMBIGUATED_SCENE_NAME=$(basename "$scene_file" .json)
+
+TA1_LOG=${eval_dir}${DISAMBIGUATED_SCENE_NAME}_stdout.log
+RENAMED_LOG=${eval_dir}${SCENE_NAME}_stdout.log
+mv "${TA1_LOG}" "${RENAMED_LOG}"
+
+# Read these variables from the MCS config file.
+S3_BUCKET=$(awk -F '=' '/s3_bucket/ {print $2}' "$mcs_configfile" | xargs)
+S3_FOLDER=$(awk -F '=' '/s3_folder/ {print $2}' "$mcs_configfile" | xargs)
+
+# Upload the mp4 video to S3 with credentials from the worker's AWS IAM role.
+aws s3 cp "${RENAMED_LOG}" s3://"${S3_BUCKET}"/"${S3_FOLDER}"/ --acl public-read
