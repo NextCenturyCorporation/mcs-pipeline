@@ -2,4 +2,4 @@ base:
   varset: ['mess']
   metadata: ['level2']
 eval-groups:
-  - dirs: ['/Users/rachel.artiss_cn/MCS/eval_6_val_subset/']
+  - dirs: ['/home/ubuntu/eval_6_validation']
