@@ -1,5 +1,5 @@
-ami: ami-0fb608b36886cbd81 #Evaluation 6 Submission AMI
+ami: ami-0ef77c926478fed2a #Evaluation 6 Submission AMI
 cluster: "ple-cora"
-workers: 2
+workers: 6
 team: "cora"
 cache_stopped_nodes: False
