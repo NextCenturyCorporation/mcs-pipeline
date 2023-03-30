@@ -55,8 +55,7 @@ def push_to_s3(
         ExtraArgs={"ACL": "public-read", "ContentType": mimetype},
     )
 
-
-@ray.remote(num_gpus=1)
+@ray.remote(num_gpus=1, num_cpus=4)
 def run_scene(
     run_script,
     mcs_config: configparser.ConfigParser,
