@@ -39,5 +39,11 @@ export DISPLAY=:4
 cd /home/ubuntu/CoraAgent || exit
 DISPLAY=:4 julia --project test/runtests.jl /home/ubuntu/scenes/caci/
 jobs
+echo "Kill jobs" 
+sudo kill 1
+sudo kill 2
+sudo kill 3
+echo "Any jobs left" 
+jobs
 echo "Completed Evaluation of Scene:" "$scene_file" 
 exit 0
