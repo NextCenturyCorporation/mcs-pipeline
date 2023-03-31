@@ -1,5 +1,5 @@
 ami: ami-0809d44ffc3525cdb
 cluster: "ple-cora"
-workers: 0
+workers: 8
 team: "cora"
 cache_stopped_nodes: False

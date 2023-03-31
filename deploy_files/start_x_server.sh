@@ -6,9 +6,8 @@ then
   echo 'X Server is running'
 else
   echo "Starting X Server"
-  # sudo nvidia-xconfig --use-display-device=None --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
-  # sudo /usr/bin/Xorg :0 1>startx-out.txt 2>startx-err.txt &
   # FOR CORA - they modify /etc/X11/xorg.conf, so dont run xconfig
+  # Need to redirect logs of background tasks or the script doesn't
   sudo /usr/bin/Xorg :4 -config /etc/X11/xorg.conf 1>startx-out.txt 2>startx-err.txt &
   echo "Sleeping for 20 seconds to wait for X server"
   sleep 20
@@ -42,6 +41,7 @@ then
 else
   echo "Starting server.py"
   cd /home/ubuntu/jax3dp3/experiments/multiprocess || exit
+  # Need to redirect logs of background tasks or the script doesn't
   python server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
   echo "Sleeping for 20 seconds to wait for vision server"
   sleep 20
@@ -53,6 +53,7 @@ then
 else
   echo "Starting physics_server.py"
   cd /home/ubuntu/CoraAgent/src/MCS/Physics || exit
+  # Need to redirect logs of background tasks or the script doesn't
   python physics_server.py 1 >physserver-out.txt 2>physserver-err.txt &
   echo "Sleeping for 20 seconds to wait for physics server"
   sleep 20
