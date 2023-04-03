@@ -1,0 +1,5 @@
+base:
+  varset: ['opics']
+  metadata: ['level2']
+eval-groups:
+  - dirs: ['/home/ubuntu/eval_6/alpha/']
