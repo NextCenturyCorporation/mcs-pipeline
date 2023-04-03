@@ -1,0 +1,5 @@
+base:
+  varset: ['mess']
+  metadata: ['level2']
+eval-groups:
+  - parent-dir: '/home/ubuntu/eval_6_prerun'
