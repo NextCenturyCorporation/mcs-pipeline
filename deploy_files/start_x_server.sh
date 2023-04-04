@@ -35,26 +35,39 @@ echo "Starting jax env"
 source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
 conda activate jax
 
-if pgrep -f "python server.py" > /dev/null
-then
-  echo 'Vision server is running'
-else
-  echo "Starting server.py"
-  cd /home/ubuntu/jax3dp3/experiments/multiprocess || exit
-  # Need to redirect logs of background tasks or the script doesn't
-  python server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
-  echo "Sleeping for 20 seconds to wait for vision server"
-  sleep 20
-fi
+# if pgrep -f "python server.py" > /dev/null
+# then
+#   echo 'Vision server is running'
+# else
+#   echo "Starting server.py"
+#   cd /home/ubuntu/jax3dp3/experiments/multiprocess || exit
+#   # Need to redirect logs of background tasks or the script doesn't
+#   python server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
+#   echo "Sleeping for 20 seconds to wait for vision server"
+#   sleep 20
+# fi
 
-if pgrep -f "python physics_server.py" > /dev/null
+# if pgrep -f "python physics_server.py" > /dev/null
+# then
+#   echo 'Physics server is running'
+# else
+#   echo "Starting physics_server.py"
+#   cd /home/ubuntu/CoraAgent/src/MCS/Physics || exit
+#   # Need to redirect logs of background tasks or the script doesn't
+#   python physics_server.py 1 >physserver-out.txt 2>physserver-err.txt &
+#   echo "Sleeping for 20 seconds to wait for physics server"
+#   sleep 20
+# fi
+
+
+if pgrep -f "python run_physics_server.py" > /dev/null
 then
   echo 'Physics server is running'
 else
-  echo "Starting physics_server.py"
-  cd /home/ubuntu/CoraAgent/src/MCS/Physics || exit
+  echo "Starting run_physics_server.py"
+  cd /home/ubuntu/jax3dp3/scripts || exit
   # Need to redirect logs of background tasks or the script doesn't
-  python physics_server.py 1 >physserver-out.txt 2>physserver-err.txt &
+  python ./run_physics_server.py 1 >physserver-out.txt 2>physserver-err.txt &
   echo "Sleeping for 20 seconds to wait for physics server"
   sleep 20
 fi
