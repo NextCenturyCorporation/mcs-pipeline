@@ -38,4 +38,4 @@ export DISPLAY=:4
 ## Running the Scene. You can run this in a separate shell/tmux sessions or in the same shell too
 cd /home/ubuntu/CoraAgent || exit
 # DISPLAY=:4 julia --project test/runtests.jl /home/ubuntu/scenes/caci/
-for i in $(ls ~/evaluation_6); do julia --project runtests.jl [testpath] "$i_results.json"; done
+for i in $(ls ~/evaluation_6); do julia --project test/runtests.jl /home/ubuntu/evaluation_6 "$i_results.json"; done
