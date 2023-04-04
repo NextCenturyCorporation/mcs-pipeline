@@ -60,7 +60,7 @@ conda activate jax
 # fi
 
 
-if pgrep -f "python run_physics_server.py" > /dev/null
+if pgrep -f "python ./run_physics_server.py" > /dev/null
 then
   echo 'Physics server is running'
 else
