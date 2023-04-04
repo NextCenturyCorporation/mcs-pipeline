@@ -1,4 +1,4 @@
 cluster: "opics"
 filePrefix: "opics"
 team: "opics"
-ami: ami-0f0b2de2c001a94a3 #opics-eval-6
+ami: ami-0e423e266b9dd50a8 #opics-eval-6-patched
