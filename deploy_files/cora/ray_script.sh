@@ -20,7 +20,7 @@ echo Starting Evaluation:
 # Adjust for where they hardcoded the scene file to be read from, might be different next collab/evaluation run
 echo "Copy Scene Files:"
 
-mkdir /home/ubuntu/scenes/evaluation_6
+mkdir -p /home/ubuntu/scenes/evaluation_6
 cd /home/ubuntu/scenes/evaluation_6 || exit
 rm ./*
 cp "$scene_file" .
@@ -37,5 +37,4 @@ export DISPLAY=:4
 
 ## Running the Scene. You can run this in a separate shell/tmux sessions or in the same shell too
 cd /home/ubuntu/CoraAgent || exit
-DISPLAY=:4 julia --project test/runtests.jl /home/ubuntu/evaluation_6
-cd /home/ubuntu/CoraAgent || exit
+DISPLAY=:4 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_6

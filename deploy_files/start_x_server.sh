@@ -8,7 +8,7 @@ source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
 conda activate jax
 
 
-if pgrep -f "python ./run_physics_server.py" > /dev/null
+if pgrep -f "python /home/ubuntu/jax3dp3/scripts/run_physics_server.py" > /dev/null
 then
   echo 'Physics server is running'
 else
