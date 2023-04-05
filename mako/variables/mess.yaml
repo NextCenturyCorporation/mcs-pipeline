@@ -1,6 +1,7 @@
 cluster: "ra-mess"
 workers: 19
 team: "mess"
+timeout: 12000
 region: us-east-2
 ami: ami-0ae99c181947b7f15 # east-2 region ami for 'mess-eval6-final-v3'
 # ami: ami-0c3225cc52c0cd227 # east-2 region ami for 'mess-6-final-validation-v2'
