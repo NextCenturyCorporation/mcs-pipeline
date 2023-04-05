@@ -5,7 +5,7 @@ set -m
 echo "OPICS Pipeline: Running TA1 environment setup..."
 cd /home/ubuntu/ || exit
 sudo nvidia-xconfig --use-display-device=None --virtual=600x400 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
-export OUR_XPID=
+export OUR_XPID=2356
 export DISPLAY=:0
 export OPTICS_HOME=~/main_optics
 export PYTHONPATH=$OPTICS_HOME:$OPTICS_HOME/opics_common
