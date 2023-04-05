@@ -135,8 +135,7 @@ def run_scene(
     eval_name = mcs_config.get("MCS", "evaluation_name")
     team = mcs_config.get("MCS", "team")
     metadata = mcs_config.get("MCS", "metadata")
-    # video_enabled =
-    # mcs_config.getboolean("MCS", "video_enabled", fallback=False)
+    video_enabled = mcs_config.getboolean("MCS", "video_enabled", fallback=False)
     success = True
     if evaluation:
         # find scene history file (should only be one file in directory)
