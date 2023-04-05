@@ -1,4 +1,4 @@
-ami: ami-07ca69bc23321785c
+ami: ami-0febaa379287dc884
 cluster: "ple-cora"
 workers: 3
 team: "cora"
