@@ -38,3 +38,4 @@ export DISPLAY=:4
 ## Running the Scene. You can run this in a separate shell/tmux sessions or in the same shell too
 cd /home/ubuntu/CoraAgent || exit
 DISPLAY=:4 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_6
+conda deactivate
