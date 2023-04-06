@@ -2,4 +2,5 @@ ami: ami-0febaa379287dc884
 cluster: "ple-cora"
 workers: 12
 team: "cora"
+timeout: 12000
 cache_stopped_nodes: False
