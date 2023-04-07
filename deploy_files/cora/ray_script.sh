@@ -33,9 +33,9 @@ cd "$eval_dir" || exit
 # Start X
 source /home/ubuntu/start_x_server.sh
 
-export DISPLAY=:4
+export DISPLAY=:0
 
 ## Running the Scene. You can run this in a separate shell/tmux sessions or in the same shell too
 cd /home/ubuntu/CoraAgent || exit
-DISPLAY=:4 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_6
+DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_6
 conda deactivate

@@ -28,7 +28,7 @@ else
   echo "Starting X Server"
   # FOR CORA - they modify /etc/X11/xorg.conf, so dont run xconfig
   # Need to redirect logs of background tasks or the script doesn't
-  sudo /usr/bin/Xorg :4 -config /etc/X11/xorg.conf 1>startx-out.txt 2>startx-err.txt &
+  sudo /usr/bin/Xorg :0 -config /etc/X11/xorg.conf 1>startx-out.txt 2>startx-err.txt &
   echo "Sleeping for 20 seconds to wait for X server"
   sleep 20
   echo "Sleep finished"
