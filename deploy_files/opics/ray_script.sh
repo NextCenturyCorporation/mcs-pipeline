@@ -62,7 +62,8 @@ for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     done
 done
 
-sudo apt install awscli -y
+sudo apt-get update
+sudo apt-get install awscli -y
 
 SCENE_NAME=$(sed -nE 's/.*"name": "(\w+)".*/\1/pi' "$scene_file")
 DISAMBIGUATED_SCENE_NAME=$(basename "$scene_file" .json)
