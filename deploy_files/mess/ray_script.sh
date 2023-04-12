@@ -54,6 +54,9 @@ scene_file_basename=$(basename "$scene_file")
 # run with SUBMISSION_ID set to '1' or '2' for both MESS submissions
 #python3 script_mess.py scenes/$scene_file_basename $SUBMISSION_ID
 
+# For tasks that don't finish/end_scene is never explicitly called, you may need
+# to do something like this:
+# timeout 7200 python src/script_mess_clean.py scenes/"$scene_file_basename"
 python src/script_mess_clean.py scenes/"$scene_file_basename"
 
 unset MCS_CONFIG_FILE_PATH
