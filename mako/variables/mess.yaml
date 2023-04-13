@@ -4,6 +4,5 @@ team: "mess"
 timeout: 7200
 region: us-east-2
 ami: ami-0d3bcdaa29a0c659f # east-2 region ami for 'mess-eval6-final-v4'
-#ami: ami-0ae99c181947b7f15 # east-2 region ami for 'mess-eval6-final-v3'
-# ami: ami-0c3225cc52c0cd227 # east-2 region ami for 'mess-6-final-validation-v2'
+#ami: ami-0642c523a480d0ae1 # east-2 region ami for 'mess-eval6-agency-with-patch'
 cache_stopped_nodes: False
