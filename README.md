@@ -29,7 +29,9 @@ $ source venv/bin/activate
 (pipeline) $ sudo apt install shellcheck moreutils expect
 ```
 
-The run_eval script needs ts (from moreutils) and unbuffer (from expect). The pre-commit config needs shellcheck.
+The `run_eval` script needs `ts` (from `moreutils`) and `unbuffer` (from `expect`). The `pre-commit` config needs `shellcheck`.
+
+Note that for Mac users, you can install both `moreutils` and `expect` with `brew`.
 
 ## Linting
 
@@ -161,8 +163,6 @@ python run_eval.py -d -n 1 -c mako/whatever.yaml -u my_name --dry_run
 It should finish promptly. The `.tmp_pipeline` folder should then have the resolved MCS (python API) and ray configuration files for you to review.
 
 #### Commands
-
-Note that for Mac users, you can install both moreutils and expect with brew.
 
 Python Script:
 
