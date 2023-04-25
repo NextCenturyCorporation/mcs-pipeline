@@ -13,6 +13,6 @@ eval_name: eval_6
 video_enabled: true
 history_enabled: true
 save_debug_images: false
-s3_bucket: evaluation-images
+s3_bucket: dev-evaluation-images
 s3_folder: eval-resources-6
 s3_movies_folder: raw-eval-6
