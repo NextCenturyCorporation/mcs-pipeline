@@ -164,7 +164,7 @@ python run_eval_single.py -v opics -s eval4-validation-subset/group3 -m level2
 
 To run a full eval from a configured file:
 ```
-python run_eval.py -d -n 1 -c mako/eval-4-subset.yaml
+python run_eval.py -n 1 -c mako/eval-4-subset.yaml
 ```
 
 See the scripts help text for additional options such as disabling validation, using dev validation and redirecting logs to STDOUT, and dry run.

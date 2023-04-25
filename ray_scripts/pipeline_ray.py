@@ -326,7 +326,7 @@ class SceneRunner:
         self.exec_config.read(args.execution_config_file)
         self.disable_validation = args.disable_validation
         # TODO: Track down what is passing this along as True
-        self.dev_validation = False
+        self.dev_validation = args.dev_validation
         self.num_retries = args.num_retries
         self.resume = args.resume
 
