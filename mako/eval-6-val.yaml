@@ -1,5 +1,0 @@
-base:
-  varset: ['mess']
-  metadata: ['level2']
-eval-groups:
-  - dirs: ['/home/ubuntu/eval_6_validation']
