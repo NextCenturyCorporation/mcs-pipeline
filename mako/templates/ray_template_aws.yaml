@@ -49,10 +49,13 @@ file_mounts: {
   ${additional_file_mounts}
 }
 
+# May need to check if the python3 on the machine is compatible with the
+# version of Ray that we are using, since TA1 can install + default to
+# whatever Python version they need (Ray 1.13.0 = Python 3.6 - 3.9)
 setup_commands:
   - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
-  - python -m pip install --upgrade pip
-  - python -m pip install -U "ray[default]"==1.13.0
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install -U "ray[default]"==1.13.0
   ${additional_setup_commands}
 
 # Command to start ray on the head node. You don't need to change this.
