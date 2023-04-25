@@ -1,5 +1,0 @@
-base:
-  varset: ['opics']
-  metadata: ['level2']
-eval-groups:
-  - dirs: ['/home/ubuntu/eval_6/delta/', '/home/ubuntu/eval_6/echo/', '/home/ubuntu/eval_6/foxtrot/']
