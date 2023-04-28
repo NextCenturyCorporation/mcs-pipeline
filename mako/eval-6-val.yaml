@@ -2,9 +2,5 @@ base:
   varset: ['cora']
   metadata: ['level2']
 eval-groups:
-  # - dirs: ['/home/ple/mcs/eval-6-scenes/eval_6_validation_1']
-  # dirs: ['/home/ubuntu/mcs/eval_6_scenes/romeo']
-  # - dirs: ['/home/ubuntu/mcs/eval_6_scenes/sierra']
-  # - dirs: ['/home/ubuntu/mcs/eval_6_scenes/tango']
-  - dirs: ['/home/ubuntu/mcs/eval_6_scenes/uniform']
-  # - dirs: ['/home/ubuntu/mcs/eval_6_scenes/victor']
+  - dirs: ['/home/ubuntu/mcs/eval_6_scenes/cluster_name']
+

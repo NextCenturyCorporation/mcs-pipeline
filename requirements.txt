@@ -5,3 +5,5 @@ Mako==1.1.6
 configparser==5.1.0
 pre-commit==2.16.0
 black==21.12b0
+gpustat==1.0.0 #0.6.0
+nvidia-ml-py==11.495.46
