@@ -1,4 +1,4 @@
-ami: ami-0b06dc6b1ab679c0b #Evaluation 5 Submission AMI
+ami: ami-001841b7aec7d1c1e #Evaluation 5 Submission AMI
 cluster: "cora"
 team: "cora"
 cache_stopped_nodes: False
