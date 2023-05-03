@@ -226,25 +226,6 @@ Retryable: False
 * Connect to shell on head node: `ray attach /path/to/config.yaml`
 * Shutdown cluster (stops AWS instances): `ray down /path/to/config.yaml`
 
-## Run Pipeline Locally
-
-To run the pipeline locally, make sure to update the paths in configs/test_local.ini to match your local machine.
-
-- "run_script" will be `<mcs-pipeline>/deploy_files/local/ray_script.sh`
-- "scene_location" is where the JSON scene files are located; you can find some sample scenes in the `docs/source/scenes/` folder in the `MCS` GitHub repository
-- "scene_list" is a .txt file that you put one scene on each line to run.
-- "eval_dir" is where the evaluations are written
-
-If you'd like to test upload to S3 from a local machine, also ensure that you have your credentials and config setup correctly in ~/.aws (directions [here] (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)) and update the config in configs/mcs_config_local_level2.ini.
-
-Then run the following:
-
-```
-python ray_scripts/pipeline_ray.py configs/test_local.ini configs/mcs_config_local_level2.ini --disable_validation --local_only
-```
-
-The ray_script.sh here is set to run run_just_pass.py from the MCS project on the list of scenes passed along, but that can be changed to whatever is needed.
-
 ## Project Structure
 
 The pipeline is setup to run different "modules" and uses convention to locate files for each module.  At first, each module will be an evaluation for a specific team, but the goal is to add modules that perform different tasks using Ray in AWS.
