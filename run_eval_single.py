@@ -23,7 +23,6 @@ def parse_args():
     )
     parser.add_argument(
         "--dev_validation",
-        "-d",
         default=False,
         action="store_true",
         help="Whether or not to validate for development instead of production",

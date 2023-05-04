@@ -1,7 +1,6 @@
 cluster: "mess"
 team: "mess"
 region: us-east-2
-ami: ami-0a5f3f1f18bec9ede # east-2 region ami for 'mess-eval5-submission-v4'
-# ami: ami-0a6ecfa816f06f9c0 # east-1 region ami for 'mess-eval5-submission-v4'
-# ami: ami-02ebe497bfb78c911 # east-1 region ami for 'mess-eval5-agency-redo' (agency rerun)
+ami: ami-0642c523a480d0ae1 # east-2 region ami for 'mess-eval6-agency-with-patch'
+#ami: ami-0d3bcdaa29a0c659f # east-2 region ami for 'mess-eval6-final-v4' (pre-agency patch)
 cache_stopped_nodes: False

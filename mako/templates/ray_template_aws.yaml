@@ -22,7 +22,7 @@ available_node_types:
   ray.head.default:
     min_workers: 0
     max_workers: 0
-    resources: {"CPU": 4, "GPU": 1}
+    resources: {"CPU": 4, "GPU": ${1 if utilize_head_node_for_work is True else 0}}       # Setting GPU to 0 won't run work on the head node
     node_config:
       InstanceType: p2.xlarge
       ImageId: ${ami}
@@ -49,6 +49,9 @@ file_mounts: {
   ${additional_file_mounts}
 }
 
+# May need to check if the python3 on the machine is compatible with the
+# version of Ray that we are using, since TA1 can install + default to
+# whatever Python version they need (Ray 1.13.0 = Python 3.6 - 3.9)
 setup_commands:
   - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
   - python3 -m pip install --upgrade pip
