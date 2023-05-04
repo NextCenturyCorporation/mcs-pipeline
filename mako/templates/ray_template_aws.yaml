@@ -56,6 +56,7 @@ setup_commands:
   - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
   - python3 -m pip install --upgrade pip
   - python3 -m pip install -U "ray[default]"==1.13.0
+  - python3 -m pip install -U gpustat==1.0.0
   ${additional_setup_commands}
 
 # Command to start ray on the head node. You don't need to change this.
