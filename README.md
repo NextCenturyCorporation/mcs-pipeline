@@ -157,7 +157,7 @@ Config File API (yaml):
 
 First try a run using the `--dry-run` flag to verify that your configuration is correct:
 ```
-python run_eval.py -d -n 1 -c mako/whatever.yaml -u my_name --dry_run
+python run_eval.py -n 1 -c mako/whatever.yaml -u my_name --dry_run
 ```
 
 It should finish promptly. The `.tmp_pipeline` folder should then have the resolved MCS (python API) and ray configuration files for you to review.
