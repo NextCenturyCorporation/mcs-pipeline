@@ -123,7 +123,7 @@ def run_scene(
         cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     lines = []
-    for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
+    for line in io.TextIOWrapper(proc.stdout, encoding="utf-8", errors='ignore'):
         logging.info(line.rstrip())
         lines.append(line)
     result = proc.wait()
