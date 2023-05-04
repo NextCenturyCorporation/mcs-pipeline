@@ -26,7 +26,12 @@ $ source venv/bin/activate
 (pipeline) $ python -m pip install --upgrade pip setuptools wheel
 (pipeline) $ python -m pip install -r requirements.txt
 (pipeline) $ pre-commit install
+(pipeline) $ sudo apt install shellcheck moreutils expect
 ```
+
+The `run_eval` script needs `ts` (from `moreutils`) and `unbuffer` (from `expect`). The `pre-commit` config needs `shellcheck`.
+
+Note that for Mac users, you can install both `moreutils` and `expect` with `brew`.
 
 ## Linting
 
@@ -148,12 +153,16 @@ Config File API (yaml):
     It expects to have a directory 'mako-test/parent/' which has one or more subdirectories filled with scenes.  It also
     expects the following directories with scene files: 'mako-test/dirs/dir1', 'mako-test/dirs/dir2'.
 
+#### Dry Run
+
+First try a run using the `--dry-run` flag to verify that your configuration is correct:
+```
+python run_eval.py -n 1 -c mako/whatever.yaml -u my_name --dry_run
+```
+
+It should finish promptly. The `.tmp_pipeline` folder should then have the resolved MCS (python API) and ray configuration files for you to review.
+
 #### Commands
-
-This script assumes you have the ts.  you can install ts via `sudo apt install moreutils`
-This script assumes you have the unbuffer.  you can install ts via `sudo apt install expect`
-
-Note that for Mac users, you can install both moreutils and expect with brew.
 
 Python Script:
 
@@ -164,7 +173,7 @@ python run_eval_single.py -v opics -s eval4-validation-subset/group3 -m level2
 
 To run a full eval from a configured file:
 ```
-python run_eval.py -d -n 1 -c mako/eval-4-subset.yaml
+python run_eval.py -d -n 1 -c mako/whatever.yaml -u my_name
 ```
 
 See the scripts help text for additional options such as disabling validation, using dev validation and redirecting logs to STDOUT, and dry run.
@@ -174,6 +183,8 @@ Configuration files and a resume.yaml will be written in the .tmp_pipeline_ray d
 #### Log Parsing
 
 The `run_eval` script is always run with 'ts -s', and the output logs can be parsed by `pipeline/log_parser.py`.  This command will split the logs into logs per working node and then use some regex to report some metrics on how long different portions of a run took.  At the moment, the script output is somewhat rough and it only has good support for tracking opics logging.
+
+If you want to watch all of the logs while the pipeline is running, you can run `tail -f <log_file>` in a separate terminal (for example, `tail -f logs-test/level2.log`).
 
 #### Script Overview
 
@@ -269,12 +280,10 @@ Some portions of `ray_template_aws.yaml` are important to how evals are executed
 ### SSH
 
 * Use the `ray attach` command to connect to a shell on the cluster head node.
-* You can also connect to a node via the following:
+* You can also connect to a node via the following (adjust the PEM filename and the EC2 address as needed):
 
-    <code>ssh -i ~/.ssh/pemfilename.pem username@ec2.2.amazon.com run_script.sh</code>
+    <code>ssh -i ~/.ssh/ray_autoscaler_whatever.pem ubuntu@ec2-whatever.compute-1.amazonaws.com</code>
 
-* secrets file, containing the pemfilename and the username.  Copy from pipeline/secrets_template.py
-to pipeline/secrets.py and fill it in.  Do not add to github.
 * We no longer use an AWS credentials file for Ray.  Instances in AWS should be given an IAM role via configurations.
   * When running locally, your system may need an AWS credentials file.  This should be in the file ~/.aws/credentials.  This will allow you to
 use [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) to get
