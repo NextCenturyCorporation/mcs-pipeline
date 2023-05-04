@@ -497,7 +497,8 @@ def create_eval_set_from_folder(
         my_override = copy.deepcopy(override)
         scene_dir = os.path.join(base_dir, dir)
         if os.path.isdir(scene_dir):
-            my_override["log_name"] = f"{dir}-{metadata}.log"
+            prefix = f"{dir}-" if dir else ""
+            my_override["log_name"] = f"{prefix}{metadata}.log"
             eval_set.append(
                 EvalParams(
                     varset, scene_dir, metadata=metadata, override=my_override
@@ -705,7 +706,8 @@ def create_eval_set_from_file(
             for dir in dirs:
                 log_dir = dir.split("/")[-1]
                 my_override = copy.deepcopy(override) if override else {}
-                my_override["log_name"] = f"{log_dir}-{metadata}.log"
+                prefix = f"{log_dir}-" if log_dir else ""
+                my_override["log_name"] = f"{prefix}{metadata}.log"
                 eval = EvalParams(varset, dir, metadata, override=my_override)
                 if files:
                     eval.file_names = files
