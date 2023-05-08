@@ -706,13 +706,6 @@ def parse_args():
         help="Whether to attempt to resume last run.",
     )
     parser.add_argument(
-        "--local_only",
-        default=False,
-        action="store_true",
-        help="Whether or not one is running on a local machine "
-        + "or on a remote cluster",
-    )
-    parser.add_argument(
         "--dev_validation",
         default=False,
         action="store_true",
@@ -746,10 +739,7 @@ if __name__ == "__main__":
 
     # Note that logging_level is set to logging.INFO by default
     # in ray.init() call (in case we need to change logging levels)
-    if args.local_only:
-        ray.init(local_mode=True)
-    else:
-        ray.init(address="auto")
+    ray.init(address="auto")
 
     try:
         scene_runner = SceneRunner(args)
