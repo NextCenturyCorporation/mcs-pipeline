@@ -2,4 +2,4 @@ base:
   varset: ['cora2']
 eval-groups:
   - metadata: ['level2']
-    dirs: ['/home/ubuntu/mcs/eval_65_scenes/earth']
+    dirs: ['/home/ubuntu/mcs/eval_65_scenes/saturn']
