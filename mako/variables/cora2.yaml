@@ -1,4 +1,4 @@
-ami: ami-0d19734b0912b6a33 #Evaluation 6.5 Submission AMI
+ami: ami-09aaade091b8d087c #Evaluation 6.5 Submission AMI
 cluster: "cora2"
 team: "cora2"
 cache_stopped_nodes: False
