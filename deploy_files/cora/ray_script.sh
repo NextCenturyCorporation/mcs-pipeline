@@ -24,11 +24,11 @@ cp "$scene_file" .
 echo $(basename "$scene_file")
 cd "$eval_dir" || exit
 
-# Source the conda environment 
-echo "Starting jax env"
-cd /home/ubuntu/CoraAgent || exit
-source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
-conda activate jax
+# # Source the conda environment 
+# echo "Starting jax env"
+# cd /home/ubuntu/CoraAgent || exit
+# source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
+# conda activate jax
 
 # Start X
 #Not used
@@ -61,32 +61,48 @@ else
   fi
 fi
 
-if pgrep -f "python /home/ubuntu/jax3dp3/scripts/run_physics_server.py" > /dev/null
-then
-  echo 'Physics server is running'
-else
-  echo "Starting run_physics_server.py"
-  # Need to redirect logs of background tasks or the script doesn't
-  python /home/ubuntu/jax3dp3/scripts/run_physics_server.py 1>physserver-out.txt 2>physserver-err.txt &
-  echo "Sleeping for 20 seconds to wait for physics server"
-  sleep 20
-fi
+# if pgrep -f "python /home/ubuntu/jax3dp3/scripts/run_physics_server.py" > /dev/null
+# then
+#   echo 'Physics server is running'
+# else
+#   echo "Starting run_physics_server.py"
+#   # Need to redirect logs of background tasks or the script doesn't
+#   python /home/ubuntu/jax3dp3/scripts/run_physics_server.py 1>physserver-out.txt 2>physserver-err.txt &
+#   echo "Sleeping for 20 seconds to wait for physics server"
+#   sleep 20
+# fi
 
-if pgrep -f "python /home/ubuntu/jax3dp3/experiments/multiprocess/server.py" > /dev/null
-then
-  echo 'Vision server is running'
-else
-  echo "Starting server.py"
-  cd /home/ubuntu/jax3dp3/experiments/multiprocess || exit
-  # Need to redirect logs of background tasks or the script doesn't
-  python server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
-  echo "Sleeping for 20 seconds to wait for vision server"
-  sleep 20
-fi
+# if pgrep -f "python /home/ubuntu/jax3dp3/experiments/multiprocess/server.py" > /dev/null
+# then
+#   echo 'Vision server is running'
+# else
+#   echo "Starting server.py"
+#   cd /home/ubuntu/jax3dp3/experiments/multiprocess || exit
+#   # Need to redirect logs of background tasks or the script doesn't
+#   python server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
+#   echo "Sleeping for 20 seconds to wait for vision server"
+#   sleep 20
+# fi
 
 # CORA has a harded coded Display value in one module, must be 0 (Eval 6)
 export DISPLAY=:0
 
+# EVAL 6.5
+conda activate bayes3d
+
+## Run physics server 
+
+cd home/ubuntu/bayes3d
+
+# All the script output is piped to server.log
+python run_mcs_physics.py > server.log 2>&1 & 
+
+## Running the Scene. The results are dumped to results.json file
+cd /home/ubuntu/Cora2/CoraAgent
+DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_6 results.json
+############################
+
+
 ## Running the Scene. You can run this in a separate shell/tmux sessions or in the same shell too
-cd /home/ubuntu/CoraAgent || exit
-DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_6
+# cd /home/ubuntu/CoraAgent || exit
+# DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_6

@@ -6,7 +6,7 @@ idle_timeout_minutes: 5
 additional_setup_commands: ""
 additional_file_mounts: ""
 cache_stopped_nodes: True
-utilize_head_node_for_work: True
+utilize_head_node_for_work: False
 #Below is for mcs_config_template.ini
 mcs_config_extra: ""
 evaluation_bool: true
