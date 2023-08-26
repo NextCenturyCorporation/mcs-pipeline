@@ -58,6 +58,7 @@ setup_commands:
   - python3 -m pip install -U pydantic==1.9.2
   - python3 -m pip install -U "ray[default]"==1.13.0
   - python3 -m pip install -U gpustat==1.0.0
+  - python3 -m pip install -U boto3
   ${additional_setup_commands}
 
 # Command to start ray on the head node. You don't need to change this.
