@@ -4,3 +4,4 @@ region: us-east-2
 ami: ami-0642c523a480d0ae1 # east-2 region ami for 'mess-eval6-agency-with-patch'
 #ami: ami-0d3bcdaa29a0c659f # east-2 region ami for 'mess-eval6-final-v4' (pre-agency patch)
 cache_stopped_nodes: False
+additional_file_mounts: '"/home/ubuntu/monitor_process.sh": "deploy_files/${filePrefix}/monitor_process.sh",'
