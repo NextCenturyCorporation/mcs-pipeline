@@ -57,6 +57,20 @@ scene_file_basename=$(basename "$scene_file")
 # For tasks that don't finish/end_scene is never explicitly called, you may need
 # to do something like this:
 # timeout 7200 python src/script_mess_clean.py scenes/"$scene_file_basename"
+
+# kick off monitor process
+source /home/ubuntu/monitor_process.sh "$mcs_configfile" "$scene_file" "$eval_dir" &
+
+# TA1 run command
 python src/script_mess_clean.py scenes/"$scene_file_basename"
+
+# end monitor process
+# TODO: MCS-1771 - make sure this actually ends the monitor process properly
+if pgrep "source /home/ubuntu/monitor_process.sh &" > /dev/null
+then
+    pkill -f "source /home/ubuntu/monitor_process.sh {$mcs_configfile} {$scene_file} {$eval_dir} &"
+    echo "Sleeping for 20 seconds to wait for monitor process to end"
+    sleep 20
+fi
 
 unset MCS_CONFIG_FILE_PATH
