@@ -37,9 +37,9 @@ while true; do
                 child_processes=$(pgrep -P "$python_process")
                 for cpid in $child_processes;
                 do
-                    echo "$cpid"
                     if ps -p "$cpid" > /dev/null
                     then
+                        echo "monitor_process.sh: Attempt to terminate process ${cpid}"
                         kill -15 "$cpid"
                     fi
                 done
