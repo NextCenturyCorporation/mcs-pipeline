@@ -60,15 +60,19 @@ scene_file_basename=$(basename "$scene_file")
 
 # kick off monitor process
 source /home/ubuntu/monitor_process.sh "$mcs_configfile" "$scene_file" "$eval_dir" &
+mon_proc_id=$!
+sleep 5
+echo Monitor process ID for "$scene_file" is: "$mon_proc_id"
 
 # TA1 run command
 python src/script_mess_clean.py scenes/"$scene_file_basename"
 
 # end monitor process
 # TODO: MCS-1771 - make sure this actually ends the monitor process properly
-if pgrep "source /home/ubuntu/monitor_process.sh &" > /dev/null
+echo "Monitor process ID: ${mon_proc_id}, checking if it has ended for scene: ${scene_file}"
+if ps -p "$mon_proc_id" > /dev/null
 then
-    pkill -f "source /home/ubuntu/monitor_process.sh {$mcs_configfile} {$scene_file} {$eval_dir} &"
+    kill -15 "$mon_proc_id"
     echo "Sleeping for 20 seconds to wait for monitor process to end"
     sleep 20
 fi

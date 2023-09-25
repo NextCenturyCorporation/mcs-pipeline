@@ -4,22 +4,46 @@
 source /home/ubuntu/check_passed_variables.sh
 # shellcheck disable=SC2154
 
+echo "monitor_process.sh: starting for ${scene_file}"
+scene_file_basename=$(basename "$scene_file")
+
+# TA1 run command
+ta1_run_cmd="python src/script_mess_clean.py scenes/${scene_file_basename}"
+
 while true; do
     # check if TA1 process is running by looking for their run command
-    if pgrep -f "python src/script_mess_clean.py scenes/{$scene_file_basename}" > /dev/null
+    if pgrep -f "${ta1_run_cmd}"> /dev/null
     then
-        # check for scene history file or timeout in logs, if one exists then end script_mess_clean process
+        # check for scene history file, if one exists then end script_mess_clean process
+        #
         # need to get non-obfuscated filename from scene file, then use that to look for an existing
         # history file
+        python_process=$(pgrep -f "${ta1_run_cmd}")
+        echo "monitor_process.sh: python process is ${python_process}"
+        echo monitor_process.sh: Checking for history file for: "$filename"
         filename=$(grep -o '"name": "[^"]*' scenes/"$scene_file_basename" | grep -o '[^"]*$')
-        if compgen -G "{$eval_dir}/SCENE_HISTORY/{$filename}*.json" > /dev/null
+        # shellcheck disable=SC2154
+        if compgen -G "${eval_dir}/SCENE_HISTORY/${filename}*.json" > /dev/null
         then
-            echo "History file exists, kill process."
-            pkill -f "python src/script_mess_clean.py scenes/{$scene_file_basename}"
-            sleep 20 # TODO: MCS-1771: is this sufficient
+            echo "monitor_process.sh: History file for ${filename} exists, terminate process."
+            echo "monitor_process.sh: Terminate child unity process first"
+            child_processes=$(pgrep -P "$python_process")
+            for cpid in $child_processes;
+            do
+                echo "$cpid"
+                if ps -p "$cpid" > /dev/null
+                then
+                    kill -15 "$cpid"
+                fi
+            done
+
+            echo "monitor_process.sh: Terminate main process now"
+            pkill -f "${ta1_run_cmd}"
+            sleep 20
+            echo "monitor_process.sh: exiting for ${scene_file}"
             exit 1
         fi
     fi
-    echo "Sleeping for 2 1/2 hours to wait for output"
-    sleep 9000
+    echo "monitor_process.sh: Sleeping for an hour to wait for output for ${scene_file}"
+    sleep 3600
 done
