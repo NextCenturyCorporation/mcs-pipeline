@@ -5,6 +5,9 @@ from subprocess import Popen, PIPE
 import json
 import glob
 import psutil
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 
 
 def main(scene_file_basename, eval_dir):
