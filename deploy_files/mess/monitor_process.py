@@ -85,7 +85,7 @@ def main(scene_file_basename, eval_dir):
 
         # if no process or file isn't found, sleep for a while
         logging.info(
-            f"monitor_process.py: sleep for {str(sleep_time / 60)} mins to wait for output for {scene_file_basename}"
+            f"monitor_process.py: sleep for {str(int(sleep_time / 60))} mins to wait for output for {scene_file_basename}"
         )
         time.sleep(sleep_time)
 
