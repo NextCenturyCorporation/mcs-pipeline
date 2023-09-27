@@ -15,8 +15,10 @@ def main(scene_file_basename, eval_dir):
     logging.info("monitor_process.py: starting with the following args: ")
     time.sleep(10)
 
-    logging.info(f"scene_file_basename: {scene_file_basename}")
-    logging.info(f"eval_dir: {eval_dir}")
+    logging.info(
+        f"monitor_process.py: scene_file_basename: {scene_file_basename}"
+    )
+    logging.info(f"monitor_process.py: eval_dir: {eval_dir}")
     # TA1 run command and full scene file path
     full_cmd = "python src/script_mess_clean.py scenes/" + scene_file_basename
     full_scene_file_path = eval_dir + "/scenes/" + scene_file_basename
