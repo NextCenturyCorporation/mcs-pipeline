@@ -7,11 +7,13 @@ import glob
 import psutil
 import logging
 
-logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+logger = logging.getLogger()
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 
 def main(scene_file_basename, eval_dir):
     print("monitor_process.py: starting with the following args: ")
+    logging.info("monitor_process.py logging test")
     time.sleep(10)
 
     print(f"scene_file_basename: {scene_file_basename}")
