@@ -68,7 +68,6 @@ echo Monitor process ID for "$scene_file" is: "$mon_proc_id"
 python src/script_mess_clean.py scenes/"$scene_file_basename"
 
 # end monitor process
-# TODO: MCS-1771 - make sure this actually ends the monitor process properly
 echo "Monitor process ID: ${mon_proc_id}, checking if it has ended for scene: ${scene_file_basename}"
 if pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}" > /dev/null
 then
