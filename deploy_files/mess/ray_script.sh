@@ -59,6 +59,10 @@ scene_file_basename=$(basename "$scene_file")
 # timeout 7200 python src/script_mess_clean.py scenes/"$scene_file_basename"
 
 # kick off monitor process
+# if using this monitor_process bit for other performers, make sure the two
+# arguments are pointing to the correct places + update lines 66, 68 and 76 if
+# changing anything about the monitor_process.py command
+# see monitor_process.py for more on how to use + update things properly.
 python /home/ubuntu/monitor_process.py "$scene_file_basename" "$eval_dir" &
 sleep 5
 mon_proc_id=$(pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}")

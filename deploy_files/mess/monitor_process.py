@@ -12,6 +12,25 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 
 def main(scene_file_basename, eval_dir):
+    """
+    This script is only needed for situations where the performer code gets
+    stuck/no steps are taken. If that happens, you should see something like
+    this in your logs:
+    "Attempting to end scene due to inactivity (user not taking any steps) for 1:00:00 (hh:mm:ss)"
+
+    In this case, a history file + video files should be created, but the parent process
+    might not exit, leaving things in a hung state (hence the need for this script).
+
+    If using this script for other performers, double check that
+    the following variables are updated and correct:
+    scene_file_basename, eval_dir, full_cmd, full_scene_file_path
+
+    Then, copy this script into deploy_files/{team} and update your
+    team config in mako/variables/{team}.yaml with the
+    additional_file_mounts + additional_setup_commands like in mess.yaml.
+    Also be sure to update ray_script.sh with the relevant parts (see
+    deploy_files/mess/ray_script.sh for an example).
+    """
     logging.info("monitor_process.py: starting with the following args: ")
     logging.info(
         f"monitor_process.py: scene_file_basename: {scene_file_basename}"
