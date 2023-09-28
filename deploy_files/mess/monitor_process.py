@@ -72,8 +72,7 @@ def main(scene_file_basename, eval_dir):
                                         f"monitor_process.py: found child Unity process: "
                                         f"{c_process}, will attempt to end."
                                     )
-
-                                c_process.terminate()
+                                    c_process.terminate()
 
                             logging.info(
                                 f"monitor_process.py: now attempting to end main process {p}"
