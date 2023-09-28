@@ -67,7 +67,7 @@ def main(scene_file_basename, eval_dir):
                         if p.info["pid"] == result_array[0]:
                             children = p.children(recursive=True)
                             for c_process in children:
-                                if c_process.name == "MCS-AI2-THOR":
+                                if "MCS-AI2-THOR" in c_process.name():
                                     logging.info(
                                         f"monitor_process.py: found child Unity process: "
                                         f"{c_process}, will attempt to end."
