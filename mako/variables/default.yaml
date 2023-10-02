@@ -18,3 +18,4 @@ s3_bucket: dev-evaluation-images
 s3_folder: eval-resources-6
 s3_movies_folder: raw-eval-6
 timeout: 3600
+has_monitor_process: false

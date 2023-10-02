@@ -27,7 +27,8 @@ def main(scene_file_basename, eval_dir):
 
     Then, copy this script into deploy_files/{team} and update your
     team config in mako/variables/{team}.yaml with the
-    additional_file_mounts + additional_setup_commands like in mess.yaml.
+    additional_file_mounts + additional_setup_commands like in mess.yaml, and that
+    has_monitor_process is set to 'true'.
     Also be sure to update ray_script.sh with the relevant parts (see
     deploy_files/mess/ray_script.sh for an example).
     """
