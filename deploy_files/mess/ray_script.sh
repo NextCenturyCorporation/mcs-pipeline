@@ -58,16 +58,17 @@ scene_file_basename=$(basename "$scene_file")
 # to do something like this:
 # timeout 7200 python src/script_mess_clean.py scenes/"$scene_file_basename"
 
-# kick off monitor process (if specified in config file)
-# if using this monitor_process bit for other performers, make sure the two
-# arguments are pointing to the correct places + update lines 66, 68 and 76 if
-# changing anything about the monitor_process.py command
-# see monitor_process.py for more on how to use + update things properly.
+# check if monitor process is specified as 'true' in config file
 HAS_MON_PROC=$(awk -F '=' '/has_monitor_process/ {print tolower($2)}' "$mcs_configfile" | xargs)
 echo has_monitor_process is "$HAS_MON_PROC"
 
 if [ "$HAS_MON_PROC" = true ];
 then
+    # kick off monitor process
+    # if using this monitor_process bit for other performers, make sure the two
+    # arguments are pointing to the correct places + update lines 72, 74 and 81 if
+    # changing anything about the monitor_process.py command
+    # see monitor_process.py for more on how to use + update things properly.
     python /home/ubuntu/monitor_process.py "$scene_file_basename" "$eval_dir" &
     mon_proc_id=$(pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}")
     echo Monitor process ID for "$scene_file" is: "$mon_proc_id"
