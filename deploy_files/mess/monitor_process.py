@@ -11,7 +11,7 @@ logger = logging.getLogger()
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 
-def main(scene_file_basename, eval_dir):
+def main(scene_file_basename, eval_dir, full_scene_file_path, full_cmd):
     """
     This script is only needed for situations where the performer code gets
     stuck/no steps are taken. If that happens, you should see something like
@@ -23,7 +23,7 @@ def main(scene_file_basename, eval_dir):
 
     If using this script for other performers, double check that
     the following variables are updated and correct:
-    scene_file_basename, eval_dir, full_cmd, full_scene_file_path
+    scene_file_basename, eval_dir, full_scene_file_path, full_cmd
 
     Then, copy this script into deploy_files/{team} and update your
     team config in mako/variables/{team}.yaml with the
@@ -37,10 +37,11 @@ def main(scene_file_basename, eval_dir):
         f"monitor_process.py: scene_file_basename: {scene_file_basename}"
     )
     logging.info(f"monitor_process.py: eval_dir: {eval_dir}")
+    logging.info(
+        f"monitor_process.py: full_scene_file_path: {full_scene_file_path}"
+    )
+    logging.info(f"monitor_process.py: full_cmd: {full_cmd}")
     time.sleep(10)
-    # TA1 run command and full scene file path
-    full_cmd = "python src/script_mess_clean.py scenes/" + scene_file_basename
-    full_scene_file_path = eval_dir + "/scenes/" + scene_file_basename
     first_run = True
     sleep_time = 1800
 
@@ -48,7 +49,7 @@ def main(scene_file_basename, eval_dir):
         logging.info(
             f"monitor_process.py: check for running process: {full_cmd}"
         )
-        child = Popen(["pgrep", "-f", full_cmd], stdout=PIPE, shell=False)
+        child = Popen(["pgrep", "-f", "^" + full_cmd], stdout=PIPE, shell=False)
         result = child.communicate()[0]
         result_array = [int(pid) for pid in result.split()]
 
@@ -114,10 +115,15 @@ def main(scene_file_basename, eval_dir):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 5:
         logging.info(
             "monitor_process.py: not enough arguments passed in, exiting. "
         )
         sys.exit()
 
-    main(scene_file_basename=sys.argv[1], eval_dir=sys.argv[2])
+    main(
+        scene_file_basename=sys.argv[1],
+        eval_dir=sys.argv[2],
+        full_scene_file_path=sys.argv[3],
+        full_cmd=sys.argv[4],
+    )
