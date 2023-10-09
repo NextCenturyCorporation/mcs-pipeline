@@ -64,25 +64,21 @@ echo has_monitor_process is "$HAS_MON_PROC"
 
 if [ "$HAS_MON_PROC" = true ];
 then
-    # save run command and full scene path as variables to pass into monitor_process.py
-    full_run_cmd=$(python src/script_mess_clean.py scenes/"$scene_file_basename")
-    full_scene_file_path="${eval_dir}/scenes/${scene_file_basename}"
-
     # kick off monitor process
     # if using this monitor_process bit for other performers, make sure the two
-    # arguments are pointing to the correct places + update lines 75, 77 and 84 if
+    # arguments are pointing to the correct places + update lines 72, 74 and 81 if
     # changing anything about the monitor_process.py command
     # see monitor_process.py for more on how to use + update things properly.
-    python /home/ubuntu/monitor_process.py "$scene_file_basename" "$eval_dir" "$full_scene_file_path" "$full_run_cmd" &
-    mon_proc_id=$(pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir} ${full_scene_file_path} ${full_run_cmd}")
+    python /home/ubuntu/monitor_process.py "$scene_file_basename" "$eval_dir" &
+    mon_proc_id=$(pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}")
     echo Monitor process ID for "$scene_file" is: "$mon_proc_id"
 
     # TA1 run command
-    $full_run_cmd
+    python src/script_mess_clean.py scenes/"$scene_file_basename"
 
     # end monitor process
     echo "Monitor process ID: ${mon_proc_id}, checking if it has ended for scene: ${scene_file_basename}"
-    if pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir} ${full_scene_file_path} ${full_run_cmd}" > /dev/null
+    if pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}" > /dev/null
     then
         echo "Scene finished, attempt to terminate monitor_process.py with id ${mon_proc_id}"
         kill -15 "$mon_proc_id"
