@@ -70,6 +70,7 @@ then
     # changing anything about the monitor_process.py command
     # see monitor_process.py for more on how to use + update things properly.
     python /home/ubuntu/monitor_process.py "$scene_file_basename" "$eval_dir" &
+    sleep 5
     mon_proc_id=$(pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}")
     echo Monitor process ID for "$scene_file" is: "$mon_proc_id"
 
