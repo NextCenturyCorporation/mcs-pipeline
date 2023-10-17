@@ -75,6 +75,7 @@ and UI related functionality will work correctly (these can be turned off for te
 - **metadata** - has to be either `level1`, `level2`, or `oracle`
 - **evaluation_name** - has to be one of the following, in the exact format: `eval_3-75`, `eval_4`, `eval_5`, `eval_6`, `eval_7`, `eval_8`
 - **evaluation** - must be set to `true`
+- **has_monitor_process** - has to be either `true` or `false` (currently only working with MESS submissions)
 - **history_enabled** - must be set to `true`
 - **team** - has to be either `mess` (for multiple submissions, `mess1` or `mess2`), `cora` (or `mit` if rerunning a pre-3.75 eval set), `opics`, or `baseline`
 - **submission_id** - currently, only needed for MESS submissions (if multiple given). Needs to match the team label (either `1` or `2`)

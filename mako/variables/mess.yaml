@@ -4,3 +4,7 @@ region: us-east-2
 ami: ami-0642c523a480d0ae1 # east-2 region ami for 'mess-eval6-agency-with-patch'
 #ami: ami-0d3bcdaa29a0c659f # east-2 region ami for 'mess-eval6-final-v4' (pre-agency patch)
 cache_stopped_nodes: False
+# Properties needed in case of timeouts
+additional_file_mounts: '"/home/ubuntu/monitor_process.py": "deploy_files/mess/monitor_process.py",'
+additional_setup_commands: "- python3 -m pip install psutil==5.9.5"
+has_monitor_process: false
