@@ -123,7 +123,9 @@ def run_scene(
         cmd.split(" "), stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     lines = []
-    for line in io.TextIOWrapper(proc.stdout, encoding="utf-8", errors='ignore'):
+    for line in io.TextIOWrapper(
+        proc.stdout, encoding="utf-8", errors="ignore"
+    ):
         logging.info(line.rstrip())
         lines.append(line)
     result = proc.wait()
@@ -315,8 +317,8 @@ class SceneRunner:
     #  more flexible for Eval 4+ and update folder structure
     CURRENT_EVAL_BUCKET = "evaluation-images"
     CURRENT_DEV_EVAL_BUCKET = "dev-evaluation-images"
-    CURRENT_EVAL_FOLDER = "eval-resources-6"
-    CURRENT_MOVIE_FOLDER = "raw-eval-6"
+    CURRENT_EVAL_FOLDER = "eval-resources-7"
+    CURRENT_MOVIE_FOLDER = "raw-eval-7"
 
     def __init__(self, args):
 
