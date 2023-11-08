@@ -4,14 +4,18 @@ set -m
 # This is what the "main_optics" command does (from the instructions TA1 gave us).
 echo "OPICS Pipeline: Running TA1 environment setup..."
 cd /home/ubuntu/ || exit
-sudo nvidia-xconfig --use-display-device=None --virtual=600x400 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
-export OUR_XPID=2356
-export DISPLAY=:0
+sudo nvidia-xconfig --use-display-device=Device0 --virtual=600x400 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
+export OUR_XPID=
+export DISPLAY=:1
 export OPTICS_HOME=~/main_optics
 export PYTHONPATH=$OPTICS_HOME:$OPTICS_HOME/opics_common
 export OPTICS_DATASTORE=ec2b
 cd $OPTICS_HOME || exit
 cd scripts/ || exit
+
+# Start the X Server
+# (Note that OPICS sets the DISPLAY to :1 -- Do NOT call start_x_server.sh)
+sudo /usr/bin/Xorg :1 1>startx-out.txt 2>startx-err.txt &
 
 # Check passed mcs_config and scene file
 # shellcheck source=/dev/null
@@ -30,11 +34,8 @@ for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     rm -f "$CONTAINER_DIR"/scripts/SCENE_HISTORY/*
 done
 
-# Start X
-source /home/ubuntu/start_x_server.sh
-
 export MCS_CONFIG_FILE_PATH=$mcs_configfile
-python opics_eval6_run_scene.py --scene "$scene_file"
+python opics_eval7_run_scene.py --scene "$scene_file"
 unset MCS_CONFIG_FILE_PATH
 
 DEBUG=true
