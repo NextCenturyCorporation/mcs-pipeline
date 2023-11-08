@@ -26,6 +26,7 @@ echo "OPICS Pipeline: Running OPICS with MCS config file $mcs_configfile and eva
 
 echo "OPICS Pipeline: Removing previous scene history files in $eval_dir/SCENE_HISTORY/"
 rm -f "$eval_dir"/SCENE_HISTORY/*
+mkdir -p "$eval_dir"/SCENE_HISTORY/
 
 # shellcheck disable=SC2207
 CONTAINER_DIRS=($(ls /home/ubuntu/test__* -d))
