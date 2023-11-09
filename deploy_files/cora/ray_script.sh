@@ -25,10 +25,10 @@ echo $(basename "$scene_file")
 cd "$eval_dir" || exit
 
 # Source the conda environment 
-echo "Starting jax env"
-cd /home/ubuntu/CoraAgent || exit
+echo "conda activate bayes3d"
+cd /home/ubuntu/Cora2/CoraAgent || exit
 source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
-conda activate jax
+conda activate bayes3d
 
 # Start X
 #Not used
@@ -61,32 +61,34 @@ else
   fi
 fi
 
-if pgrep -f "python /home/ubuntu/jax3dp3/scripts/run_physics_server.py" > /dev/null
+#Physics Server
+cd /home/ubuntu/bayes3d || exit
+if pgrep -f "python /home/ubuntu/bayes3d/run_mcs_physics.py" > /dev/null
 then
   echo 'Physics server is running'
 else
   echo "Starting run_physics_server.py"
   # Need to redirect logs of background tasks or the script doesn't
-  python /home/ubuntu/jax3dp3/scripts/run_physics_server.py 1>physserver-out.txt 2>physserver-err.txt &
+  python python /home/ubuntu/bayes3d/run_mcs_physics.py 1>physserver-out.txt 2>physserver-err.txt &
   echo "Sleeping for 20 seconds to wait for physics server"
   sleep 20
 fi
 
-if pgrep -f "python /home/ubuntu/jax3dp3/experiments/multiprocess/server.py" > /dev/null
-then
-  echo 'Vision server is running'
-else
-  echo "Starting server.py"
-  cd /home/ubuntu/jax3dp3/experiments/multiprocess || exit
-  # Need to redirect logs of background tasks or the script doesn't
-  python server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
-  echo "Sleeping for 20 seconds to wait for vision server"
-  sleep 20
-fi
+# if pgrep -f "python /home/ubuntu/jax3dp3/experiments/multiprocess/server.py" > /dev/null
+# then
+#   echo 'Vision server is running'
+# else
+#   echo "Starting server.py"
+#   cd /home/ubuntu/jax3dp3/experiments/multiprocess || exit
+#   # Need to redirect logs of background tasks or the script doesn't
+#   python server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
+#   echo "Sleeping for 20 seconds to wait for vision server"
+#   sleep 20
+# fi
 
 # CORA has a harded coded Display value in one module, must be 0 (Eval 6)
 export DISPLAY=:0
 
 ## Running the Scene. You can run this in a separate shell/tmux sessions or in the same shell too
-cd /home/ubuntu/CoraAgent || exit
-DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_6
+cd /home/ubuntu/Cora2/CoraAgent || exit
+DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7
