@@ -17,8 +17,8 @@ echo Starting Evaluation for CORA:
 
 # Adjust for where they hardcoded the scene file to be read from, might be different next collab/evaluation run
 echo "Copy Scene Files:"
-mkdir -p /home/ubuntu/scenes/evaluation_6
-cd /home/ubuntu/scenes/evaluation_6 || exit
+mkdir -p /home/ubuntu/scenes/evaluation_7
+cd /home/ubuntu/scenes/evaluation_7 || exit
 rm ./*
 cp "$scene_file" .
 echo $(basename "$scene_file")
