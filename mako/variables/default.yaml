@@ -1,5 +1,5 @@
 workers: 10
-region: us-east-1
+region: us-west-2
 clusterUser: ""
 clusterSuffix: ""
 idle_timeout_minutes: 15

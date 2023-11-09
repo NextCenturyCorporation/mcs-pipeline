@@ -3,4 +3,3 @@ base:
 eval-groups:
   - metadata: ['level2']
     dirs: ['/home/ubuntu/mcs/eval_7_validation/']
-    #dirs: ['/home/ple/mcs/eval_6/eval_6_validation_small/']
