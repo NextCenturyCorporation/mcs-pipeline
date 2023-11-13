@@ -27,7 +27,7 @@ cd "$eval_dir" || exit
 # Source the conda environment 
 echo "conda activate bayes3d"
 cd /home/ubuntu/Cora2/CoraAgent || exit
-source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
+source /home/ubuntu/miniconda3/etc/profile.d/conda.sh
 conda activate bayes3d
 
 # Start X

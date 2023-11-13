@@ -634,8 +634,12 @@ def run_evals(
             )
             print(f"  {all_status.get_progress_string()}")
             print(f"  {all_status.get_timing_string()}")
-        print(f"Finished with cluster {num}")
-        execute_shell(f"ray down -y {last_config_file.as_posix()}", log_file)
+        if last_config_file:
+            print(f"Finished with cluster {num}")
+            execute_shell(
+                f"ray down -y {last_config_file.as_posix()}",
+                log_file
+            )
 
     threads = []
     for i in range(num_clusters):
