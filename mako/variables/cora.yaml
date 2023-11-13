@@ -1,4 +1,4 @@
-ami: ami-0ae760770877fd126 #Evaluation 7 Submission AMI (Oregon)
+ami: ami-087ef59385ef3d8dd #Evaluation 7 Submission AMI (Oregon)
 cluster: "cora"
 team: "cora"
 cache_stopped_nodes: False
