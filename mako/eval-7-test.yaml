@@ -2,4 +2,4 @@ base:
   varset: ['mess']
 eval-groups:
   - metadata: ['level2']
-    dirs: ['/home/ubuntu/eval_7_val_test']
+    dirs: ['/home/ubuntu/eval_7_val_subset']
