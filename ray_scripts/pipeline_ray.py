@@ -27,6 +27,9 @@ from logging import config
 from typing import List
 
 import boto3
+
+os.environ["RAY_DEDUP_LOGS"] = "0"
+
 import ray
 
 # File the records the files that finished.  If we want to restart,
