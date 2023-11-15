@@ -1,4 +1,5 @@
 cluster: "mess"
+workers: 10
 team: "mess"
 region: us-east-2
 ami: ami-0af6b5e87e607b415 # east-2 region ami for 'mess-validation-1-eval-7'
