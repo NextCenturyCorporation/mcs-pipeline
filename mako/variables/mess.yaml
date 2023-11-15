@@ -6,5 +6,5 @@ ami: ami-0af6b5e87e607b415 # east-2 region ami for 'mess-validation-1-eval-7'
 cache_stopped_nodes: False
 # Properties needed in case of timeouts
 additional_file_mounts: '"/home/ubuntu/monitor_process.py": "deploy_files/mess/monitor_process.py",'
-additional_setup_commands: "- pip install psutil==5.9.5"
+additional_setup_commands: "- pip install pydantic==1.10.7"
 has_monitor_process: false

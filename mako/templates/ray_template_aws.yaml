@@ -54,7 +54,7 @@ setup_commands:
   - pip install --upgrade pip
   - pip install -U boto3
   - pip install -U "ray[default]"==2.4.0
-  - pip install "pydantic<2"
+  - pip install psutil==5.9.5
   ${additional_setup_commands}
 
 # Command to start ray on the head node. You don't need to change this.
