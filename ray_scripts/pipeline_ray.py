@@ -342,15 +342,12 @@ class SceneRunner:
         self.scene_files_list = []
 
         # Scene_statuses keeps track of all the scenes and current status.
-        # Maps each scene name to its corresponding SceneStatus object
+        # Maps job_id to SceneStatus object
         self.scene_statuses = {}
-
-        # Maps each ray job reference to its corresponding scene name
-        self.jobs_to_scenes = {}
 
         # List of all the job references that have been submitted to Ray that
         # have not completed.  We call ray.wait on these to get job outputs
-        self.incomplete_jobs = []
+        self.not_done_jobs = []
 
         self.get_scenes()
         self.on_start_scenes()
@@ -503,9 +500,9 @@ class SceneRunner:
 
     def run_scenes(self):
         logging.info(f"Running {len(self.scene_files_list)} scenes")
+        job_ids = []
         run_script = self.exec_config["MCS"]["run_script"]
         eval_dir = self.exec_config["MCS"]["eval_dir"]
-        self.incomplete_jobs = []
         for scene_ref in self.scene_files_list:
             # skip directories
             if os.path.isdir(str(scene_ref)):
@@ -518,21 +515,17 @@ class SceneRunner:
                     eval_dir,
                     1,
                 )
-                # Save the ray job reference separately from the status so we
-                # can delete the reference once the job is finished but keep
-                # the status until the entire run is finished.
-                self.jobs_to_scenes[job_id] = str(scene_ref)
-                self.scene_statuses[str(scene_ref)] = SceneStatus(
+                self.scene_statuses[job_id] = SceneStatus(
                     scene_ref, 0, StatusEnum.PENDING
                 )
-                self.incomplete_jobs.append(job_id)
+                job_ids.append(job_id)
 
-        while self.incomplete_jobs:
-            finished_jobs, unfinished_jobs = ray.wait(self.incomplete_jobs)
-            for finished_job_id in finished_jobs:
-                result, output, success = ray.get(finished_job_id)
-                scene_ref = self.jobs_to_scenes.get(finished_job_id)
-                scene_status = self.scene_statuses.get(scene_ref)
+        self.not_done_jobs = job_ids
+        while self.not_done_jobs:
+            done_jobs, self.not_done_jobs = ray.wait(self.not_done_jobs)
+            for done_ref in done_jobs:
+                result, output, success = ray.get(done_ref)
+                scene_status = self.scene_statuses.get(done_ref)
                 run_status = self.get_run_status(
                     result, output, success, scene_status.scene_file
                 )
@@ -548,33 +541,15 @@ class SceneRunner:
                     self.retry_job(scene_status)
                     scene_status.retries += 1
                     scene_status.status = StatusEnum.RETRYING
-                    # Remove entry tied to old ray reference (finished_job_id)
-                    self.jobs_to_scenes.pop(finished_job_id)
-                    self.scene_statuses.pop(scene_ref)
+                    # Remove entry tied to old ray reference (done_ref)
+                    self.scene_statuses.pop(done_ref)
                 else:
                     # If we are finished, full scene status should be
                     # same as last run status
                     scene_status.status = run_status.status
                     self.on_scene_finished(scene_status)
-
                 self.print_status()
                 self.output_status()
-
-                # Delete the ray reference to this finished job. This will
-                # allow ray to stop the worker if it's now idle. Sometimes
-                # a short sleep is needed after deleting the reference.
-                self.jobs_to_scenes.pop(finished_job_id)
-                del finished_job_id
-                time.sleep(1)
-
-            # Delete all old ray references, just in case.
-            for previous_job_id in self.incomplete_jobs:
-                scene_ref = self.jobs_to_scenes.get(previous_job_id)
-                del previous_job_id
-                time.sleep(1)
-
-            # Loop again if needed.
-            self.incomplete_jobs = unfinished_jobs
 
     def print_status(self):
         """During the run, print out the number of completed jobs,
@@ -633,15 +608,15 @@ class SceneRunner:
                 scene_status.retries + 2,
             )
             logging.info(f"Retrying {scene_ref} with job_id={job_id}")
-            self.jobs_to_scenes[job_id] = str(scene_ref)
-            self.scene_statuses[str(scene_ref)] = scene_status
-            self.incomplete_jobs.append(job_id)
+            self.scene_statuses[job_id] = scene_status
+            self.not_done_jobs.append(job_id)
 
     def print_results(self):
         # scenes may have multiple entries of they were retried
         scenes_printed = []
         logging.info("Status:")
-        for s_status in self.scene_statuses.values():
+        for key in self.scene_statuses:
+            s_status = self.scene_statuses[key]
             file = s_status.scene_file
             if file not in scenes_printed:
                 scenes_printed.append(file)
