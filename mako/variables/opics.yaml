@@ -1,5 +1,5 @@
 cluster: "opics"
 filePrefix: "opics"
-team: "opics"
+team: "opics_run_2"
 region: us-east-1
-ami: ami-0a220c7e0e7cfa70d # opics-eval-7-validation-1
+ami: ami-010c55f9f0cfae0ec # opics-eval-7-validation-2
