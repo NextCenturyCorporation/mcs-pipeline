@@ -528,7 +528,7 @@ class SceneRunner:
                 self.incomplete_jobs.append(job_id)
 
         while self.incomplete_jobs:
-            finished_jobs, unfinished_jobs = ray.wait(self.incomplete_jobs)
+            finished_jobs, self.incomplete_jobs = ray.wait(self.incomplete_jobs)
             for finished_job_id in finished_jobs:
                 result, output, success = ray.get(finished_job_id)
                 scene_ref = self.jobs_to_scenes.get(finished_job_id)
@@ -566,15 +566,6 @@ class SceneRunner:
                 self.jobs_to_scenes.pop(finished_job_id)
                 del finished_job_id
                 time.sleep(1)
-
-            # Delete all old ray references, just in case.
-            for previous_job_id in self.incomplete_jobs:
-                scene_ref = self.jobs_to_scenes.get(previous_job_id)
-                del previous_job_id
-                time.sleep(1)
-
-            # Loop again if needed.
-            self.incomplete_jobs = unfinished_jobs
 
     def print_status(self):
         """During the run, print out the number of completed jobs,
