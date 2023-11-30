@@ -8,3 +8,4 @@ cache_stopped_nodes: False
 additional_file_mounts: '"/home/ubuntu/monitor_process.py": "deploy_files/mess/monitor_process.py",'
 additional_setup_commands: "- pip install pydantic==1.10.7"
 has_monitor_process: false
+timeout: 1800
