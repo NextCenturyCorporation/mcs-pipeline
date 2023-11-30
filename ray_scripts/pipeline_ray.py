@@ -545,8 +545,7 @@ class SceneRunner:
                     self.retry_job(scene_status)
                     scene_status.retries += 1
                     scene_status.status = StatusEnum.RETRYING
-                    # Remove entry tied to old ray reference (finished_job_id)
-                    self.jobs_to_scenes.pop(finished_job_id)
+                    # Remove entry tied to old job.
                     self.scene_statuses.pop(scene_ref)
                 else:
                     # If we are finished, full scene status should be
