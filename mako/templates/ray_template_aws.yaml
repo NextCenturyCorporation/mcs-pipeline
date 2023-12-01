@@ -51,17 +51,11 @@ file_mounts: {
 
 setup_commands:
   - sudo cp /home/ubuntu/asound.conf /etc/asound.conf
-<<<<<<< HEAD
-  - python3 -m pip install --upgrade pip
-  - python3 -m pip install -U "ray[default]" boto3
-  - python3 -m pip install -U "ray[default]"==2.4.0
-  - python3 -m pip install -U gpustat==1.0.0
-=======
   - pip install --upgrade pip
   - pip install -U boto3
   - pip install -U "ray[default]"==2.4.0
   - pip install psutil==5.9.5
->>>>>>> mess-eval-7
+  - python3 -m pip install -U gpustat==1.0.0
   ${additional_setup_commands}
 
 # Command to start ray on the head node. You don't need to change this.
