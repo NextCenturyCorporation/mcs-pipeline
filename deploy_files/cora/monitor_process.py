@@ -39,7 +39,7 @@ def main(scene_file_basename, eval_dir):
     logging.info(f"monitor_process.py: eval_dir: {eval_dir}")
     time.sleep(10)
     # TA1 run command and full scene file path
-    full_cmd = "python src/script_mess_clean.py scenes/" + scene_file_basename
+    full_cmd = "DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7"
     full_scene_file_path = eval_dir + "/scenes/" + scene_file_basename
     first_run = True
     sleep_time = 1800

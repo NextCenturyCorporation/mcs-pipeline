@@ -91,4 +91,42 @@ export DISPLAY=:0
 
 ## Running the Scene. You can run this in a separate shell/tmux sessions or in the same shell too
 cd /home/ubuntu/Cora2/CoraAgent || exit
-DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7
+# DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7
+
+##########################################################
+
+
+# check if monitor process is specified as 'true' in config file
+HAS_MON_PROC=$(awk -F '=' '/has_monitor_process/ {print tolower($2)}' "$mcs_configfile" | xargs)
+echo has_monitor_process is "$HAS_MON_PROC"
+
+if [ "$HAS_MON_PROC" = true ];
+then
+    # kick off monitor process
+    # if using this monitor_process bit for other performers, make sure the two
+    # arguments are pointing to the correct places + update lines 72, 74 and 81 if
+    # changing anything about the monitor_process.py command
+    # see monitor_process.py for more on how to use + update things properly.
+    python /home/ubuntu/monitor_process.py "$scene_file_basename" "$eval_dir" &
+    sleep 5
+    mon_proc_id=$(pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}")
+    echo Monitor process ID for "$scene_file" is: "$mon_proc_id"
+
+    # TA1 run command
+    DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7
+  
+    # end monitor process
+    echo "Monitor process ID: ${mon_proc_id}, checking if it has ended for scene: ${scene_file_basename}"
+    if pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}" > /dev/null
+    then
+        echo "Scene finished, attempt to terminate monitor_process.py with id ${mon_proc_id}"
+        kill -15 "$mon_proc_id"
+        echo "Sleeping for 20 seconds to wait for monitor process to end"
+        sleep 20
+    fi
+else
+    # TA1 run command
+    DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7
+fi
+
+unset MCS_CONFIG_FILE_PATH

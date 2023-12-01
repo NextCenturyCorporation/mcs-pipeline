@@ -1,4 +1,4 @@
-workers: 10
+workers: 2
 region: us-west-2
 clusterUser: ""
 clusterSuffix: ""
