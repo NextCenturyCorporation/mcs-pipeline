@@ -4,7 +4,8 @@ set -m
 # This is what the "main_optics" command does (from the instructions TA1 gave us).
 echo "OPICS Pipeline: Running TA1 environment setup..."
 cd /home/ubuntu/ || exit
-sudo nvidia-xconfig --use-display-device=Device0 --virtual=600x400 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
+# Ensure that the virtual display (monitor resolution) is much greater than 600x400
+sudo nvidia-xconfig --use-display-device=Device0 --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
 export OUR_XPID=
 export DISPLAY=:1
 export OPTICS_HOME=~/main_optics
