@@ -211,8 +211,10 @@ def run_scene(
 
     logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if logs_to_s3:
-        # This seems a little dirty, but its mostly copied from MCS project.
+        if not timestamp:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
+        # This seems a little dirty, but its mostly copied from MCS project.
         log_s3_filename = (
             folder
             + "/"
