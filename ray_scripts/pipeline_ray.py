@@ -206,8 +206,10 @@ def run_scene(
 
     logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if logs_to_s3:
-        # This seems a little dirty, but its mostly copied from MCS project.
+        if not timestamp:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
+        # This seems a little dirty, but its mostly copied from MCS project.
         log_s3_filename = (
             folder
             + "/"
@@ -545,8 +547,7 @@ class SceneRunner:
                     self.retry_job(scene_status)
                     scene_status.retries += 1
                     scene_status.status = StatusEnum.RETRYING
-                    # Remove entry tied to old ray reference (finished_job_id)
-                    self.jobs_to_scenes.pop(finished_job_id)
+                    # Remove entry tied to old job.
                     self.scene_statuses.pop(scene_ref)
                 else:
                     # If we are finished, full scene status should be

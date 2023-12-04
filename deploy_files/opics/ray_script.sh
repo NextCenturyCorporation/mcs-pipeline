@@ -65,8 +65,11 @@ for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     done
 done
 
-sudo apt-get update
-sudo apt-get install awscli -y
+echo "OPICS Pipeline: Running apt-get update and install..."
+# Use "until" to (hopefully) avoid "dpkg frontend lock" errors which cause "install" to fail.
+until sudo apt-get update; do :; done
+until sudo apt-get install awscli -y; do :; done
+echo "OPICS Pipeline: Installed the AWS CLI"
 
 SCENE_NAME=$(sed -nE 's/.*"name": "(\w+)".*/\1/pi' "$scene_file")
 DISAMBIGUATED_SCENE_NAME=$(basename "$scene_file" .json)
