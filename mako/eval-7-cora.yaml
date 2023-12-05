@@ -2,4 +2,4 @@ base:
   varset: ['cora']
 eval-groups:
   - metadata: ['level2']
-    dirs: ['/home/ubuntu/mcs/eval_7_validation/']
+    dirs: ['/home/ubuntu/mcs/eval_7_small/']
