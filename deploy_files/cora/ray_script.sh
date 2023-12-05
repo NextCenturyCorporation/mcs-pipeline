@@ -62,17 +62,17 @@ else
 fi
 
 #Physics Server
-cd /home/ubuntu/bayes3d || exit
-if pgrep -f "python /home/ubuntu/bayes3d/run_mcs_physics.py" > /dev/null
-then
-  echo 'Physics server is running'
-else
-  echo "Starting run_physics_server.py"
-  # Need to redirect logs of background tasks or the script doesn't
-  python python /home/ubuntu/bayes3d/run_mcs_physics.py 1>physserver-out.txt 2>physserver-err.txt &
-  echo "Sleeping for 20 seconds to wait for physics server"
-  sleep 20
-fi
+# cd /home/ubuntu/bayes3d || exit
+# if pgrep -f "python /home/ubuntu/bayes3d/run_mcs_physics.py" > /dev/null
+# then
+#   echo 'Physics server is running'
+# else
+#   echo "Starting run_physics_server.py"
+#   # Need to redirect logs of background tasks or the script doesn't
+#   python python /home/ubuntu/bayes3d/run_mcs_physics.py 1>physserver-out.txt 2>physserver-err.txt &
+#   echo "Sleeping for 20 seconds to wait for physics server"
+#   sleep 20
+# fi
 
 # if pgrep -f "python /home/ubuntu/jax3dp3/experiments/multiprocess/server.py" > /dev/null
 # then
