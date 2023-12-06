@@ -29,6 +29,8 @@ from typing import List
 import boto3
 import ray
 
+os.environ["RAY_record_ref_creation_sites"] = "1"
+
 # File the records the files that finished.  If we want to restart,
 # we can skip these files.
 FINISHED_SCENES_LIST_FILENAME = "./.last_run_finished.txt"
@@ -349,7 +351,7 @@ class SceneRunner:
 
         # List of all the job references that have been submitted to Ray that
         # have not completed.  We call ray.wait on these to get job outputs
-        self.incomplete_jobs = []
+        self.unfinished_jobs = []
 
         self.get_scenes()
         self.on_start_scenes()
@@ -504,7 +506,7 @@ class SceneRunner:
         logging.info(f"Running {len(self.scene_files_list)} scenes")
         run_script = self.exec_config["MCS"]["run_script"]
         eval_dir = self.exec_config["MCS"]["eval_dir"]
-        self.incomplete_jobs = []
+        self.unfinished_jobs = []
         for scene_ref in self.scene_files_list:
             # skip directories
             if os.path.isdir(str(scene_ref)):
@@ -524,10 +526,12 @@ class SceneRunner:
                 self.scene_statuses[str(scene_ref)] = SceneStatus(
                     scene_ref, 0, StatusEnum.PENDING
                 )
-                self.incomplete_jobs.append(job_id)
+                self.unfinished_jobs.append(job_id)
 
-        while self.incomplete_jobs:
-            finished_jobs, unfinished_jobs = ray.wait(self.incomplete_jobs)
+        while self.unfinished_jobs:
+            finished_jobs, self.unfinished_jobs = ray.wait(
+                self.unfinished_jobs
+            )
             for finished_job_id in finished_jobs:
                 result, output, success = ray.get(finished_job_id)
                 scene_ref = self.jobs_to_scenes.get(finished_job_id)
@@ -565,14 +569,7 @@ class SceneRunner:
                 del finished_job_id
                 time.sleep(1)
 
-            # Delete all old ray references, just in case.
-            for previous_job_id in self.incomplete_jobs:
-                scene_ref = self.jobs_to_scenes.get(previous_job_id)
-                del previous_job_id
-                time.sleep(1)
-
-            # Loop again if needed.
-            self.incomplete_jobs = unfinished_jobs
+            del finished_jobs
 
     def print_status(self):
         """During the run, print out the number of completed jobs,
