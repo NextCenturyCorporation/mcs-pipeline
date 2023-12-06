@@ -41,6 +41,9 @@ python opics_eval7_run_scene.py --scene "$scene_file"
 unset MCS_CONFIG_FILE_PATH
 
 DEBUG=true
+
+# Make sure to check for new container directories!
+CONTAINER_DIRS=($(ls /home/ubuntu/test__* -d))
 for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     if [ $DEBUG ]; then echo "OPICS Pipeline: Found container directory: $CONTAINER_DIR"; fi
     HISTORY_DIR="$CONTAINER_DIR/scripts/SCENE_HISTORY/"
@@ -85,3 +88,4 @@ mv "${TA1_LOG}" "${RENAMED_LOG}"
 
 # Upload the mp4 video to S3 with credentials from the worker's AWS IAM role.
 aws s3 cp "${RENAMED_LOG}" s3://"${S3_BUCKET}"/"${S3_FOLDER}"/ --acl public-read
+echo "OPICS Pipeline: Uploaded ${TEAM_NAME}_${SCENE_NAME}_stdout.log"
