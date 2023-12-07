@@ -43,6 +43,7 @@ unset MCS_CONFIG_FILE_PATH
 DEBUG=true
 
 # Make sure to check for new container directories!
+# shellcheck disable=SC2207
 CONTAINER_DIRS=($(ls /home/ubuntu/test__* -d))
 for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     if [ $DEBUG ]; then echo "OPICS Pipeline: Found container directory: $CONTAINER_DIR"; fi
@@ -70,8 +71,10 @@ done
 
 echo "OPICS Pipeline: Running apt-get update and install..."
 # Use "until" to (hopefully) avoid "dpkg frontend lock" errors which cause "install" to fail.
-until sudo apt-get update; do :; done
-until sudo apt-get install awscli -y; do :; done
+# until sudo apt-get update; do :; done
+# until sudo apt-get install awscli -y; do :; done
+sudo apt-get update
+sudo apt-get install awscli -y || exit
 echo "OPICS Pipeline: Installed the AWS CLI"
 
 SCENE_NAME=$(sed -nE 's/.*"name": "(\w+)".*/\1/pi' "$scene_file")

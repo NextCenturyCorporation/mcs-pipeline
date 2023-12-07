@@ -27,9 +27,12 @@ from logging import config
 from typing import List
 
 import boto3
-import ray
 
+# This must be done before ray is imported.
+os.environ["RAY_DEDUP_LOGS"] = "0"
 os.environ["RAY_record_ref_creation_sites"] = "1"
+
+import ray
 
 # File the records the files that finished.  If we want to restart,
 # we can skip these files.
@@ -529,9 +532,7 @@ class SceneRunner:
                 self.unfinished_jobs.append(job_id)
 
         while self.unfinished_jobs:
-            finished_jobs, self.unfinished_jobs = ray.wait(
-                self.unfinished_jobs
-            )
+            finished_jobs, self.unfinished_jobs = ray.wait(self.unfinished_jobs)
             for finished_job_id in finished_jobs:
                 result, output, success = ray.get(finished_job_id)
                 scene_ref = self.jobs_to_scenes.get(finished_job_id)
