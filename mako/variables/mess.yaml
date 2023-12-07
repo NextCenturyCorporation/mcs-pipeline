@@ -3,6 +3,7 @@ workers: 10
 team: "mess"
 region: us-east-2
 ami: ami-0b9e2f88ec61e1b6c # east-2 region ami for 'mess-evaluation-7-submission'
+# ami-0ed5aa45a1bd9db99 # this is the east-2 ami for 'mess-eval-7-agency-fix'
 cache_stopped_nodes: False
 utilize_head_node_for_work: False
 # Properties needed in case of timeouts
