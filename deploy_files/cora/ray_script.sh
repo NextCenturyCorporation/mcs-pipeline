@@ -25,10 +25,10 @@ echo $(basename "$scene_file")
 cd "$eval_dir" || exit
 
 # Source the conda environment 
-echo "conda activate bayes3d"
+echo "conda activate old_bayes3d"
 cd /home/ubuntu/Cora2/CoraAgent || exit
 source /home/ubuntu/miniconda3/etc/profile.d/conda.sh
-conda activate bayes3d
+conda activate old_bayes3d
 
 # Start X
 #Not used
@@ -74,17 +74,17 @@ fi
 #   sleep 20
 # fi
 
-# if pgrep -f "python /home/ubuntu/jax3dp3/experiments/multiprocess/server.py" > /dev/null
-# then
-#   echo 'Vision server is running'
-# else
-#   echo "Starting server.py"
-#   cd /home/ubuntu/jax3dp3/experiments/multiprocess || exit
-#   # Need to redirect logs of background tasks or the script doesn't
-#   python server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
-#   echo "Sleeping for 20 seconds to wait for vision server"
-#   sleep 20
-# fi
+if pgrep -f "python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py" > /dev/null
+then
+  echo 'server.py is running'
+else
+  echo "Starting server.py"
+  cd /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess || exit
+  # Need to redirect logs of background tasks or the script doesn't
+  python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
+  echo "Sleeping for 30 seconds to wait for server"
+  sleep 20
+fi
 
 # CORA has a harded coded Display value in one module, must be 0 (Eval 6)
 export DISPLAY=:0
