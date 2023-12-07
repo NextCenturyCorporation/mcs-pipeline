@@ -802,7 +802,7 @@ def parse_args():
     parser.add_argument(
         "--num_retries",
         type=int,
-        default=3,
+        default=1,
         help="How many times to retry running a failed scene which is eligible for retry.",
     )
     parser.add_argument(
