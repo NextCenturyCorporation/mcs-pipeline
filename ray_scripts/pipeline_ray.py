@@ -292,6 +292,7 @@ class StatusEnum(str, Enum):
     ERROR = "ERROR"
     ERROR_TIMEOUT = "ERROR_TIMEOUT"
     ERROR_XSERVER = "ERROR_XSERVER"
+    ERROR_OOM = "ERROR_OOM"
 
 
 @dataclass
@@ -539,7 +540,16 @@ class SceneRunner:
             finished_jobs, self.incomplete_jobs = ray.wait(self.incomplete_jobs)
             for finished_job_id in finished_jobs:
                 # logging.info(f"finished job id: {finished_job_id}")
-                result, output, success = ray.get(finished_job_id)
+                try:
+                    result, output, success = ray.get(finished_job_id)
+                    # logging.info(f"Had success: job id: {finished_job_id}, result: {result}, output: {output}, success: {success}")
+                except ray.exceptions.OutOfMemoryError as err:
+                    logging.info("Out of Memory Error: ", exc_info=err)
+                    # output line taken from exception thrown in logs.
+                    output = "ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory."
+                    result = -1
+                    success = False
+
                 scene_ref = self.jobs_to_scenes.get(finished_job_id)
                 scene_status = self.scene_statuses.get(scene_ref)
                 run_status = self.get_run_status(
@@ -613,6 +623,7 @@ class SceneRunner:
                 StatusEnum.ERROR,
                 StatusEnum.ERROR_TIMEOUT,
                 StatusEnum.ERROR_XSERVER,
+                StatusEnum.ERROR_OOM,
             ]:
                 json_status["Failed"] += 1
             # Ignoring PENDING, RETRYING, UNKNOWN
@@ -689,6 +700,15 @@ class SceneRunner:
             status.retry |= True
             status.status = StatusEnum.ERROR
         # Add more conditions to retry here
+        # Add more conditions to retry (or not) here
+        if "OutOfMemoryError" in output:
+            logging.info(
+                f"Out of Memory (OOM) Error for file={scene_file_path}"
+            )
+            # If we'd like to retry for OOM jobs, we can flip this
+            # to true, or comment out this if block.
+            status.retry = False
+            status.status = StatusEnum.ERROR_OOM        
         return status
 
     def on_start_scenes(self):
