@@ -24,7 +24,7 @@ cp "$scene_file" .
 echo $(basename "$scene_file")
 cd "$eval_dir" || exit
 
-# Source the conda environment 
+# Source the conda environment
 echo "conda activate old_bayes3d"
 cd /home/ubuntu/Cora2/CoraAgent || exit
 source /home/ubuntu/miniconda3/etc/profile.d/conda.sh
@@ -74,17 +74,17 @@ fi
 #   sleep 20
 # fi
 
-if pgrep -f "python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py" > /dev/null
-then
-  echo 'server.py is running'
-else
-  echo "Starting server.py"
-  cd /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess || exit
-  # Need to redirect logs of background tasks or the script doesn't
-  python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
-  echo "Sleeping for 30 seconds to wait for server"
-  sleep 20
-fi
+#if pgrep -f "python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py" > /dev/null
+#then
+#  echo 'server.py is running'
+#else
+#  echo "Starting server.py"
+#  cd /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess || exit
+#  # Need to redirect logs of background tasks or the script doesn't
+#  python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
+#  echo "Sleeping for 30 seconds to wait for server"
+#  sleep 20
+#fi
 
 # CORA has a harded coded Display value in one module, must be 0 (Eval 6)
 export DISPLAY=:0
@@ -114,7 +114,7 @@ then
 
     # TA1 run command
     DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7
-  
+
     # end monitor process
     echo "Monitor process ID: ${mon_proc_id}, checking if it has ended for scene: ${scene_file_basename}"
     if pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}" > /dev/null
