@@ -69,14 +69,6 @@ for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     done
 done
 
-echo "OPICS Pipeline: Running apt-get update and install..."
-# Use "until" to (hopefully) avoid "dpkg frontend lock" errors which cause "install" to fail.
-# until sudo apt-get update; do :; done
-# until sudo apt-get install awscli -y; do :; done
-sudo apt-get update
-sudo apt-get install awscli -y || exit
-echo "OPICS Pipeline: Installed the AWS CLI"
-
 SCENE_NAME=$(sed -nE 's/.*"name": "(\w+)".*/\1/pi' "$scene_file")
 DISAMBIGUATED_SCENE_NAME=$(basename "$scene_file" .json)
 
@@ -90,5 +82,6 @@ RENAMED_LOG=${eval_dir}/logs/${TEAM_NAME}_${SCENE_NAME}_stdout.log
 mv "${TA1_LOG}" "${RENAMED_LOG}"
 
 # Upload the mp4 video to S3 with credentials from the worker's AWS IAM role.
+echo "OPICS Pipeline: Uploading ${TEAM_NAME}_${SCENE_NAME}_stdout.log"
 aws s3 cp "${RENAMED_LOG}" s3://"${S3_BUCKET}"/"${S3_FOLDER}"/ --acl public-read
-echo "OPICS Pipeline: Uploaded ${TEAM_NAME}_${SCENE_NAME}_stdout.log"
+echo "OPICS Pipeline: Finished successfully"
