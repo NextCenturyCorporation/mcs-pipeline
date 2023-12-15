@@ -19,4 +19,4 @@ s3_folder: eval-resources-7
 s3_movies_folder: raw-eval-7
 timeout: 3600
 controller_timeout: 3600
-has_monitor_process: true
+has_monitor_process: false

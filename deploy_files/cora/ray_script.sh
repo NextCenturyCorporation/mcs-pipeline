@@ -24,11 +24,11 @@ cp "$scene_file" .
 echo $(basename "$scene_file")
 cd "$eval_dir" || exit
 
-# Source the conda environment 
-echo "conda activate old_bayes3d"
-cd /home/ubuntu/Cora2/CoraAgent || exit
+# Source the conda environment
+echo "conda activate physics_conda"
+cd ~/arijit/bayes3d/scripts/experiments/intphys || exit
 source /home/ubuntu/miniconda3/etc/profile.d/conda.sh
-conda activate old_bayes3d
+conda activate physics_conda
 
 # Start X
 #Not used
@@ -74,59 +74,21 @@ fi
 #   sleep 20
 # fi
 
-if pgrep -f "python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py" > /dev/null
-then
-  echo 'server.py is running'
-else
-  echo "Starting server.py"
-  cd /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess || exit
-  # Need to redirect logs of background tasks or the script doesn't
-  python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
-  echo "Sleeping for 30 seconds to wait for server"
-  sleep 20
-fi
+#if pgrep -f "python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py" > /dev/null
+#then
+#  echo 'server.py is running'
+#else
+#  echo "Starting server.py"
+#  cd /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess || exit
+#  # Need to redirect logs of background tasks or the script doesn't
+#  python /home/ubuntu/old_bayes3d/icra-bayes3d/experiments/multiprocess/server.py 1 >pyserver-out.txt 2>pyserver-err.txt &
+#  echo "Sleeping for 30 seconds to wait for server"
+#  sleep 20
+#fi
 
 # CORA has a harded coded Display value in one module, must be 0 (Eval 6)
 export DISPLAY=:0
 
-## Running the Scene. You can run this in a separate shell/tmux sessions or in the same shell too
-cd /home/ubuntu/Cora2/CoraAgent || exit
-# DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7
-
 ##########################################################
 
-
-# check if monitor process is specified as 'true' in config file
-HAS_MON_PROC=$(awk -F '=' '/has_monitor_process/ {print tolower($2)}' "$mcs_configfile" | xargs)
-echo has_monitor_process is "$HAS_MON_PROC"
-
-if [ "$HAS_MON_PROC" = true ];
-then
-    # kick off monitor process
-    # if using this monitor_process bit for other performers, make sure the two
-    # arguments are pointing to the correct places + update lines 72, 74 and 81 if
-    # changing anything about the monitor_process.py command
-    # see monitor_process.py for more on how to use + update things properly.
-    python /home/ubuntu/monitor_process.py "$scene_file_basename" "$eval_dir" &
-    sleep 5
-    mon_proc_id=$(pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}")
-    echo Monitor process ID for "$scene_file" is: "$mon_proc_id"
-
-    # TA1 run command
-    DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7
-  
-    # end monitor process
-    echo "Monitor process ID: ${mon_proc_id}, checking if it has ended for scene: ${scene_file_basename}"
-    if pgrep -f "python /home/ubuntu/monitor_process.py ${scene_file_basename} ${eval_dir}" > /dev/null
-    then
-        echo "Scene finished, attempt to terminate monitor_process.py with id ${mon_proc_id}"
-        kill -15 "$mon_proc_id"
-        echo "Sleeping for 20 seconds to wait for monitor process to end"
-        sleep 20
-    fi
-else
-    # TA1 run command
-    DISPLAY=:0 julia --project test/runtests.jl /home/ubuntu/scenes/evaluation_7
-fi
-
-unset MCS_CONFIG_FILE_PATH
+python mcs_physics_eval7.py /home/ubuntu/scenes/evaluation_7

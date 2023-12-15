@@ -24,7 +24,7 @@ available_node_types:
     max_workers: 0
     resources: {"CPU": 2, "GPU": ${1 if utilize_head_node_for_work is True else 0}}       # Setting GPU to 0 won't run work on the head node
     node_config:
-      InstanceType: t2.medium
+      InstanceType: t2.large
       ImageId: ${ami}
   ray.worker.default:
     min_workers: 0
