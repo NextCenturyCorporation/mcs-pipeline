@@ -1,6 +1,6 @@
 boto3==1.17.24
 flake8==3.8.4
-ray[default]==1.13.0
+ray[default]==2.7.1
 Mako==1.1.6
 configparser==5.1.0
 pre-commit==2.16.0

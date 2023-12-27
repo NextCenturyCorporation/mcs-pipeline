@@ -27,6 +27,11 @@ from logging import config
 from typing import List
 
 import boto3
+
+os.environ["RAY_DEDUP_LOGS"] = "0"
+# useful for debugging issues with leftover objects in object store
+# os.environ["RAY_record_ref_creation_sites"] = "1"
+
 import ray
 
 # File the records the files that finished.  If we want to restart,
@@ -206,8 +211,10 @@ def run_scene(
 
     logs_to_s3 = mcs_config.getboolean("MCS", "logs_to_s3", fallback=True)
     if logs_to_s3:
-        # This seems a little dirty, but its mostly copied from MCS project.
+        if not timestamp:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
+        # This seems a little dirty, but its mostly copied from MCS project.
         log_s3_filename = (
             folder
             + "/"
@@ -285,6 +292,7 @@ class StatusEnum(str, Enum):
     ERROR = "ERROR"
     ERROR_TIMEOUT = "ERROR_TIMEOUT"
     ERROR_XSERVER = "ERROR_XSERVER"
+    ERROR_OOM = "ERROR_OOM"
 
 
 @dataclass
@@ -339,12 +347,15 @@ class SceneRunner:
         self.scene_files_list = []
 
         # Scene_statuses keeps track of all the scenes and current status.
-        # Maps job_id to SceneStatus object
+        # Maps each scene name to its corresponding SceneStatus object
         self.scene_statuses = {}
+
+        # Maps each ray job reference to its corresponding scene name
+        self.jobs_to_scenes = {}
 
         # List of all the job references that have been submitted to Ray that
         # have not completed.  We call ray.wait on these to get job outputs
-        self.not_done_jobs = []
+        self.incomplete_jobs = []
 
         self.get_scenes()
         self.on_start_scenes()
@@ -497,7 +508,7 @@ class SceneRunner:
 
     def run_scenes(self):
         logging.info(f"Running {len(self.scene_files_list)} scenes")
-        job_ids = []
+        self.incomplete_jobs = []
         run_script = self.exec_config["MCS"]["run_script"]
         eval_dir = self.exec_config["MCS"]["eval_dir"]
         for scene_ref in self.scene_files_list:
@@ -512,17 +523,34 @@ class SceneRunner:
                     eval_dir,
                     1,
                 )
-                self.scene_statuses[job_id] = SceneStatus(
+                # Save the ray job reference separately from the status so we
+                # can delete the reference once the job is finished but keep
+                # the status until the entire run is finished.
+                self.jobs_to_scenes[job_id] = str(scene_ref)
+                self.scene_statuses[str(scene_ref)] = SceneStatus(
                     scene_ref, 0, StatusEnum.PENDING
                 )
-                job_ids.append(job_id)
+                self.incomplete_jobs.append(job_id)
 
-        self.not_done_jobs = job_ids
-        while self.not_done_jobs:
-            done_jobs, self.not_done_jobs = ray.wait(self.not_done_jobs)
-            for done_ref in done_jobs:
-                result, output, success = ray.get(done_ref)
-                scene_status = self.scene_statuses.get(done_ref)
+        # delete reference to last job_id
+        del job_id
+
+        while self.incomplete_jobs:
+            finished_jobs, self.incomplete_jobs = ray.wait(self.incomplete_jobs)
+            for finished_job_id in finished_jobs:
+                # logging.info(f"finished job id: {finished_job_id}")
+                try:
+                    result, output, success = ray.get(finished_job_id)
+                    # logging.info(f"Had success: job id: {finished_job_id}, result: {result}, output: {output}, success: {success}")
+                except ray.exceptions.OutOfMemoryError as err:
+                    logging.info("Out of Memory Error: ", exc_info=err)
+                    # output line taken from exception thrown in logs.
+                    output = "ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory."
+                    result = -1
+                    success = False
+
+                scene_ref = self.jobs_to_scenes.get(finished_job_id)
+                scene_status = self.scene_statuses.get(scene_ref)
                 run_status = self.get_run_status(
                     result, output, success, scene_status.scene_file
                 )
@@ -538,15 +566,23 @@ class SceneRunner:
                     self.retry_job(scene_status)
                     scene_status.retries += 1
                     scene_status.status = StatusEnum.RETRYING
-                    # Remove entry tied to old ray reference (done_ref)
-                    self.scene_statuses.pop(done_ref)
                 else:
                     # If we are finished, full scene status should be
                     # same as last run status
                     scene_status.status = run_status.status
                     self.on_scene_finished(scene_status)
+
                 self.print_status()
                 self.output_status()
+
+                # Delete the ray reference to this finished job. This will
+                # allow ray to stop the worker if it's now idle. Sometimes
+                # a short sleep is needed after deleting the reference.
+                self.jobs_to_scenes.pop(finished_job_id)
+                del finished_job_id
+
+            # delete reference to old finished jobs list
+            del finished_jobs
 
     def print_status(self):
         """During the run, print out the number of completed jobs,
@@ -585,6 +621,7 @@ class SceneRunner:
                 StatusEnum.ERROR,
                 StatusEnum.ERROR_TIMEOUT,
                 StatusEnum.ERROR_XSERVER,
+                StatusEnum.ERROR_OOM,
             ]:
                 json_status["Failed"] += 1
             # Ignoring PENDING, RETRYING, UNKNOWN
@@ -605,15 +642,15 @@ class SceneRunner:
                 scene_status.retries + 2,
             )
             logging.info(f"Retrying {scene_ref} with job_id={job_id}")
-            self.scene_statuses[job_id] = scene_status
-            self.not_done_jobs.append(job_id)
+            self.jobs_to_scenes[job_id] = str(scene_ref)
+            self.scene_statuses[str(scene_ref)] = scene_status
+            self.incomplete_jobs.append(job_id)
 
     def print_results(self):
         # scenes may have multiple entries of they were retried
         scenes_printed = []
         logging.info("Status:")
-        for key in self.scene_statuses:
-            s_status = self.scene_statuses[key]
+        for s_status in self.scene_statuses.values():
             file = s_status.scene_file
             if file not in scenes_printed:
                 scenes_printed.append(file)
@@ -660,7 +697,15 @@ class SceneRunner:
             )
             status.retry |= True
             status.status = StatusEnum.ERROR
-        # Add more conditions to retry here
+        # Add more conditions to retry (or not) here
+        if "OutOfMemoryError" in output:
+            logging.info(
+                f"Out of Memory (OOM) Error for file={scene_file_path}"
+            )
+            # If we'd like to retry for OOM jobs, we can flip this
+            # to true, or comment out this if block.
+            status.retry = False
+            status.status = StatusEnum.ERROR_OOM
         return status
 
     def on_start_scenes(self):
