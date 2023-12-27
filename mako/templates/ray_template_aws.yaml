@@ -22,13 +22,13 @@ available_node_types:
   ray.head.default:
     min_workers: 0
     max_workers: 0
-    resources: {"CPU": 8, "GPU": ${1 if utilize_head_node_for_work is True else 0}}       # Setting GPU to 0 won't run work on the head node
+    resources: {"CPU": ${num_cpus}, "GPU": ${1 if utilize_head_node_for_work is True else 0}}       # Setting GPU to 0 won't run work on the head node
     node_config:
       InstanceType: p3.2xlarge
       ImageId: ${ami}
   ray.worker.default:
     min_workers: 0
-    resources: {"CPU": 8, "GPU": 1}
+    resources: {"CPU": ${num_cpus}, "GPU": 1}
     node_config:
       InstanceType: p3.2xlarge
       ImageId: ${ami}
