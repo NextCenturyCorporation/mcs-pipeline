@@ -2,6 +2,7 @@ cluster: "opics"
 filePrefix: "opics"
 team: "opics"
 region: us-east-1
+num_cpus: 4
 ami: ami-0c3e21efcd9cc4ee3 #opics-eval-6-with-nvidia-hold-patch, us-east-1
 # region: us-east-2
 # ami: ami-0446e2290a501208f #opics-eval-6-with-nvidia-hold-patch, us-east-2

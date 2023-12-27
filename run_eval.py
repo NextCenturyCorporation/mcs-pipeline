@@ -312,7 +312,7 @@ class EvalRun:
         dry_run=False,
         base_dir="mako",
         group_working_dir=RAY_WORKING_DIR,
-        num_retries: int = 3,
+        num_retries: int = 1,
     ) -> pathlib.Path:
         self.eval = eval
         self.status = self.eval.status
@@ -567,7 +567,7 @@ def run_evals(
     output_logs=False,
     dry_run=False,
     base_dir="mako",
-    num_retries: int = 3,
+    num_retries: int = 1,
 ):
     q = queue.Queue()
     for eval in eval_set:
@@ -637,8 +637,7 @@ def run_evals(
         if last_config_file:
             print(f"Finished with cluster {num}")
             execute_shell(
-                f"ray down -y {last_config_file.as_posix()}",
-                log_file
+                f"ray down -y {last_config_file.as_posix()}", log_file
             )
 
     threads = []
@@ -803,7 +802,7 @@ def parse_args():
     parser.add_argument(
         "--num_retries",
         type=int,
-        default=3,
+        default=1,
         help="How many times to retry running a failed scene which is eligible for retry.",
     )
     parser.add_argument(

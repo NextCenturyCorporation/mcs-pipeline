@@ -571,7 +571,6 @@ class SceneRunner:
                     # same as last run status
                     scene_status.status = run_status.status
                     self.on_scene_finished(scene_status)
-
                 self.print_status()
                 self.output_status()
 
@@ -761,7 +760,7 @@ def parse_args():
     parser.add_argument(
         "--num_retries",
         type=int,
-        default=3,
+        default=1,
         help="How many times to retry running a failed scene which is eligible for retry.",
     )
     return parser.parse_args()

@@ -26,17 +26,12 @@ cp "$scene_file" "$SCENE_DIR"/
 
 export MCS_CONFIG_FILE_PATH=$mcs_configfile
 
-# Go to the mess-eval6/, which is where we will be running things
+# Go to ~/workspace/mess-eval7/, which is where we will be running things
 cd "$eval_dir" || exit
 
 # Activate mamba/conda environment
-source /home/ubuntu/mambaforge/etc/profile.d/conda.sh
-conda activate mess6
-
-# if DISPLAY environment variable is set in their environment,
-# unset it - they are setup a little differently and use vncserver
-# instead
-unset DISPLAY
+source /home/ubuntu/miniforge3/etc/profile.d/conda.sh
+conda activate mess7
 
 # Run the Performer code
 echo Starting Evaluation:

@@ -1,10 +1,18 @@
 cluster: "mess"
+workers: 10
 team: "mess"
 region: us-east-2
-ami: ami-0642c523a480d0ae1 # east-2 region ami for 'mess-eval6-agency-with-patch'
-#ami: ami-0d3bcdaa29a0c659f # east-2 region ami for 'mess-eval6-final-v4' (pre-agency patch)
+#region: us-east-1
+ami: ami-0ed5aa45a1bd9db99 # this is the east-2 ami for 'mess-eval-7-agency-fix'
+# ami: ami-0b9e2f88ec61e1b6c # east-2 region ami for 'mess-evaluation-7-submission'
+# ami: ami-0a4152550d29b5655 # this is the east-2 ami for 'mess-eval7-tools-fix'
+#ami: ami-02c6fb489b9825195 # this is the east-1 ami for 'mess-eval-7-agency-fix'
 cache_stopped_nodes: False
+utilize_head_node_for_work: False
 # Properties needed in case of timeouts
 additional_file_mounts: '"/home/ubuntu/monitor_process.py": "deploy_files/mess/monitor_process.py",'
-additional_setup_commands: "- python3 -m pip install psutil==5.9.5"
+additional_setup_commands: "- pip install pydantic==1.10.7"
 has_monitor_process: false
+timeout: 3600
+# TODO: Make sure to remove s3_bucket when eval is complete
+s3_bucket: evaluation-images
