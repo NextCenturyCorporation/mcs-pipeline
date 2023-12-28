@@ -1,7 +1,8 @@
+cache_stopped_nodes: False
 cluster: "opics"
 filePrefix: "opics"
 team: "opics"
 region: us-east-1
-ami: ami-0c3e21efcd9cc4ee3 #opics-eval-6-with-nvidia-hold-patch, us-east-1
-# region: us-east-2
-# ami: ami-0446e2290a501208f #opics-eval-6-with-nvidia-hold-patch, us-east-2
+# ami: ami-05e48add22bae3c25 # opics-eval-7
+ami: ami-0612af76abe080b4d # opics-eval-7-tools
+additional_setup_commands: "- sudo apt-get update && sudo apt-get install awscli -y"

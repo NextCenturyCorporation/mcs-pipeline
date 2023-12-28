@@ -4,14 +4,19 @@ set -m
 # This is what the "main_optics" command does (from the instructions TA1 gave us).
 echo "OPICS Pipeline: Running TA1 environment setup..."
 cd /home/ubuntu/ || exit
-sudo nvidia-xconfig --use-display-device=None --virtual=600x400 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
-export OUR_XPID=2356
-export DISPLAY=:0
+# Ensure that the virtual display (monitor resolution) is much greater than 600x400
+sudo nvidia-xconfig --use-display-device=Device0 --virtual=1280x1024 --output-xconfig=/etc/X11/xorg.conf --busid=PCI:0:30:0
+export OUR_XPID=
+export DISPLAY=:1
 export OPTICS_HOME=~/main_optics
 export PYTHONPATH=$OPTICS_HOME:$OPTICS_HOME/opics_common
 export OPTICS_DATASTORE=ec2b
 cd $OPTICS_HOME || exit
 cd scripts/ || exit
+
+# Start the X Server
+# (Note that OPICS sets the DISPLAY to :1 -- Do NOT call start_x_server.sh)
+sudo /usr/bin/Xorg :1 1>startx-out.txt 2>startx-err.txt &
 
 # Check passed mcs_config and scene file
 # shellcheck source=/dev/null
@@ -22,6 +27,7 @@ echo "OPICS Pipeline: Running OPICS with MCS config file $mcs_configfile and eva
 
 echo "OPICS Pipeline: Removing previous scene history files in $eval_dir/SCENE_HISTORY/"
 rm -f "$eval_dir"/SCENE_HISTORY/*
+mkdir -p "$eval_dir"/SCENE_HISTORY/
 
 # shellcheck disable=SC2207
 CONTAINER_DIRS=($(ls /home/ubuntu/test__* -d))
@@ -30,14 +36,15 @@ for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     rm -f "$CONTAINER_DIR"/scripts/SCENE_HISTORY/*
 done
 
-# Start X
-source /home/ubuntu/start_x_server.sh
-
 export MCS_CONFIG_FILE_PATH=$mcs_configfile
-python opics_eval6_run_scene.py --scene "$scene_file"
+python opics_eval7_run_scene.py --scene "$scene_file"
 unset MCS_CONFIG_FILE_PATH
 
 DEBUG=true
+
+# Make sure to check for new container directories!
+# shellcheck disable=SC2207
+CONTAINER_DIRS=($(ls /home/ubuntu/test__* -d))
 for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     if [ $DEBUG ]; then echo "OPICS Pipeline: Found container directory: $CONTAINER_DIR"; fi
     HISTORY_DIR="$CONTAINER_DIR/scripts/SCENE_HISTORY/"
@@ -62,9 +69,6 @@ for CONTAINER_DIR in "${CONTAINER_DIRS[@]}"; do
     done
 done
 
-sudo apt-get update
-sudo apt-get install awscli -y
-
 SCENE_NAME=$(sed -nE 's/.*"name": "(\w+)".*/\1/pi' "$scene_file")
 DISAMBIGUATED_SCENE_NAME=$(basename "$scene_file" .json)
 
@@ -78,4 +82,6 @@ RENAMED_LOG=${eval_dir}/logs/${TEAM_NAME}_${SCENE_NAME}_stdout.log
 mv "${TA1_LOG}" "${RENAMED_LOG}"
 
 # Upload the mp4 video to S3 with credentials from the worker's AWS IAM role.
+echo "OPICS Pipeline: Uploading ${TEAM_NAME}_${SCENE_NAME}_stdout.log"
 aws s3 cp "${RENAMED_LOG}" s3://"${S3_BUCKET}"/"${S3_FOLDER}"/ --acl public-read
+echo "OPICS Pipeline: Finished successfully"

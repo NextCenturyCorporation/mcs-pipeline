@@ -511,6 +511,7 @@ class SceneRunner:
         self.incomplete_jobs = []
         run_script = self.exec_config["MCS"]["run_script"]
         eval_dir = self.exec_config["MCS"]["eval_dir"]
+
         for scene_ref in self.scene_files_list:
             # skip directories
             if os.path.isdir(str(scene_ref)):
@@ -537,6 +538,7 @@ class SceneRunner:
 
         while self.incomplete_jobs:
             finished_jobs, self.incomplete_jobs = ray.wait(self.incomplete_jobs)
+
             for finished_job_id in finished_jobs:
                 # logging.info(f"finished job id: {finished_job_id}")
                 try:
