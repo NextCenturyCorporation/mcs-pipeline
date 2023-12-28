@@ -355,7 +355,7 @@ class SceneRunner:
 
         # List of all the job references that have been submitted to Ray that
         # have not completed.  We call ray.wait on these to get job outputs
-        self.unfinished_jobs = []
+        self.incomplete_jobs = []
 
         self.get_scenes()
         self.on_start_scenes()
@@ -531,7 +531,7 @@ class SceneRunner:
                 self.scene_statuses[str(scene_ref)] = SceneStatus(
                     scene_ref, 0, StatusEnum.PENDING
                 )
-                self.unfinished_jobs.append(job_id)
+                self.incomplete_jobs.append(job_id)
 
         # delete reference to last job_id
         del job_id
