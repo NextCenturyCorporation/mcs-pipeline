@@ -28,9 +28,9 @@ from typing import List
 
 import boto3
 
-# This must be done before ray is imported.
 os.environ["RAY_DEDUP_LOGS"] = "0"
-os.environ["RAY_record_ref_creation_sites"] = "1"
+# useful for debugging issues with leftover objects in object store
+# os.environ["RAY_record_ref_creation_sites"] = "1"
 
 import ray
 
@@ -292,6 +292,7 @@ class StatusEnum(str, Enum):
     ERROR = "ERROR"
     ERROR_TIMEOUT = "ERROR_TIMEOUT"
     ERROR_XSERVER = "ERROR_XSERVER"
+    ERROR_OOM = "ERROR_OOM"
 
 
 @dataclass
@@ -507,9 +508,10 @@ class SceneRunner:
 
     def run_scenes(self):
         logging.info(f"Running {len(self.scene_files_list)} scenes")
+        self.incomplete_jobs = []
         run_script = self.exec_config["MCS"]["run_script"]
         eval_dir = self.exec_config["MCS"]["eval_dir"]
-        self.unfinished_jobs = []
+
         for scene_ref in self.scene_files_list:
             # skip directories
             if os.path.isdir(str(scene_ref)):
@@ -531,10 +533,24 @@ class SceneRunner:
                 )
                 self.unfinished_jobs.append(job_id)
 
-        while self.unfinished_jobs:
-            finished_jobs, self.unfinished_jobs = ray.wait(self.unfinished_jobs)
+        # delete reference to last job_id
+        del job_id
+
+        while self.incomplete_jobs:
+            finished_jobs, self.incomplete_jobs = ray.wait(self.incomplete_jobs)
+
             for finished_job_id in finished_jobs:
-                result, output, success = ray.get(finished_job_id)
+                # logging.info(f"finished job id: {finished_job_id}")
+                try:
+                    result, output, success = ray.get(finished_job_id)
+                    # logging.info(f"Had success: job id: {finished_job_id}, result: {result}, output: {output}, success: {success}")
+                except ray.exceptions.OutOfMemoryError as err:
+                    logging.info("Out of Memory Error: ", exc_info=err)
+                    # output line taken from exception thrown in logs.
+                    output = "ray.exceptions.OutOfMemoryError: Task was killed due to the node running low on memory."
+                    result = -1
+                    success = False
+
                 scene_ref = self.jobs_to_scenes.get(finished_job_id)
                 scene_status = self.scene_statuses.get(scene_ref)
                 run_status = self.get_run_status(
@@ -552,8 +568,6 @@ class SceneRunner:
                     self.retry_job(scene_status)
                     scene_status.retries += 1
                     scene_status.status = StatusEnum.RETRYING
-                    # Remove entry tied to old job.
-                    self.scene_statuses.pop(scene_ref)
                 else:
                     # If we are finished, full scene status should be
                     # same as last run status
@@ -568,8 +582,8 @@ class SceneRunner:
                 # a short sleep is needed after deleting the reference.
                 self.jobs_to_scenes.pop(finished_job_id)
                 del finished_job_id
-                time.sleep(1)
 
+            # delete reference to old finished jobs list
             del finished_jobs
 
     def print_status(self):
@@ -609,6 +623,7 @@ class SceneRunner:
                 StatusEnum.ERROR,
                 StatusEnum.ERROR_TIMEOUT,
                 StatusEnum.ERROR_XSERVER,
+                StatusEnum.ERROR_OOM,
             ]:
                 json_status["Failed"] += 1
             # Ignoring PENDING, RETRYING, UNKNOWN
@@ -684,7 +699,15 @@ class SceneRunner:
             )
             status.retry |= True
             status.status = StatusEnum.ERROR
-        # Add more conditions to retry here
+        # Add more conditions to retry (or not) here
+        if "OutOfMemoryError" in output:
+            logging.info(
+                f"Out of Memory (OOM) Error for file={scene_file_path}"
+            )
+            # If we'd like to retry for OOM jobs, we can flip this
+            # to true, or comment out this if block.
+            status.retry = False
+            status.status = StatusEnum.ERROR_OOM
         return status
 
     def on_start_scenes(self):
